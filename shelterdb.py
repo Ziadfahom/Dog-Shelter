@@ -6,6 +6,9 @@
 
 import mysql.connector
 
+
+# For setting up the database only
+
 dataBase = mysql.connector.connect(
     host = 'localhost',
     user = 'root',
