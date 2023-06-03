@@ -7,7 +7,7 @@
     <h1>Welcome to the Dogs Shelter system, {{ user.username }}!</h1>
 
     {% else %}
-    <h1 class="col-md-6 offset-md-3">Login</h1>
+    <h1 class="offset-md-4">Login</h1>
     <br>
     <form method="POST" action="{% url 'home' %}">
         {% csrf_token %}
