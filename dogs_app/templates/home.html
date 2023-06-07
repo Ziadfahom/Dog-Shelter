@@ -1,29 +1,103 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<div class="col-md-6 offset-md-3">
     {% if user.is_authenticated %}
 
-    <h1>Welcome to the Dogs Shelter system, {{ user.username }}!</h1>
+    <h2 class="col-md-8 offset-md-2">Welcome to the Dogs Shelter system, {{ user.username }}!</h2>
+        <br>
+        <br>
+                <table class="table table-sm table-striped table-hover table-bordered caption-top">
+                <caption class="col-md-8 offset-md-5">Current dogs in our system</caption>
+                 <thead class="table-dark">
+                    <tr>
+                      <th scope="col">Chip Num</th>
+                      <th scope="col">Name</th>
+                      <th scope="col">Gender</th>
+                      <th scope="col">Breed</th>
+                      <th scope="col">Fur Color</th>
+                      <th scope="col">Birth Date</th>
+                      <th scope="col">Arrival Date</th>
+                      <th scope="col">Vaccination Date</th>
+                      <th scope="col">Neutered?</th>
+                      <th scope="col">Dangerous?</th>
+                      <th scope="col">Kong Added</th>
+                      <th scope="col">Image</th>
+                      <th scope="col">Owner</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                        {% if dogs %}
+                            {% for dog in dogs %}
+                        <tr>
+                            {% if dog.chipNum %}
+                            <td>{{ dog.chipNum }}</td>
+                            {% else %}
+                            <td></td>
+                            {% endif %}
+
+                            <td>{{ dog.dogName }}</td>
+
+                            {% if dog.gender == "M" %}
+                            <td>Male</td>
+                            {% elif dog.gender == "F" %}
+                            <td>Female</td>
+                            {% else %}
+                            <td></td>
+                            {% endif %}
+
+                            {% if dog.breed %}
+                            <td>{{ dog.breed }}</td>
+                            {% else %}
+                            <td></td>
+                            {% endif %}
+
+                            {% if dog.furColor %}
+                            <td>{{ dog.furColor }}</td>
+                            {% else %}
+                            <td></td>
+                            {% endif %}
+
+                            {% if dog.dateOfBirthEst %}
+                            <td>{{ dog.dateOfBirthEst }}</td>
+                            {% else %}
+                            <td></td>
+                            {% endif %}
+                        
+                            <td>{{ dog.dateOfArrival }}</td>
+                            <td>{{ dog.dateOfVaccination }}</td>
+                            <td>{{ dog.isNeutered }}</td>
+                            <td>{{ dog.isDangerous }}</td>
+                            <td>{{ dog.kongDateAdded }}</td>
+                            <td>
+                                {% if dog.dogImageURL %}
+                                <a href="{{ dog.dogImageURL }}">Link</a></td>
+                                {% endif %}
+                            <td>{{ dog.ownerSerialNum }}</td>
+                        </tr>
+                            {% endfor %}
+                        {% endif %}
+                  </tbody>
+                </table>
+
 
     {% else %}
     <h1 class="offset-md-4">Login</h1>
     <br>
-    <form method="POST" action="{% url 'home' %}">
-        {% csrf_token %}
+            <form method="POST" action="{% url 'home' %}">
+            {% csrf_token %}
 
-      <div class="form-group">
-        <input type="text" class="form-control" name="username" placeholder="Username" required>
-      </div>
-        <br>
-      <div class="form-group">
-          <input type="password" class="form-control" name="password" placeholder="Password" required>
-      </div>
-        <br>
-      <button type="submit" class="btn btn-secondary">Login</button>
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" name="username" id="floatingUsername" placeholder="Username" required>
+                <label for="floatingUsername">Username</label>
+            </div>
+            <br>
+            <div class="form-floating">
+                <input type="password" class="form-control" name="password" id="floatingPassword" placeholder="Password" required>
+                <label for="floatingPassword">Password</label>
+            </div>
+            <br>
+            <button type="submit" class="btn btn-secondary">Login</button>
+        </form>
 
-    </form>
-
-</div>
     {% endif %}
 {% endblock %}

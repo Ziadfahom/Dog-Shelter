@@ -2,11 +2,13 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib import messages
 from .forms import SignUpForm
-
+from .models import Dog
 
 # Main Page view for displaying either dog records if  user is logged in,
 # or a login page if user is logged out
 def home_view(request):
+    # Get all the dog records in the database
+    all_dogs = Dog.objects.all().order_by('-dateOfArrival')
 
     # Checking if user is logged in
     if request.method == 'POST':
@@ -36,7 +38,7 @@ def home_view(request):
     else:
 
         # User is not logged in, redirect them to login page (home)
-        return render(request, 'home.html', {})
+        return render(request, 'home.html', {"dogs": all_dogs})
 
 
 # Logout Users view for displaying a user-logout option if they're already logged in

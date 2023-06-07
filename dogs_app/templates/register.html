@@ -23,7 +23,12 @@
         {% endif %}
 
 
-        {{ form.as_p }}
+        {% for field in form %}
+            <div class="form-floating mb-3">
+                {{ field }}
+                <label for="{{ field.id_for_label }}">{{ field.name }}</label>
+            </div>
+        {% endfor %}
 
         <br>
         <button type="submit" class="btn btn-secondary">Register</button>
