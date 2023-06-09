@@ -54,7 +54,7 @@ class Dog(models.Model):
     chipNum = models.CharField(max_length=30, unique=True, blank=True, null=True)
     dogName = models.CharField(max_length=35, blank=True, null=True)
     dateOfBirthEst = models.DateField(blank=True, null=True)
-    dateOfArrival = models.DateField(blank=True, null=True)
+    dateOfArrival = models.DateField(blank=True, null=True, default=timezone.now)
     dateOfVaccination = models.DateField(blank=True, null=True)
     breed = models.CharField(max_length=30, blank=True, null=True)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True, null=True)
@@ -63,7 +63,7 @@ class Dog(models.Model):
     isDangerous = models.CharField(max_length=1, choices=IS_DANGEROUS_CHOICES, blank=True, null=True)
     dogImageURL = models.URLField(max_length=200, blank=True, null=True)
     kongDateAdded = models.DateField(blank=True, null=True)
-    ownerSerialNum = models.ForeignKey(Owner, on_delete=models.SET_NULL, blank=True, null=True)
+    ownerSerialNum = models.ForeignKey(Owner, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Owner')
 
     def __str__(self):
         if self.breed is None:

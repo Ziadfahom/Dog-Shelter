@@ -4,6 +4,7 @@ from django.contrib import messages
 from .forms import SignUpForm
 from .models import Dog
 
+
 # Main Page view for displaying either dog records if  user is logged in,
 # or a login page if user is logged out
 def home_view(request):
@@ -14,21 +15,24 @@ def home_view(request):
     if request.method == 'POST':
         username = request.POST['username']
         password = request.POST['password']
-        User = get_user_model()
+        users = get_user_model()
 
         # Check if username exists
-        if User.objects.filter(username=username).exists():
+        if users.objects.filter(username=username).exists():
 
-            # Authenticate
-            user = authenticate(request, username=username, password=password)
-            if user is not None:
-                login(request, user=user)
-                messages.success(request, message='You have successfully logged in!')
-                return redirect('home')
-            else:
-
-                # Username exists but password was incorrect
-                messages.error(request, message='The password is incorrect. Please try again...')
+            try:
+                # Authenticate
+                user = authenticate(request, username=username, password=password)
+                if user is not None:
+                    login(request, user=user)
+                    messages.success(request, message='You have successfully logged in!')
+                    return redirect('home')
+                else:
+                    # Username exists but password was incorrect
+                    messages.error(request, message='The password is incorrect. Please try again...')
+                    return redirect('home')
+            except Exception as e:
+                messages.error(request, message=f'An error occurred during login: {e}')
                 return redirect('home')
         else:
 
@@ -80,3 +84,31 @@ def register_user_view(request):
     else:
         form = SignUpForm()
         return render(request, 'register.html', {'form': form})
+
+
+# Dog record page, displays the details for a single dog
+# Takes in the dog's PK
+def dog_record_view(request, pk):
+    # Check if the user is logged in
+    if request.user.is_authenticated:
+        # Look up and save the dog's record
+        dog_record = Dog.objects.get(dogID=pk)
+        return render(request, 'dog_record.html', {'dog_record': dog_record})
+
+    # User is NOT logged in --> send them to login page
+    else:
+        messages.error(request, message='You Must Be Logged In To View That Page...')
+        return redirect('home')
+
+
+def delete_dog_view(request, pk):
+    # Check if the user is logged in
+    if request.user.is_authenticated:
+        delete_dog = Dog.objects.get(dogID=pk)
+        dog_name = delete_dog.dogName
+        delete_dog.delete()
+        messages.success(request, message=f'{dog_name} Deleted Successfully...')
+        return redirect('home')
+    else:
+        messages.error(request, message='You must be logged in to do that...')
+        return redirect('home')

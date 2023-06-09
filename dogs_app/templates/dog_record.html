@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load dog_filters %}
+{% load static %}
+{% block content %}
+
+    <link href="{% static 'dogs_app/css_file.css' %}" rel="stylesheet">
+    <div class="card offset-md-3 text-center border-secondary shadow-lg my-5" style="width: 40rem;">
+        <div class="card-header bg-dark text-white">
+            <strong>{{ dog_record }}</strong>
+        </div>
+        <div class="card-header">
+            <img src="{{ dog_record.dogImageURL }}" class="card-img-top" alt="Image not available" style="width: 25rem; height: 20rem; object-fit: cover;">
+        </div>
+
+
+
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+
+                <li class="list-group-item">
+                    <div class="text-start-strong">
+                    <strong>Dog Name: </strong> <span>{{ dog_record.dogName|handle_none }}</span>
+                    </div>
+                </li>
+
+                <li class="list-group-item">
+                    <div class="text-start-strong">
+                    <strong>Date of Arrival: </strong><span>{{ dog_record.dateOfArrival|handle_none }}</span>
+                    </div>
+                </li>
+
+                <li class="list-group-item">
+                    <div class="text-start-strong">
+                    <strong>Chip Number: </strong><span>{{ dog_record.chipNum|handle_none }}</span>
+                    </div>
+                </li>
+
+                <li class="list-group-item">
+                    <div class="text-start-strong">
+                    <strong>Gender: </strong><span>{{ dog_record.gender|gender_filter }}</span>
+                    </div>
+                </li>
+
+                <li class="list-group-item">
+                    <div class="text-start-strong">
+                    <strong>Breed: </strong><span>{{ dog_record.breed|handle_none }}</span>
+                    </div>
+                </li>
+
+                <li class="list-group-item">
+                    <div class="text-start-strong">
+                    <strong>Fur Color: </strong><span>{{ dog_record.furColor|handle_none }}</span>
+                    </div>
+                </li>
+
+                <li class="list-group-item">
+                    <div class="text-start-strong">
+                    <strong>Estimated Date of Birth: </strong><span>{{ dog_record.dateOfBirthEst|handle_none }}</span>
+                    </div>
+                </li>
+
+                <li class="list-group-item">
+                    <div class="text-start-strong">
+                    <strong>Date of Vaccination: </strong><span>{{ dog_record.dateOfVaccination|handle_none }}</span>
+                    </div>
+                </li>
+
+                <li class="list-group-item">
+                    <div class="text-start-strong">
+                    <strong>Neutered?: </strong><span>{{ dog_record.isNeutered|yes_no_filter }}</span>
+                    </div>
+                </li>
+
+                <li class="list-group-item">
+                    <div class="text-start-strong">
+                    <strong>Dangerous?: </strong><span>{{ dog_record.isDangerous|yes_no_filter }}</span>
+                    </div>
+                </li>
+
+                <li class="list-group-item">
+                    <div class="text-start-strong">
+                    <strong>Date Given Last Kong Toy: </strong><span>{{ dog_record.kongDateAdded|handle_none }}</span>
+                    </div>
+                </li>
+
+                <li class="list-group-item">
+                    <div class="text-start-strong">
+                    <strong>Full Image: </strong>
+                    <span>
+                        {% if dog_record.dogImageURL %}
+                        <a href="{{ dog_record.dogImageURL }}">Link</a><br>
+                        {% else %}
+                        <!-- keep it empty --><br>
+                        {% endif %}
+                    </span>
+                    </div>
+                </li>
+
+                <li class="list-group-item">
+                    <div class="text-start-strong">
+                    <strong>Owner: </strong><span>{{ dog_record.ownerSerialNum|handle_none }}</span>
+                    </div>
+                </li>
+
+            </ul>
+        </div>
+    </div>
+
+<br/><br/>
+<div class="position-fixed bottom-0 m-3 d-flex" style="left: 1rem;">
+    <a href="{% url 'home' %}" class="btn btn-secondary me-2">Back</a>
+    <a href="{% url 'delete_dog' dog_record.dogID %}" class="btn btn-danger">Delete</a>
+</div>
+
+
+
+{#<a href="{% url 'update_record' dog_record.dogID %}" class="btn btn-secondary">Update Record</a>#}
+<br/> <br/>
+{% endblock %}
