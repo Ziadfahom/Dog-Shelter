@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 
+
 class Owner(models.Model):
     ownerSerialNum = models.AutoField(primary_key=True)
     firstName = models.CharField(max_length=50)
@@ -38,21 +39,24 @@ class Dog(models.Model):
     GENDER_CHOICES = [
         ('M', 'Male'),
         ('F', 'Female'),
+        ('', '-')
     ]
 
     IS_NEUTERED_CHOICES = [
         ('Y', 'Yes'),
         ('N', 'No'),
+        ('', '-')
     ]
 
     IS_DANGEROUS_CHOICES = [
         ('Y', 'Yes'),
         ('N', 'No'),
+        ('', '-')
     ]
 
     dogID = models.AutoField(primary_key=True)
     chipNum = models.CharField(max_length=30, unique=True, blank=True, null=True)
-    dogName = models.CharField(max_length=35, blank=True, null=True)
+    dogName = models.CharField(max_length=35)
     dateOfBirthEst = models.DateField(blank=True, null=True)
     dateOfArrival = models.DateField(blank=True, null=True, default=timezone.now)
     dateOfVaccination = models.DateField(blank=True, null=True)

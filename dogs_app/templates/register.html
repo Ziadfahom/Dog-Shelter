@@ -10,7 +10,7 @@
 
         {% if form.errors %}
             <div class="alert alert-warning alert-dismissible fade show" role="alert">
-            Your Form Has Errors
+            Please Fix the Following Errors:
             {% for field in form %}
                 {% if field.errors %}
                     {{ field.errors }}
@@ -26,13 +26,13 @@
         {% for field in form %}
             <div class="form-floating mb-3">
                 {{ field }}
-                <label for="{{ field.id_for_label }}">{{ field.name }}</label>
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
             </div>
         {% endfor %}
 
-        <br>
-        <button type="submit" class="btn btn-secondary">Register</button>
 
+        <button type="submit" class="btn btn-secondary">Register</button>
+        <br><br><br>
 
 
 

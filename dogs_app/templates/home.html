@@ -5,79 +5,96 @@
     {% if user.is_authenticated %}
 
         <h2 class="col-md-7 offset-md-3">Welcome to the Dogs Shelter system, {{ user.username }}!</h2><br><br>
-                <div class="container col-md-12">
-                <table class="table table-sm table-striped table-hover table-bordered caption-top">
-                <caption class="col-md-8 offset-md-5">Current dogs in our system</caption>
-                 <thead class="table-dark">
-                    <tr>
-                      <th scope="col" class="text-center">Dog Name</th>
-                      <th scope="col" class="text-center">Arrival Date</th>
-                      <th scope="col" class="text-center">Chip Num</th>
-                      <th scope="col" class="text-center">Gender</th>
-                      <th scope="col" class="text-center">Breed</th>
-                      <th scope="col" class="text-center">Fur Color</th>
-                      <th scope="col" class="text-center">Birth Date</th>
-                      <th scope="col" class="text-center">Vaccination Date</th>
-                      <th scope="col" class="text-center">Neutered?</th>
-                      <th scope="col" class="text-center">Dangerous?</th>
-                      <th scope="col" class="text-center">Kong Added</th>
-                      <th scope="col" class="text-center">Image</th>
-                      <th scope="col" class="text-center">Owner</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                        {% if dogs %}
-                            {% for dog in dogs %}
-                                <tr>
 
-                                    <td class="text-center">
-                                        <a href="{% url 'dog_record' dog.dogID %}">
-                                            {{ dog.dogName|handle_none }}
-                                        </a>
-                                    </td>
-                                    <td class="text-center">{{ dog.dateOfArrival|handle_none }}</td>
-                                    <td class="text-center">{{ dog.chipNum|handle_none }}</td>
-                                    <td class="text-center">{{ dog.gender|gender_filter }}</td>
-                                    <td class="text-center">{{ dog.breed|handle_none }}</td>
-                                    <td class="text-center">{{ dog.furColor|handle_none }}</td>
-                                    <td class="text-center">{{ dog.dateOfBirthEst|handle_none }}</td>
-                                    <td class="text-center">{{ dog.dateOfVaccination|handle_none }}</td>
-                                    <td class="text-center">{{ dog.isNeutered|yes_no_filter }}</td>
-                                    <td class="text-center">{{ dog.isDangerous|yes_no_filter }}</td>
-                                    <td class="text-center">{{ dog.kongDateAdded|handle_none }}</td>
-                                    <td class="text-center">
-                                            {% if dog.dogImageURL %}
-                                                <a href="{{ dog.dogImageURL }}">Link</a>
-                                            {% else %}
-                                                <!-- keep it empty -->
-                                            {% endif %}
-                                    </td>
-                                    <td class="text-center">{{ dog.ownerSerialNum|handle_none }}</td>
-                                </tr>
-                            {% endfor %}
-                        {% endif %}
-                    </tbody>
-                </table>
-                </div>
+        <div class="container col-md-12">
+            <table class="table table-sm table-striped table-hover table-bordered caption-top">
+
+                <caption class="col-md-8 offset-md-5">Current dogs in our system</caption>
+
+                <thead class="table-dark">
+                <tr>
+                    <th scope="col" class="text-center">Dog Name</th>
+                    <th scope="col" class="text-center">Arrival Date</th>
+                    <th scope="col" class="text-center">Chip Num</th>
+                    <th scope="col" class="text-center">Gender</th>
+                    <th scope="col" class="text-center">Breed</th>
+                    <th scope="col" class="text-center">Fur Color</th>
+                    <th scope="col" class="text-center">Birth Date</th>
+                    <th scope="col" class="text-center">Vaccination Date</th>
+                    <th scope="col" class="text-center">Neutered?</th>
+                    <th scope="col" class="text-center">Dangerous?</th>
+                    <th scope="col" class="text-center">Kong Added</th>
+                    <th scope="col" class="text-center">Image</th>
+                    <th scope="col" class="text-center">Owner</th>
+                </tr>
+                </thead>
+
+                <tbody>
+
+                {% if dogs %}
+
+                    {% for dog in dogs %}
+                        <tr>
+                            <td class="text-center">
+                                <a href="{% url 'dog_record' dog.dogID %}">
+                                    {{ dog.dogName|handle_none }}
+                                </a>
+                            </td>
+                            <td class="text-center">{{ dog.dateOfArrival|handle_none }}</td>
+                            <td class="text-center">{{ dog.chipNum|handle_none }}</td>
+                            <td class="text-center">{{ dog.gender|gender_filter }}</td>
+                            <td class="text-center">{{ dog.breed|handle_none }}</td>
+                            <td class="text-center">{{ dog.furColor|handle_none }}</td>
+                            <td class="text-center">{{ dog.dateOfBirthEst|handle_none }}</td>
+                            <td class="text-center">{{ dog.dateOfVaccination|handle_none }}</td>
+                            <td class="text-center">{{ dog.isNeutered|yes_no_filter }}</td>
+                            <td class="text-center">{{ dog.isDangerous|yes_no_filter }}</td>
+                            <td class="text-center">{{ dog.kongDateAdded|handle_none }}</td>
+                            <td class="text-center">
+                                {% if dog.dogImageURL %}
+                                    <a href="{{ dog.dogImageURL }}">Link</a>
+                                {% else %}
+                                    <!-- keep it empty -->
+                                {% endif %}
+                            </td>
+                            <td class="text-center">{{ dog.ownerSerialNum|handle_none }}</td>
+                        </tr>
+                    {% endfor %}
+
+                {% endif %}
+
+                </tbody>
+
+            </table>
+        </div>
 
     {% else %}
-        <div class="col-md-6 offset-md-3">
-        <h1 class="offset-md-5">Login</h1><br>
-                <form method="POST" action="{% url 'home' %}">
-                    {% csrf_token %}
 
-                    <div class="form-floating mb-3">
-                        <input type="text" class="form-control" name="username" id="floatingUsername" placeholder="Username" required>
-                        <label for="floatingUsername">Username</label>
-                    </div>
-                    <br>
-                    <div class="form-floating">
-                        <input type="password" class="form-control" name="password" id="floatingPassword" placeholder="Password" required>
-                        <label for="floatingPassword">Password</label>
-                    </div>
-                    <br>
-                    <button type="submit" class="btn btn-secondary">Login</button>
+        <div class="col-md-6 offset-md-3">
+            <h1 class="offset-md-5">Login</h1><br>
+
+            <form method="POST" action="{% url 'home' %}">
+                {% csrf_token %}
+
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" name="username" id="floatingUsername" placeholder="Username" required>
+                    <label for="floatingUsername">Username</label>
+                </div>
+
+                <br>
+
+                <div class="form-floating">
+                    <input type="password" class="form-control" name="password" id="floatingPassword" placeholder="Password" required>
+                    <label for="floatingPassword">Password</label>
+                </div>
+
+                <br>
+                <button type="submit" class="btn btn-secondary">Login</button>
+
             </form>
+
         </div>
+
     {% endif %}
+
 {% endblock %}
