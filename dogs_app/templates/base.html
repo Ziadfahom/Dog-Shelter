@@ -13,12 +13,13 @@
         <br>
         {% if messages %}
             {% for message in messages %}
-                <div class="alert alert-warning alert-dismissible fade show col-md-6 offset-md-3" role="alert">
-                    <span class="col-md-6 offset-md-3">{{ message }}</span>
-                   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <div class="alert alert-warning alert-dismissible fade show col-md-6 offset-md-3 text-center" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             {% endfor %}
         {% endif %}
+
 
         {%  block content %}
 

@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout, get_user_model
+from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from .forms import SignUpForm, AddDogForm
+from .forms import SignUpForm, AddDogForm, UpdateUserForm
 from .models import Dog
 
 
@@ -140,6 +142,7 @@ def add_dog_view(request):
         messages.error(request, "You Must Be Logged In To Add New Dogs...")
         return redirect('home')
 
+
 def update_dog_view(request, pk):
     # Check if user is logged in
     if request.user.is_authenticated:
@@ -159,3 +162,50 @@ def update_dog_view(request, pk):
         return redirect('home')
 
 
+# Display all users for the admins only in view_users.html
+# Check user is logged in
+@login_required
+# Check user is Admin
+@user_passes_test(lambda u: u.is_superuser)
+def view_users(request):
+    # Retrieve all the users in the system, pass them in to viewers_users.html
+    users = User.objects.all()
+    return render(request, 'view_users.html', {'users': users})
+
+
+# Only logged-in users permitted
+@login_required
+# Check user is Admin
+@user_passes_test(lambda u: u.is_superuser)
+# Delete a user in the Admin user-view page
+def delete_user_view(request, pk):
+    # Check if the user is logged in
+    if request.user.is_authenticated:
+        delete_user = User.objects.get(pk=pk)
+        user_name = delete_user.username
+        delete_user.delete()
+        messages.success(request, message=f'{user_name} Has Been Deleted Successfully...')
+        return redirect('view_users')
+    else:
+        messages.error(request, message='You must be logged in to do that...')
+        return redirect('home')
+
+
+# Check user is Admin
+@user_passes_test(lambda u: u.is_superuser)
+def update_user_view(request, pk):
+    # Check if user is logged in
+    if request.user.is_authenticated:
+        current_user = User.objects.get(pk=pk)
+        form = UpdateUserForm(request.POST or None, instance=current_user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"{current_user.first_name} {current_user.last_name}'s Details"
+                                      f" Have Been Updated Successfully!")
+            return redirect('view_users')
+        else:
+            return render(request, 'update_user.html', {'form': form})
+    # User is not logged in, redirect them to login
+    else:
+        messages.error(request, "You must be logged in to do that...")
+        return redirect('home')

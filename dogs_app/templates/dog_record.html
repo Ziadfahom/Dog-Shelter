@@ -3,18 +3,17 @@
 {% load static %}
 {% block content %}
 
-    <link href="{% static 'dogs_app/css_file.css' %}" rel="stylesheet">
-    <div class="card offset-md-3 text-center border-secondary shadow-lg my-5" style="width: 40rem;">
-        <div class="card-header bg-dark text-white">
-            <strong>{{ dog_record }}</strong>
-        </div>
-        <div class="card-header">
-            <img src="{{ dog_record.dogImageURL }}" class="card-img-top" alt="Image not available" style="width: 25rem; height: 20rem; object-fit: cover;">
-        </div>
+<link href="{% static 'dogs_app/css_file.css' %}" rel="stylesheet">
+<div class="card offset-md-3 text-center border-secondary shadow-lg my-5" style="width: 40rem;">
+    <div class="card-header bg-dark text-white">
+        <strong>{{ dog_record }}</strong>
+    </div>
+    <div class="card-header">
+        <img src="{{ dog_record.dogImageURL }}" class="card-img-top" alt="Image not available" style="width: 25rem; height: 20rem; object-fit: cover;">
+    </div>
 
-
-        <div class="card-body">
-            <ul class="list-group list-group-flush">
+    <div class="card-body">
+        <ul class="list-group list-group-flush">
 
                 <li class="list-group-item">
                     <div class="text-start-strong">
@@ -102,19 +101,13 @@
                 </li>
 
             </ul>
+    </div>
+    <div class="card-footer bg-transparent">
+        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+            <a href="{% url 'home' %}" class="btn btn-secondary me-2">Back</a>
+            <a href="{% url 'update_dog' dog_record.dogID %}" class="btn btn-success me-2">Update</a>
+            <a href="{% url 'delete_dog' dog_record.dogID %}" class="btn btn-danger">Delete</a>
         </div>
     </div>
-
-<br/><br/>
-
-<div class="position-fixed bottom-0 m-3 d-flex" style="left: 1rem;">
-    <a href="{% url 'home' %}" class="btn btn-secondary me-2">Back</a>
-    <a href="{% url 'update_dog' dog_record.dogID %}" class="btn btn-secondary me-2">Update</a>
-    <a href="{% url 'delete_dog' dog_record.dogID %}" class="btn btn-danger me-2">Delete</a>
 </div>
-
-
-
-{#<a href="{% url 'update_record' dog_record.dogID %}" class="btn btn-secondary">Update Record</a>#}
-<br/> <br/>
 {% endblock %}

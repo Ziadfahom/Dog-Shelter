@@ -1,4 +1,4 @@
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.core.validators import RegexValidator
@@ -143,3 +143,19 @@ class AddDogForm(forms.ModelForm):
         if dob and dob > date.today():
             raise ValidationError('Estimated Date of Birth cannot be a future date')
         return dob
+
+
+# Form for update users
+class UpdateUserForm(UserChangeForm):
+    email = forms.EmailField(widget=forms.TextInput(attrs={'class': 'form-control',
+                                                           'placeholder': 'Email Address'}))
+    first_name = forms.CharField(max_length=50,
+                                 widget=forms.TextInput(attrs={'class': 'form-control',
+                                                               'placeholder': 'First Name'}))
+    last_name = forms.CharField(max_length=50,
+                                widget=forms.TextInput(attrs={'class': 'form-control',
+                                                              'placeholder': 'Last Name'}))
+
+    class Meta:
+        model = User
+        fields = ('username', 'first_name', 'last_name', 'email')

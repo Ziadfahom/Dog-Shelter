@@ -2,17 +2,18 @@
 {% load dog_filters %}
 {% block content %}
 
+<div class="container">
+
     {% if user.is_authenticated %}
+        <h2 class="text-center my-3">Welcome to the Dogs Shelter system, {{ user.username }}!</h2>
 
-        <h2 class="col-md-7 offset-md-3">Welcome to the Dogs Shelter system, {{ user.username }}!</h2><br><br>
+        <div class="table-responsive mt-4">
+            <table class="table table-sm table-striped table-hover table-bordered">
 
-        <div class="container col-md-12">
-            <table class="table table-sm table-striped table-hover table-bordered caption-top">
+                <caption style="caption-side: top;" class="text-center">Current dogs in our system</caption>
 
-                <caption class="col-md-8 offset-md-5">Current dogs in our system</caption>
-
-                <thead class="table-dark">
-                <tr>
+                <thead class="table-dark text-center">
+                    <tr>
                     <th scope="col" class="text-center">Dog Name</th>
                     <th scope="col" class="text-center">Arrival Date</th>
                     <th scope="col" class="text-center">Chip Num</th>
@@ -31,9 +32,9 @@
 
                 <tbody>
 
-                {% if dogs %}
+                    {% if dogs %}
 
-                    {% for dog in dogs %}
+                        {% for dog in dogs %}
                         <tr>
                             <td class="text-center">
                                 <a href="{% url 'dog_record' dog.dogID %}">
@@ -61,40 +62,45 @@
                         </tr>
                     {% endfor %}
 
-                {% endif %}
+                    {% endif %}
 
                 </tbody>
-
             </table>
         </div>
 
     {% else %}
 
-        <div class="col-md-6 offset-md-3">
-            <h1 class="offset-md-5">Login</h1><br>
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card border-primary my-5">
+                    <div class="card-header text-center text-white bg-primary">
+                        <h1>Login</h1>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{% url 'home' %}">
+                            {% csrf_token %}
 
-            <form method="POST" action="{% url 'home' %}">
-                {% csrf_token %}
+                            <div class="form-floating mb-3">
+                                <input type="text" class="form-control" name="username" id="floatingUsername" placeholder="Username" required>
+                                <label for="floatingUsername">Username</label>
+                            </div>
 
-                <div class="form-floating mb-3">
-                    <input type="text" class="form-control" name="username" id="floatingUsername" placeholder="Username" required>
-                    <label for="floatingUsername">Username</label>
+                            <div class="form-floating">
+                                <input type="password" class="form-control" name="password" id="floatingPassword" placeholder="Password" required>
+                                <label for="floatingPassword">Password</label>
+                            </div>
+
+                            <div class="d-grid gap-2 mt-3">
+                                <button type="submit" class="btn btn-secondary">Login</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-
-                <br>
-
-                <div class="form-floating">
-                    <input type="password" class="form-control" name="password" id="floatingPassword" placeholder="Password" required>
-                    <label for="floatingPassword">Password</label>
-                </div>
-
-                <br>
-                <button type="submit" class="btn btn-secondary">Login</button>
-
-            </form>
-
+            </div>
         </div>
 
     {% endif %}
+
+</div>
 
 {% endblock %}

@@ -1,45 +1,48 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<div class="col-md-6 offset-md-3">
-<h1 class="offset-md-2">New User Registration</h1>
-<br>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-secondary shadow">
+                <div class="card-header bg-primary text-white text-center">
+                    <h1>New User Registration</h1>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="">
+                        {% csrf_token %}
 
-    <form method="POST" action="">
-        {% csrf_token %}
+                        {% if form.errors %}
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <strong>Please Fix the Following Errors:</strong>
+                                {% for field in form %}
+                                    {% if field.errors %}
+                                        <ul>
+                                            {% for error in field.errors %}
+                                                <li>{{ error }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endif %}
+                                {% endfor %}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endif %}
 
-        {% if form.errors %}
-            <div class="alert alert-warning alert-dismissible fade show" role="alert">
-            Please Fix the Following Errors:
-            {% for field in form %}
-                {% if field.errors %}
-                    {{ field.errors }}
-                {% endif %}
-            {% endfor %}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        {% for field in form %}
+                            <div class="form-floating mb-3">
+                                {{ field }}
+                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            </div>
+                        {% endfor %}
 
+                        <div class="d-flex justify-content-center">
+                            <button type="submit" class="btn btn-secondary">Register</button>
+                        </div>
+                    </form>
+                </div>
             </div>
-
-        {% endif %}
-
-
-        {% for field in form %}
-            <div class="form-floating mb-3">
-                {{ field }}
-                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-            </div>
-        {% endfor %}
-
-
-        <button type="submit" class="btn btn-secondary">Register</button>
-        <br><br><br>
-
-
-
-
-    </form>
-
-
+        </div>
+    </div>
 </div>
-
+<br><br><br><br>
 {% endblock %}
