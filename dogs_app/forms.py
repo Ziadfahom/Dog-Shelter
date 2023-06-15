@@ -155,7 +155,29 @@ class UpdateUserForm(UserChangeForm):
     last_name = forms.CharField(max_length=50,
                                 widget=forms.TextInput(attrs={'class': 'form-control',
                                                               'placeholder': 'Last Name'}))
+    # For displaying User Status (ranking)
+    ROLE_CHOICES = [
+        ('Regular', 'Regular'),
+        ('Vet', 'Vet'),
+        ('Admin', 'Admin'),
+    ]
+
+    role = forms.ChoiceField(choices=ROLE_CHOICES, required=False)
 
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name', 'email')
+        fields = ('username', 'first_name', 'last_name', 'email', 'role')
+
+    # Admins can't change their own role to "Vet" or "Regular"
+    # They can only change other admins
+    def __init__(self, *args, **kwargs):
+        self.request_user = kwargs.pop('request_user', None)
+        super().__init__(*args, **kwargs)
+
+        # If the instance user (i.e., the user being edited) is the same as the
+        # currently logged-in user, and the logged-in user is an Admin,
+        # remove the 'Regular' and 'Vet' options from the role field.
+        if self.instance == self.request_user and self.request_user.is_superuser:
+            self.fields['role'].choices = [
+                ('Admin', 'Admin'),
+            ]

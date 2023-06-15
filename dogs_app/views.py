@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout, get_user_model
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
+from django.core.exceptions import PermissionDenied
 from .forms import SignUpForm, AddDogForm, UpdateUserForm
 from .models import Dog
 
@@ -64,7 +65,11 @@ def register_user_view(request):
 
         # Validate the data and see if it meets all the conditions
         if form.is_valid():
-            form.save()
+            user = form.save()
+
+            # Add User to the Regulars Group
+            regulars_group = Group.objects.get(name="Regular")
+            user.groups.add(regulars_group)
 
             # Authenticate the user by verifying their credentials
             username = form.cleaned_data['username']
@@ -106,6 +111,10 @@ def dog_record_view(request, pk):
 def delete_dog_view(request, pk):
     # Check if the user is logged in
     if request.user.is_authenticated:
+        # Check if the user has the right permissions
+        if not request.user.has_perm('dogs_app.delete_dog'):
+            raise PermissionDenied
+        
         delete_dog = Dog.objects.get(dogID=pk)
         dog_name = delete_dog.dogName
         delete_dog.delete()
@@ -117,9 +126,12 @@ def delete_dog_view(request, pk):
 
 
 def add_dog_view(request):
-
     # Check if user is logged in
     if request.user.is_authenticated:
+        # Check if the user has the right permissions
+        if not request.user.has_perm('dogs_app.add_dog'):
+            raise PermissionDenied
+
         # If form is submitted (i.e., User has filled the form)
         if request.method == 'POST':
             # Initialize the form
@@ -146,6 +158,10 @@ def add_dog_view(request):
 def update_dog_view(request, pk):
     # Check if user is logged in
     if request.user.is_authenticated:
+        # Check if the user has the right permissions to edit dogs
+        if not request.user.has_perm('dogs_app.change_dog'):
+            raise PermissionDenied
+
         # Grab the Dog record
         current_dog = Dog.objects.get(dogID=pk)
         form = AddDogForm(request.POST or None, instance=current_dog)
@@ -168,9 +184,26 @@ def update_dog_view(request, pk):
 # Check user is Admin
 @user_passes_test(lambda u: u.is_superuser)
 def view_users(request):
-    # Retrieve all the users in the system, pass them in to viewers_users.html
-    users = User.objects.all()
+    # Retrieve all the users in the system
+    users = User.objects.all().prefetch_related('groups')
+    # Fetch each user's Status (E.g: "Admin", "Vet" or "Regular")
+    for user in users:
+        user.role = get_user_role(user)
+    # pass all users on to viewers_users.html
     return render(request, 'view_users.html', {'users': users})
+
+
+# Takes in a User, returns their ranking.
+# Used in view_users and update_user to determine User Status
+def get_user_role(user):
+    if user.is_superuser:
+        return "Admin"
+    elif user.groups.filter(name="Vet").exists():
+        return "Vet"
+    elif user.groups.filter(name="Regular").exists():
+        return "Regular"
+    else:
+        return ""
 
 
 # Only logged-in users permitted
@@ -197,9 +230,32 @@ def update_user_view(request, pk):
     # Check if user is logged in
     if request.user.is_authenticated:
         current_user = User.objects.get(pk=pk)
-        form = UpdateUserForm(request.POST or None, instance=current_user)
+        initial = {'role': get_user_role(current_user)}
+        form = UpdateUserForm(request.POST or None, instance=current_user, initial=initial, request_user= request.user)
         if form.is_valid():
-            form.save()
+            # Save form without committing (we'll modify the user before saving)
+            user = form.save(commit=False)
+            role = form.cleaned_data['role']
+            # If the group name is not empty
+            if role:
+                # If group name is Admin, update is_superuser status and clear other groups
+                if role == 'Admin':
+                    user.is_superuser = True
+                    user.is_staff = True
+                    current_user.groups.clear()
+                else:
+                    # For other groups, get the chosen group
+                    chosen_group = Group.objects.get(name=role)
+                    # Remove the user from all the other groups
+                    current_user.groups.clear()
+                    # Add the user to the chosen group
+                    current_user.groups.add(chosen_group)
+                    # Update user's is_superuser status
+                    user.is_superuser = False
+                    user.is_staff = False
+
+            # Now commit the save
+            user.save()
             messages.success(request, f"{current_user.first_name} {current_user.last_name}'s Details"
                                       f" Have Been Updated Successfully!")
             return redirect('view_users')

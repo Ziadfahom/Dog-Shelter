@@ -12,6 +12,7 @@
                   <th>First Name</th>
                   <th>Last Name</th>
                   <th>Email</th>
+                  <th>Role</th>
                   <th>Update</th>
                   <th>Delete</th>
               </tr>
@@ -23,11 +24,12 @@
                       <td>{{ user.first_name }}</td>
                       <td>{{ user.last_name }}</td>
                       <td>{{ user.email }}</td>
+                      <td>{{ user.role }}</td>
                       <td>
                         <a href="{% url 'update_user' user.id %}" class="btn btn-warning btn-sm">Update</a>
                       </td>
                       <td>
-                        <a href="{% url 'delete_user' user.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">Delete</a>
+                        <a href="{% url 'delete_user' user.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete {{ user.username }}?')">Delete</a>
                       </td>
                   </tr>
               {% empty %}
