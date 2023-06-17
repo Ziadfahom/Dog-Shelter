@@ -7,7 +7,6 @@ from .models import Dog, Owner
 from django.core.exceptions import ValidationError
 from datetime import date
 
-
 # New User Registration Form
 class SignUpForm(UserCreationForm):
 
@@ -174,10 +173,28 @@ class UpdateUserForm(UserChangeForm):
         self.request_user = kwargs.pop('request_user', None)
         super().__init__(*args, **kwargs)
 
+        # Takes in a User, returns their current role.
+        def get_user_role(user):
+            if user.is_superuser:
+                return "Admin"
+            elif user.groups.filter(name="Vet").exists():
+                return "Vet"
+            elif user.groups.filter(name="Regular").exists():
+                return "Regular"
+            else:
+                return ""
+
         # If the instance user (i.e., the user being edited) is the same as the
-        # currently logged-in user, and the logged-in user is an Admin,
-        # remove the 'Regular' and 'Vet' options from the role field.
-        if self.instance == self.request_user and self.request_user.is_superuser:
-            self.fields['role'].choices = [
-                ('Admin', 'Admin'),
-            ]
+        # currently logged-in user, then roles should not be possible to edit.
+        if self.instance == self.request_user:
+            # Check if the user is Admin
+            if self.request_user.is_superuser:
+                # Only give them the option to choose "Admin"
+                self.fields['role'].choices = [('Admin', 'Admin')]
+            else:
+                # Not an admin --> then give them the option to only choose their current role
+                current_role = get_user_role(self.request_user)
+                if current_role == 'Vet':
+                    self.fields['role'].choices = [('Vet', 'Vet')]
+                elif current_role == 'Regular':
+                    self.fields['role'].choices = [('Regular', 'Regular')]

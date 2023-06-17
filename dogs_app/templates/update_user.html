@@ -6,8 +6,12 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card border-secondary shadow">
-                <div class="card-header bg-dark text-white text-center">
-                    <h1>Update User</h1>
+                <div class="card-header bg-primary text-white text-center">
+                    {% if user.is_superuser %}
+                        <h1>Edit User Details</h1>
+                    {% else %}
+                        <h1>Edit Your Account Details</h1>
+                    {% endif %}
                 </div>
                 <div class="card-body">
                     <form method="POST" action="">
@@ -30,7 +34,12 @@
 
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                             <button type="submit" class="btn btn-success">Update Details</button>
-                            <a href="{% url 'view_users' %}" class="btn btn-secondary me-2">Back</a>
+                            {% if user.is_superuser %}
+                                <a href="{% url 'view_users' %}" class="btn btn-secondary me-2">Back</a>
+                            {% else %}
+                                <a href="{% url 'home' %}" class="btn btn-secondary me-2">Back</a>
+                            {% endif %}
+
                         </div>
                     </form>
                 </div>

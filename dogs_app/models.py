@@ -3,8 +3,6 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 
-
-
 class Owner(models.Model):
     ownerSerialNum = models.AutoField(primary_key=True)
     firstName = models.CharField(max_length=50)
@@ -227,3 +225,4 @@ class DogStance(models.Model):
     class Meta:
         unique_together = ('dogID', 'camID', 'obsDateTime', 'stanceStartTime')
         ordering = ['-stanceStartTime']
+

@@ -24,7 +24,7 @@
                     {% if user.is_superuser %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-gear-fill"></i> Admin Control
+                                <i class="bi bi-gear-fill"></i> Admin Controls
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li><a class="dropdown-item" href="{% url 'view_users' %}">View Users</a></li>
@@ -33,9 +33,6 @@
                             </ul>
                         </li>
                     {% endif %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right"></i> Logout</a>
-                    </li>
                 {% else %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'register' %}"><i class="bi bi-person-plus-fill"></i> Register</a>
@@ -44,6 +41,22 @@
                         <a class="nav-link" href="{% url 'home' %}"><i class="bi bi-box-arrow-in-right"></i> Login</a>
                     </li>
                 {% endif %}
+            {% if user.is_authenticated %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-gear-fill"></i> Account
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a href="{% url 'update_user_self' %}" class="dropdown-item">Manage Details</a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="nav-item">
+                        <a class="nav-link" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right"></i> Logout</a>
+                </li>
+            {% endif %}
+
             </ul>
         </div>
     </div>

@@ -231,7 +231,7 @@ def update_user_view(request, pk):
     if request.user.is_authenticated:
         current_user = User.objects.get(pk=pk)
         initial = {'role': get_user_role(current_user)}
-        form = UpdateUserForm(request.POST or None, instance=current_user, initial=initial, request_user= request.user)
+        form = UpdateUserForm(request.POST or None, instance=current_user, initial=initial, request_user=request.user)
         if form.is_valid():
             # Save form without committing (we'll modify the user before saving)
             user = form.save(commit=False)
@@ -259,6 +259,26 @@ def update_user_view(request, pk):
             messages.success(request, f"{current_user.first_name} {current_user.last_name}'s Details"
                                       f" Have Been Updated Successfully!")
             return redirect('view_users')
+        else:
+            return render(request, 'update_user.html', {'form': form})
+    # User is not logged in, redirect them to login
+    else:
+        messages.error(request, "You must be logged in to do that...")
+        return redirect('home')
+
+
+# Only logged-in users permitted
+@login_required
+def update_user_self_view(request):
+    if request.user.is_authenticated:
+        current_user = User.objects.get(pk=request.user.pk)
+        initial = {'role': get_user_role(current_user)}
+        form = UpdateUserForm(request.POST or None, instance=current_user, initial=initial, request_user=request.user)
+        if form.is_valid():
+            # Save form without committing (we'll modify the user before saving)
+            user = form.save()
+            messages.success(request, f"Your Details Have Been Updated Successfully!")
+            return redirect('update_user_self')
         else:
             return render(request, 'update_user.html', {'form': form})
     # User is not logged in, redirect them to login
