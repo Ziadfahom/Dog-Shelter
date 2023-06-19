@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from .forms import SignUpForm, AddDogForm, UpdateUserForm
-from .models import Dog
+from .models import Dog, News
 
 
 # Main Page view for displaying either dog records if  user is logged in,
@@ -13,6 +13,15 @@ from .models import Dog
 def home_view(request):
     # Get all the dog records in the database
     all_dogs = Dog.objects.all().order_by('-dateOfArrival')
+
+    # Get the total number of dogs
+    total_dogs = Dog.objects.count()
+
+    # Get the number of dogs that have received toy treatments
+    toy_treatment_dogs = Dog.objects.filter(observation__isKong='Y').distinct().count()
+
+    # Get all the website News to display them in descending order
+    news_items = News.objects.all().order_by('-created_at')
 
     # Checking if user is logged in
     if request.method == 'POST':
@@ -45,7 +54,13 @@ def home_view(request):
             return redirect('home')
     else:
         # User is not logged in, redirect them to login page (home)
-        return render(request, 'home.html', {"dogs": all_dogs})
+        context = {
+            'dogs': all_dogs,
+            'total_dogs': total_dogs,
+            'toy_treatment_dogs': toy_treatment_dogs,
+            'news_items': news_items
+        }
+        return render(request, 'home.html', context=context)
 
 
 # Logout Users view for displaying a user-logout option if they're already logged in
@@ -92,6 +107,18 @@ def register_user_view(request):
         form = SignUpForm()
         return render(request, 'register.html', {'form': form})
 
+
+# View for adding website news to the homepage
+# Only logged-in admins permitted
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def add_news(request):
+    if request.method == 'POST':
+        news_title = request.POST.get('title')
+        news_content = request.POST.get('content')
+        News.objects.create(title=news_title, content=news_content)
+        return redirect('home')
+    return render(request, 'add_news.html')
 
 # Dog record page, displays the details for a single dog
 # Takes in the dog's PK

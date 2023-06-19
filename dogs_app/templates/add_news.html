@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+    <div class="container mt-5 col-md-10">
+        <div class="card border-primary mb-3 mt-5">
+            <div class="card-header text-center text-white bg-primary">
+                <h2>Add News for the Home Page</h2>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="form-floating mb-3">
+                        <input type="text" class="form-control" id="title" name="title" placeholder="Title">
+                        <label for="title">Title</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                        <textarea id="content" name="content" class="form-control" placeholder="Content" style="height: 100px;"></textarea>
+                        <label for="content">Content</label>
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-success">Add News</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+{% endblock %}

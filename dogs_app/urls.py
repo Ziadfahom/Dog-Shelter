@@ -13,4 +13,5 @@ urlpatterns = [
     path('delete_user/<int:pk>', views.delete_user_view, name='delete_user'),
     path('update_user/<int:pk>', views.update_user_view, name='update_user'),
     path('update_user_self/', views.update_user_self_view, name='update_user_self'),
+    path('add_news/', views.add_news, name='add_news'),
 ]

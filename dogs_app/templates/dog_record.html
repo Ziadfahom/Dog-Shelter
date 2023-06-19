@@ -5,7 +5,7 @@
 {% block content %}
 
 <link href="{% static 'dogs_app/css_file.css' %}" rel="stylesheet">
-<div class="card offset-md-3 text-center border-secondary shadow-lg my-5" style="width: 40rem;">
+<div class="card offset-md-2 text-center border-secondary shadow-lg my-5" style="width: 40rem;">
     <div class="card-header bg-dark text-white">
         <strong>{{ dog_record }}</strong>
     </div>
@@ -55,6 +55,12 @@
                 <li class="list-group-item">
                     <div class="text-start-strong">
                     <strong>Estimated Date of Birth: </strong><span>{{ dog_record.dateOfBirthEst|handle_none }}</span>
+                    </div>
+                </li>
+
+                <li class="list-group-item">
+                    <div class="text-start-strong">
+                    <strong>Estimated Age (Years): </strong><span>{{ dog_record.dateOfBirthEst|calculate_age }} </span>
                     </div>
                 </li>
 

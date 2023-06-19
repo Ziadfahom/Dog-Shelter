@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 
+
 class Owner(models.Model):
     ownerSerialNum = models.AutoField(primary_key=True)
     firstName = models.CharField(max_length=50)
@@ -225,4 +226,11 @@ class DogStance(models.Model):
     class Meta:
         unique_together = ('dogID', 'camID', 'obsDateTime', 'stanceStartTime')
         ordering = ['-stanceStartTime']
+
+
+# News Model for saving the latest website news and displaying them on the homepage
+class News(models.Model):
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
 
