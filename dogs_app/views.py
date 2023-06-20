@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -54,11 +54,16 @@ def home_view(request):
             return redirect('home')
     else:
         # User is not logged in, redirect them to login page (home)
+
+        # Attach user roles to the home page display
+        role = get_user_role(request.user) if request.user.is_authenticated else ""
+
         context = {
             'dogs': all_dogs,
             'total_dogs': total_dogs,
             'toy_treatment_dogs': toy_treatment_dogs,
-            'news_items': news_items
+            'news_items': news_items,
+            'role': role
         }
         return render(request, 'home.html', context=context)
 
@@ -119,6 +124,7 @@ def add_news(request):
         News.objects.create(title=news_title, content=news_content)
         return redirect('home')
     return render(request, 'add_news.html')
+
 
 # Dog record page, displays the details for a single dog
 # Takes in the dog's PK
@@ -312,3 +318,28 @@ def update_user_self_view(request):
     else:
         messages.error(request, "You must be logged in to do that...")
         return redirect('home')
+
+
+# Page for editing the news from the homepage. Only visible to Admins
+@user_passes_test(lambda u: u.is_superuser)
+def update_news(request, news_id):
+    news = get_object_or_404(News, pk=news_id)
+    if request.method == 'POST':
+        news.title = request.POST['title']
+        news.content = request.POST['content']
+        news.save()
+        messages.success(request, f"News Story: '{request.POST['title']}' has been successfully edited...")
+        return redirect('home')
+    return render(request, 'update_news.html', {'news': news})
+
+
+# View for deleting a News story from the homepage. Only available to Admins
+@user_passes_test(lambda u: u.is_superuser)
+def delete_news(request, news_id):
+    news = get_object_or_404(News, pk=news_id)
+    if request.method == 'POST':
+        news_title = news.title
+        news.delete()
+        messages.success(request, f"News Story: '{news_title}' has been successfully deleted...")
+        return redirect('home')
+    return render(request, 'delete_news.html', {'news': news})

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container mt-5 col-md-8">
+    <div class="card text-center">
+        <div class="card-header bg-dark text-white">
+            <h2 class="mb-0">Edit News</h2>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="title" class="form-label">Title</label>
+                    <input type="text" class="form-control" id="title" name="title" value="{{ news.title }}">
+                </div>
+                <div class="mb-3">
+                    <label for="content" class="form-label">Content</label>
+                    <textarea class="form-control" id="content" name="content" rows="3">{{ news.content }}</textarea>
+                </div>
+                <div class="mb-3 text-end">
+                    <button type="submit" class="btn btn-primary">Update News</button>
+                    <a href="{% url 'home' %}" class="btn btn-secondary">Back</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
