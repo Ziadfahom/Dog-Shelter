@@ -1,11 +1,13 @@
+from json import dumps
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
-from .forms import SignUpForm, AddDogForm, UpdateUserForm
-from .models import Dog, News
+from .forms import SignUpForm, AddDogForm, UpdateUserForm, ProfileUpdateForm
+from .models import Dog, News, Profile
 
 
 # Main Page view for displaying either dog records if  user is logged in,
@@ -257,6 +259,7 @@ def delete_user_view(request, pk):
         return redirect('home')
 
 
+# View for updating user details
 # Check user is Admin
 @user_passes_test(lambda u: u.is_superuser)
 def update_user_view(request, pk):
@@ -264,11 +267,20 @@ def update_user_view(request, pk):
     if request.user.is_authenticated:
         current_user = User.objects.get(pk=pk)
         initial = {'role': get_user_role(current_user)}
-        form = UpdateUserForm(request.POST or None, instance=current_user, initial=initial, request_user=request.user)
-        if form.is_valid():
+        # Main User Form
+        user_form = UpdateUserForm(request.POST or None,
+                                   instance=current_user,
+                                   initial=initial,
+                                   request_user=request.user)
+        # Addition User Details Form (phone, address, image)
+        profile_form = ProfileUpdateForm(request.POST or None,
+                                         request.FILES or None,
+                                         instance=current_user.profile)
+
+        if user_form.is_valid() and profile_form.is_valid():
             # Save form without committing (we'll modify the user before saving)
-            user = form.save(commit=False)
-            role = form.cleaned_data['role']
+            user = user_form.save(commit=False)
+            role = user_form.cleaned_data['role']
             # If the group name is not empty
             if role:
                 # If group name is Admin, update is_superuser status and clear other groups
@@ -289,31 +301,53 @@ def update_user_view(request, pk):
 
             # Now commit the save
             user.save()
+            profile_form.save()
             messages.success(request, f"{current_user.first_name} {current_user.last_name}'s Details"
                                       f" Have Been Updated Successfully!")
             return redirect('view_users')
-        else:
-            return render(request, 'update_user.html', {'form': form})
+
+        return render(request, 'update_user.html', {'user_form': user_form, 'profile_form': profile_form})
     # User is not logged in, redirect them to login
     else:
         messages.error(request, "You must be logged in to do that...")
         return redirect('home')
 
 
+# User updating their own details view
 # Only logged-in users permitted
 @login_required
 def update_user_self_view(request):
     if request.user.is_authenticated:
         current_user = User.objects.get(pk=request.user.pk)
         initial = {'role': get_user_role(current_user)}
-        form = UpdateUserForm(request.POST or None, instance=current_user, initial=initial, request_user=request.user)
-        if form.is_valid():
-            # Save form without committing (we'll modify the user before saving)
-            user = form.save()
-            messages.success(request, f"Your Details Have Been Updated Successfully!")
-            return redirect('update_user_self')
+        # Main User Form
+        user_form = UpdateUserForm(request.POST or None,
+                                   instance=current_user,
+                                   initial=initial,
+                                   request_user=request.user)
+
+        profile, created = Profile.objects.get_or_create(user=current_user)
+        # Addition User Details Form (phone, address, image)
+        profile_form = ProfileUpdateForm(request.POST or None,
+                                         request.FILES or None,
+                                         instance=profile)
+        if request.method == 'POST':
+            if user_form.is_valid() and profile_form.is_valid():
+                user_form.save()
+                profile_form.save()
+                messages.success(request, f"Your Details Have Been Updated Successfully!")
+                return redirect('home')
+            else:
+                return render(request, 'update_user.html', {
+                    'user_form': user_form,
+                    'profile_form': profile_form
+                })
         else:
-            return render(request, 'update_user.html', {'form': form})
+            context = {
+                'user_form': user_form,
+                'profile_form': profile_form
+            }
+            return render(request, 'update_user.html', context)
     # User is not logged in, redirect them to login
     else:
         messages.error(request, "You must be logged in to do that...")

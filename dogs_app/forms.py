@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from django.core.validators import RegexValidator
 from django import forms
-from .models import Dog, Owner
+from .models import Dog, Owner, Profile
 from django.core.exceptions import ValidationError
 from datetime import date
 
@@ -198,3 +198,17 @@ class UpdateUserForm(UserChangeForm):
                     self.fields['role'].choices = [('Vet', 'Vet')]
                 elif current_role == 'Regular':
                     self.fields['role'].choices = [('Regular', 'Regular')]
+
+
+# Add more attributes to User profiles
+class ProfileUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ['phone_number', 'address', 'image']
+        widgets = {
+            'phone_number': forms.TextInput(attrs={'class': 'form-control',
+                                                   'placeholder': 'Phone Number'}),
+            'address': forms.TextInput(attrs={'class': 'form-control',
+                                              'placeholder': 'Address'}),
+            'image': forms.FileInput()
+        }
