@@ -7,6 +7,8 @@ from django.core.exceptions import PermissionDenied
 from .forms import SignUpForm, AddDogForm, UpdateUserForm, ProfileUpdateForm
 from .models import Dog, News, Profile
 
+# Location of the default User profile picture if they don't have a picture
+DEFAULT_IMAGE_SOURCE = '/profile_pictures/default.jpg'
 
 # Main Page view for displaying either dog records if  user is logged in,
 # or a login page if user is logged out
@@ -143,17 +145,17 @@ def delete_dog_view(request, pk):
         # Check if the user has the right permissions
         if not request.user.has_perm('dogs_app.delete_dog'):
             raise PermissionDenied
-
-        dog = get_object_or_404(Dog, dogID=pk)
+        # Grab the dog to delete
+        delete_dog = get_object_or_404(Dog, dogID=pk)
 
         if request.method == 'POST':
-            dog_name = dog.dogName
-            dog.delete()
+            dog_name = delete_dog.dogName
+            delete_dog.delete()
             messages.success(request, f'{dog_name} Has Been Deleted Successfully...')
             return redirect('home')
-
-        return render(request, 'delete_dog.html', {'dog': dog})
-
+        # User clicked "Delete" button to confirm deletion
+        return render(request, 'delete_dog.html', {'dog': delete_dog})
+    # User not logged in, must login first
     else:
         messages.error(request, 'You must be logged in to do that...')
         return redirect('home')
@@ -218,8 +220,8 @@ def update_dog_view(request, pk):
 # Check user is Admin
 @user_passes_test(lambda u: u.is_superuser)
 def view_users(request):
-    # Retrieve all the users in the system
-    users = User.objects.all().prefetch_related('groups')
+    # Retrieve all the users in the system, prefetch their groups, and select their profiles
+    users = User.objects.all().prefetch_related('groups').select_related('profile')
     # Fetch each user's Status (E.g: "Admin", "Vet" or "Regular")
     for user in users:
         user.role = get_user_role(user)
@@ -248,11 +250,20 @@ def get_user_role(user):
 def delete_user_view(request, pk):
     # Check if the user is logged in
     if request.user.is_authenticated:
-        delete_user = User.objects.get(pk=pk)
-        user_name = delete_user.username
-        delete_user.delete()
-        messages.success(request, message=f'{user_name} Has Been Deleted Successfully...')
-        return redirect('view_users')
+        # Check if the user has the right permissions
+        if not request.user.has_perm('dogs_app.delete_user'):
+            raise PermissionDenied
+        # Grab the user to delete
+        delete_user = get_object_or_404(User, pk=pk)
+        # User trying to display the delete page
+        if request.method == 'POST':
+            user_name = delete_user.username
+            delete_user.delete()
+            messages.success(request, f'{user_name} Has Been Deleted Successfully...')
+            return redirect('view_users')
+        # User clicked "Delete" button to confirm deletion
+        return render(request, 'delete_user.html', {'delete_user': delete_user})
+    # User not logged in, must login first
     else:
         messages.error(request, message='You must be logged in to do that...')
         return redirect('home')
@@ -348,13 +359,13 @@ def update_user_self_view(request):
                 if 'deleteImage' in request.POST:
                     if profile.image:  # Only delete the image if one exists
                         profile.image.delete()  # Deletes the image file
-                        profile.image = None  # Removes the image from the profile
+                        profile.image = DEFAULT_IMAGE_SOURCE  # Removes the image from the profile
 
                 profile_form.save()
                 user.save()
 
                 messages.success(request, f"Your Details Have Been Updated Successfully!")
-                return redirect('home')
+                return redirect('update_user_self')
             else:
                 return render(request, 'update_user.html', {
                     'user_form': user_form,

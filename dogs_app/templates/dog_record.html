@@ -111,14 +111,13 @@
                 </ul>
             </div>
             <div class="card-footer bg-transparent">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div></div>
-                    {% if user.is_authenticated and user|has_group:"Vet" %}
-                        <div class="action-buttons">
-                            <a href="{% url 'update_dog' dog_record.dogID %}" class="btn btn-success me-2">Update</a>
-                            <a href="{% url 'delete_dog' dog_record.dogID %}" class="btn btn-danger">Delete</a>
-                        </div>
-                    {% endif %}
+                {% if user.is_authenticated and user|has_group:"Vet" %}
+                    <div class="add-dog-button mt-4 action-buttons">
+                        <a href="{% url 'update_dog' dog_record.dogID %}" class="btn btn-success me-2">Update</a>
+                        <a href="{% url 'delete_dog' dog_record.dogID %}" class="btn btn-danger">Delete</a>
+                    </div>
+                {% endif %}
+                <div class="back-button mt-2">
                     <a href="{% url 'home' %}" class="btn btn-secondary">Back</a>
                 </div>
             </div>

@@ -6,7 +6,7 @@
 <link href="{% static 'dogs_app/css/styles.css' %}" rel="stylesheet">
 
 <div class="container mt-5 col-md-9">
-    <div class="card border-secondary stylish-card">
+    <div class="card border-secondary stylish-card shadow">
         <div class="card-header bg-primary text-white text-center stylish-card-header">
             <h1 class="">Update Dog Details</h1>
         </div>
@@ -30,16 +30,13 @@
                     {% endif %}
                 {% endfor %}
 
-
-
-                <div class="d-flex justify-content-center align-items-center">
-                    <div class="action-buttons d-flex justify-content-center">
-                        <button type="submit" class="btn btn-success me-2">Update Details</button>
-                    </div>
-                    <div class="ml-auto">
-                        <a href="{% url 'dog_record' current_dogID %}" class="btn btn-secondary">Back</a>
-                    </div>
+                <div class="add-dog-button mt-4 action-buttons">
+                    <button type="submit" class="btn btn-success">Update Details</button>
                 </div>
+                <div class="back-button mt-2">
+                    <a href="{% url 'dog_record' current_dogID %}" class="btn btn-secondary">Back</a>
+                </div>
+
             </form>
         </div>
     </div>

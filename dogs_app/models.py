@@ -4,16 +4,27 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import User
 
+# Location of the default User profile picture if they don't have a picture
+DEFAULT_IMAGE_SOURCE = '/profile_pictures/default.jpg'
+ALTERNATIVE_DEFAULT_IMAGE_SOURCE = '/static/dogs_app/img/default.jpg'
+
 
 # Adding more attributes to the User model
 class Profile(models.Model):
+
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     phone_number = models.CharField(max_length=15, blank=True, null=True)
     address = models.CharField(max_length=255, blank=True, null=True)
-    image = models.ImageField(upload_to='profile_pictures', default='/profile_pictures/default.jpg')
+    image = models.ImageField(upload_to='profile_pictures', default=DEFAULT_IMAGE_SOURCE)
 
     def __str__(self):
         return f'{self.user.username} Profile'
+
+    # Returns True if the user's profile picture is the default.jpg
+    def is_default_image(self):
+        if self.image is None:
+            return True
+        return self.image.name in [DEFAULT_IMAGE_SOURCE, ALTERNATIVE_DEFAULT_IMAGE_SOURCE]
 
 
 class Owner(models.Model):

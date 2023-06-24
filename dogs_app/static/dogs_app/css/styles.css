@@ -177,3 +177,15 @@
     font-weight: bold;
     color: #6c757d;
 }
+
+.profile-image {
+    background-size: cover;
+    background-position: center;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;  /* This makes the picture round */
+}
+
+th {
+    font-size: 0.9em;
+}

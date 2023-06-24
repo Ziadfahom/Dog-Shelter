@@ -2,36 +2,36 @@
 {% load static %}
 
 {% block content %}
-<link href="{% static 'dogs_app/css/styles.css' %}" rel="stylesheet">
+    <link href="{% static 'dogs_app/css/styles.css' %}" rel="stylesheet">
 
-<div class="container mt-5 text-center">
-    <div class="col-md-7 mx-auto">
-        <div class="card border-danger shadow-lg">
-            <div class="card-header bg-danger text-white">
-                <h2 class="card-title">Delete Dog</h2>
-            </div>
-           <div class="card-body">
-                <p class="lead prompt">Are you sure you want to delete this dog?</p>
-               <div class="card-header">
-                <img src="{{ dog.dogImageURL }}" class="card-img-top" alt="Image not available" style="width: 25rem; height: 20rem; object-fit: cover;">
-            </div>
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <strong>Dog Name: </strong><span class="centered-content">{{ dog.dogName }}</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <strong>Chip Number: </strong><span class="centered-content">{{ dog.chipNum }}</span>
-                    </li>
-                </ul>
-                <form method="POST" class="delete-dog-button mt-4">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">Delete Dog</button>
-                </form>
-                <div class="back-button mt-2">
-                    <a href="{% url 'home' %}" class="btn btn-secondary">Back</a>
+    <div class="container mt-5 text-center">
+        <div class="col-md-7 mx-auto">
+            <div class="card border-danger shadow-lg">
+                <div class="card-header bg-danger text-white">
+                    <h2 class="card-title">Delete Dog</h2>
                 </div>
+                <div class="card-body">
+                    <p class="lead prompt">Are you sure you want to delete this dog?</p>
+                    <div class="card-header">
+                        <img src="{{ dog.dogImageURL }}" class="card-img-top" alt="Image not available" style="width: 25rem; height: 20rem; object-fit: cover;">
+                   </div>
+                   <ul class="list-group list-group-flush">
+                       <li class="list-group-item d-flex justify-content-between align-items-center">
+                           <strong>Dog Name: </strong><span class="centered-content">{{ dog.dogName }}</span>
+                       </li>
+                       <li class="list-group-item d-flex justify-content-between align-items-center">
+                           <strong>Chip Number: </strong><span class="centered-content">{{ dog.chipNum }}</span>
+                       </li>
+                   </ul>
+                   <form method="POST" class="delete-dog-button mt-4">
+                       {% csrf_token %}
+                       <button type="submit" class="btn btn-danger">Delete</button>
+                   </form>
+                   <div class="back-button mt-2">
+                       <a href="{% url 'home' %}" class="btn btn-secondary">Back</a>
+                   </div>
+               </div>
             </div>
         </div>
     </div>
-</div>
 {% endblock %}
