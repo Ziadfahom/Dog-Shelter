@@ -80,7 +80,7 @@
                             <p><strong>Address: </strong>{{ user.profile.address }}</p>
 
                             <!-- User join date -->
-                            <p><strong>Joined: </strong>{{ user.date_joined }}</p>
+                            <p><strong>Joined: </strong>{{ user.date_joined|date:" d/m/Y" }}</p>
                         </div>
                     </div>
                 </div>

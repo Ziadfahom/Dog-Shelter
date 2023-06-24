@@ -40,8 +40,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'widget_tweaks',
-    'storages'  # For the AWS S3 cloud for pictures/videos uploads
+    'widget_tweaks',    # Tweaks for widgets
+    'storages',         # For the AWS S3 cloud for pictures/videos uploads
+    'crispy_forms',     # Better looking forms
+    'crispy_bootstrap5',
 ]
 
 MIDDLEWARE = [
@@ -156,3 +158,8 @@ else:
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
     STATIC_URL = '/static/'
     STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+
+CRISPY_TEMPLATE_PACK = 'bootstrap5'
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+

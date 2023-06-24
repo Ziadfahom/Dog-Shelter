@@ -1,13 +1,16 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block content %}
+
+<link href="{% static 'dogs_app/css/styles.css' %}" rel="stylesheet">
 
 <div class="container mt-5 col-md-10">
     <div class="card border-secondary shadow">
-        <div class="card-header bg-primary text-white text-center">
+        <div class="card-header bg-primary text-white text-center stylish-card-header">
             <h1>New User Registration</h1>
         </div>
-        <div class="card-body">
-            <form method="POST" action="">
+        <div class="card-body stylish-card-body">
+            <form method="POST" action="" enctype="multipart/form-data">
                 {% csrf_token %}
 
                 {% if form.errors %}
@@ -27,13 +30,29 @@
                 {% endif %}
 
                 {% for field in form %}
-                    <div class="form-floating mb-3">
+                    <div class="form-floating mb-3 stylish-form-floating">
                         {{ field }}
-                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        <label for="{{ field.id_for_label }}" class="stylish-label">{{ field.label }}</label>
                     </div>
                 {% endfor %}
 
-                <div class="d-flex justify-content-center">
+                {% for field in profile_form %}
+                    {% if field.name == 'image' %}
+                        <div class="form-floating mb-3 stylish-form-floating">
+
+                            <div class="container"><label for="{{ field.id_for_label }}" class="stylish-label">Profile Picture</label></div>
+                            <br><div class="container"> {{ field }}</div>
+                        </div>
+                    {% else %}
+                        <div class="form-floating mb-3 stylish-form-floating">
+                            {{ field }}
+                            <label for="{{ field.id_for_label }}" class="stylish-label">{{ field.label }}</label>
+                        </div>
+                    {% endif %}
+               {% endfor %}
+
+
+                <div class="d-flex justify-content-center stylish-button">
                     <button type="submit" class="btn btn-primary">Register</button>
                 </div>
             </form>

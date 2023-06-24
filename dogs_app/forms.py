@@ -7,6 +7,7 @@ from .models import Dog, Owner, Profile
 from django.core.exceptions import ValidationError
 from datetime import date
 
+
 # New User Registration Form
 class SignUpForm(UserCreationForm):
 
@@ -135,7 +136,7 @@ class AddDogForm(forms.ModelForm):
 
     class Meta:
         model = Dog
-        exclude = ('dogID',)
+        fields = '__all__'
 
     def clean_dateOfBirthEst(self):
         dob = self.cleaned_data.get('dateOfBirthEst')

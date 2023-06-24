@@ -1,5 +1,3 @@
-from json import dumps
-from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.models import User, Group
@@ -79,40 +77,36 @@ def logout_user_view(request):
 
 # User Registration view for new users
 def register_user_view(request):
-
-    # Check if the request is a POST request
-    # (indicating that the user is submitting the form)
     if request.method == 'POST':
         form = SignUpForm(request.POST)
-
-        # Validate the data and see if it meets all the conditions
-        if form.is_valid():
+        profile_form = ProfileUpdateForm(request.POST, request.FILES)
+        if form.is_valid() and profile_form.is_valid():
             user = form.save()
-
             # Add User to the Regulars Group
             regulars_group = Group.objects.get(name="Regular")
             user.groups.add(regulars_group)
 
-            # Authenticate the user by verifying their credentials
+            # Check if a profile already exists for the user
+            profile = Profile.objects.filter(user=user).first()
+            if not profile:
+                profile = Profile.objects.create(user=user)
+
+            profile_form = ProfileUpdateForm(request.POST, request.FILES, instance=profile)
+            profile_form.save()
+
             username = form.cleaned_data['username']
             password = form.cleaned_data['password1']
-            user = authenticate(username=username, password=password)
-
-            # Login the user and display success message
+            user = authenticate(request, username=username, password=password)
             login(request, user)
+
             messages.success(request, f"Welcome, {username} and thank you for signing up! "
                                       "You're now a member of our Dogs Shelter community.")
             return redirect('home')
-
-        # If the form data is invalid, display an error message
-        else:
-            return render(request, 'register.html', {'form': form})
-
-    # If it's a GET request (indicating the user
-    # wants to see the form), create a blank form
     else:
         form = SignUpForm()
-        return render(request, 'register.html', {'form': form})
+        profile_form = ProfileUpdateForm()
+
+    return render(request, 'register.html', {'form': form, 'profile_form': profile_form})
 
 
 # View for adding website news to the homepage
@@ -149,14 +143,19 @@ def delete_dog_view(request, pk):
         # Check if the user has the right permissions
         if not request.user.has_perm('dogs_app.delete_dog'):
             raise PermissionDenied
-        
-        delete_dog = Dog.objects.get(dogID=pk)
-        dog_name = delete_dog.dogName
-        delete_dog.delete()
-        messages.success(request, message=f'{dog_name} Has Been Deleted Successfully...')
-        return redirect('home')
+
+        dog = get_object_or_404(Dog, dogID=pk)
+
+        if request.method == 'POST':
+            dog_name = dog.dogName
+            dog.delete()
+            messages.success(request, f'{dog_name} Has Been Deleted Successfully...')
+            return redirect('home')
+
+        return render(request, 'delete_dog.html', {'dog': dog})
+
     else:
-        messages.error(request, message='You must be logged in to do that...')
+        messages.error(request, 'You must be logged in to do that...')
         return redirect('home')
 
 
@@ -206,7 +205,7 @@ def update_dog_view(request, pk):
             return redirect('home')
         # If request is not POST (i.e., GET), just render the form
         else:
-            return render(request, 'update_dog.html', {'form': form})
+            return render(request, 'update_dog.html', {'form': form, 'current_dogID': current_dog.dogID})
     # User is not logged in, redirect them to login
     else:
         messages.error(request, "You must be logged in to do that...")
@@ -305,8 +304,12 @@ def update_user_view(request, pk):
             messages.success(request, f"{current_user.first_name} {current_user.last_name}'s Details"
                                       f" Have Been Updated Successfully!")
             return redirect('view_users')
-
-        return render(request, 'update_user.html', {'user_form': user_form, 'profile_form': profile_form})
+        context = {
+            'user_form': user_form,
+            'profile_form': profile_form,
+            'profile': current_user.profile
+        }
+        return render(request, 'update_user.html', context=context)
     # User is not logged in, redirect them to login
     else:
         messages.error(request, "You must be logged in to do that...")
@@ -320,21 +323,36 @@ def update_user_self_view(request):
     if request.user.is_authenticated:
         current_user = User.objects.get(pk=request.user.pk)
         initial = {'role': get_user_role(current_user)}
-        # Main User Form
+
         user_form = UpdateUserForm(request.POST or None,
                                    instance=current_user,
                                    initial=initial,
                                    request_user=request.user)
 
         profile, created = Profile.objects.get_or_create(user=current_user)
-        # Addition User Details Form (phone, address, image)
         profile_form = ProfileUpdateForm(request.POST or None,
                                          request.FILES or None,
                                          instance=profile)
         if request.method == 'POST':
             if user_form.is_valid() and profile_form.is_valid():
-                user_form.save()
+                user = user_form.save(commit=False)
+                # Ensure non-admin users can't change their own roles
+                if not request.user.is_superuser and 'role' in user_form.changed_data:
+                    messages.error(request, "You are not allowed to change your role.")
+                    return render(request, 'update_user.html', {
+                        'user_form': user_form,
+                        'profile_form': profile_form
+                    })
+
+                # Check if the delete image button was clicked
+                if 'deleteImage' in request.POST:
+                    if profile.image:  # Only delete the image if one exists
+                        profile.image.delete()  # Deletes the image file
+                        profile.image = None  # Removes the image from the profile
+
                 profile_form.save()
+                user.save()
+
                 messages.success(request, f"Your Details Have Been Updated Successfully!")
                 return redirect('home')
             else:
@@ -345,10 +363,10 @@ def update_user_self_view(request):
         else:
             context = {
                 'user_form': user_form,
-                'profile_form': profile_form
+                'profile_form': profile_form,
+                'profile': profile,
             }
             return render(request, 'update_user.html', context)
-    # User is not logged in, redirect them to login
     else:
         messages.error(request, "You must be logged in to do that...")
         return redirect('home')

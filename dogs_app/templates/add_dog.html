@@ -1,9 +1,14 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block content %}
-    <div class="container mt-5 col-md-10">
-        <div class="card border-primary mb-3 mt-5">
-            <div class="card-header text-center text-white bg-primary">
-                <h1>Add a New Dog</h1>
+<link href="{% static 'dogs_app/css/styles.css' %}" rel="stylesheet">
+
+<div class="container mt-5 text-center">
+    <div class="col-md-8 mx-auto">
+        <div class="card border-primary shadow-lg">
+            <div class="card-header text-white bg-primary">
+                <h2 class="card-title">Add a New Dog</h2>
             </div>
             <div class="card-body">
                 <form method="POST" action="{% url 'add_dog' %}" novalidate>
@@ -19,12 +24,16 @@
                             {% endif %}
                         </div>
                     {% endfor %}
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <div class="add-dog-button mt-4">
                         <button type="submit" class="btn btn-success">Add Dog</button>
+                    </div>
+                    <div class="back-button mt-2">
                         <a href="{% url 'home' %}" class="btn btn-secondary">Back</a>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+</div>
+
 {% endblock %}

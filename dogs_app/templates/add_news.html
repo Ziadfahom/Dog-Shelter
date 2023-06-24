@@ -1,9 +1,14 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block content %}
-    <div class="container mt-5 col-md-10">
-        <div class="card border-primary mb-3 mt-5">
-            <div class="card-header text-center text-white bg-primary">
-                <h2>Add News for the Home Page</h2>
+<link href="{% static 'dogs_app/css/styles.css' %}" rel="stylesheet">
+
+<div class="container mt-5 text-center">
+    <div class="col-md-7 mx-auto">
+        <div class="card border-primary shadow-lg">
+            <div class="card-header text-white bg-primary">
+                <h2 class="card-title">Add News to the Home Page</h2>
             </div>
             <div class="card-body">
                 <form method="POST">
@@ -13,15 +18,19 @@
                         <label for="title">Title</label>
                     </div>
                     <div class="form-floating mb-3">
-                        <textarea id="content" name="content" class="form-control" placeholder="Content" style="height: 100px;"></textarea>
+                        <textarea id="content" name="content" class="form-control" placeholder="Content" style="height: 180px;"></textarea>
                         <label for="content">Content</label>
                     </div>
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <button type="submit" class="btn btn-success me-2">Add News</button>
+                    <div class="add-news-button mt-4">
+                        <button type="submit" class="btn btn-success">Add News</button>
+                    </div>
+                    <div class="back-button mt-2">
                         <a href="{% url 'home' %}" class="btn btn-secondary">Back</a>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+</div>
+
 {% endblock %}
