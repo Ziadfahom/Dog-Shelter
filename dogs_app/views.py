@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate, login, logout, get_user_model
+from django.contrib.auth import authenticate, login, logout, get_user_model, update_session_auth_hash
 from django.contrib.auth.models import User, Group
+from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
@@ -109,6 +110,28 @@ def register_user_view(request):
         profile_form = ProfileUpdateForm()
 
     return render(request, 'register.html', {'form': form, 'profile_form': profile_form})
+
+
+# User password reset view
+def change_password(request):
+    # User trying to submit the form
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        # The details are valid
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Important! Re-logins the user after password change
+            messages.success(request, 'Your password was successfully updated!')
+            return redirect('home')
+        # Issues with the filled details
+        else:
+            messages.error(request, 'Please correct the error below')
+    # User is trying to open the change password page
+    else:
+        form = PasswordChangeForm(request.user)
+    return render(request, 'change_password.html', {
+        'form': form,
+    })
 
 
 # View for adding website news to the homepage

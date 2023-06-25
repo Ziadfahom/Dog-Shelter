@@ -1,3 +1,4 @@
+/* Global */
 .list-group-item {
     display: flex;
     justify-content: space-between;
@@ -10,16 +11,33 @@
     flex-grow: 1;
 }
 
-.card-title {
-    text-align: center;
-}
-
 .prompt {
     font-size: 1.4rem;
     color: #333;
     font-weight: bold;
 }
 
+.form-control,
+.stylish-form-control {
+    border-radius: 0.25rem;
+    border: 1px solid #ced4da;
+    color: #495057;
+    padding: 0.375rem 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    margin-top: 6px;
+    margin-bottom: 16px;
+    resize: vertical;
+}
+
+.small-text {
+    color: #dc3545;  /* Bootstrap's default color for text-danger */
+    margin-top: 2px;
+    font-size: 80%;
+}
+
+/* Buttons */
 .delete-news-button,
 .update-news-button,
 .add-news-button,
@@ -37,91 +55,6 @@
     justify-content: flex-end;
 }
 
-.card-body {
-    padding: 2rem;
-}
-
-.card {
-    border-radius: 15px;
-    overflow: hidden;
-}
-
-.card-header {
-    border-radius: 15px 15px 0 0;
-}
-
-.btn-danger {
-    background-color: #dc3545;
-    border-color: #dc3545;
-}
-
-.btn-danger:hover {
-    background-color: #c82333;
-    border-color: #bd2130;
-}
-
-.btn-secondary {
-    color: #fff;
-    background-color: #6c757d;
-    border-color: #6c757d;
-}
-
-.btn-secondary:hover {
-    color: #fff;
-    background-color: #5a6268;
-    border-color: #545b62;
-}
-
-.btn-primary {
-    color: #fff;
-    background-color: #0d6efd;
-    border-color: #0d6efd;
-}
-
-.btn-primary:hover {
-    color: #fff;
-    background-color: #0b5ed7;
-    border-color: #0a58ca;
-}
-
-.form-control {
-    border-radius: 0.25rem;
-    border: 1px solid #ced4da;
-    color: #495057;
-    padding: 0.375rem 0.75rem;
-}
-
-.alert-warning {
-    color: #856404;
-    background-color: #fff3cd;
-    border-color: #ffeeba;
-}
-
-.stylish-card-header {
-    /* styles for card header */
-    font-size: 1.5em;
-    border-radius: 20px;
-    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
-}
-
-.stylish-card-body {
-    /* styles for card body */
-    padding: 20px;
-    border-radius: 20px;
-    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
-}
-
-.stylish-form-floating {
-    /* styles for form-floating */
-    color: #495057;
-}
-
-.stylish-label {
-    /* styles for label */
-    font-weight: bold;
-    color: #6c757d;
-}
-
 .stylish-button {
     /* styles for the register button */
     border: none;
@@ -137,47 +70,98 @@
     border-radius: 12px;
 }
 
+.button-wrapper {
+    margin-top: 30px;
+}
+
+/* Buttons Color */
+.btn-primary,
+.btn-secondary,
+.btn-danger {
+    color: #fff;
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+.btn-secondary:hover {
+    color: #fff;
+    background-color: #5a6268;
+    border-color: #545b62;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+/* Card */
+.card,
 .stylish-card {
-    /* styles for card */
+    border-radius: 15px;
+    overflow: hidden;
     border-radius: 20px;
     box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
 }
 
+.card-title {
+    text-align: center;
+}
+
+.card-header,
 .stylish-card-header {
-    /* styles for card header */
+    border-radius: 15px 15px 0 0;
     font-size: 1.5em;
     border-radius: 20px;
     box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
 }
 
+.card-body,
 .stylish-card-body {
-    /* styles for card body */
+    padding: 2rem;
     padding: 20px;
     border-radius: 20px;
     box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
 }
 
+/* Forms and Labels */
 .stylish-form {
     /* styles for form */
     padding: 10px;
 }
 
-.stylish-form-control {
-    /* styles for form control */
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
-    margin-top: 6px;
-    margin-bottom: 16px;
-    resize: vertical;
-}
-
-.stylish-label {
+.stylish-label,
+.stylish-form-floating {
     /* styles for label */
     font-weight: bold;
     color: #6c757d;
 }
 
+/* Alerts */
+.alert-warning {
+    color: #856404;
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+}
+
+/* Images */
 .profile-image {
     background-size: cover;
     background-position: center;
@@ -186,6 +170,19 @@
     border-radius: 50%;  /* This makes the picture round */
 }
 
+/* Table */
 th {
     font-size: 0.9em;
+}
+
+/* Input types */
+input[type='password'] {
+    border-radius: 10px;
+    border: 1px solid #ced4da;
+}
+
+input[type='password']:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
 }
