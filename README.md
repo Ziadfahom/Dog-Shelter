@@ -4,7 +4,9 @@
 Installations:
 --------------------
 pip install Django
+
 pip install mysql
+
 pip install mysql-connector-python
 pip install mysql-connector
 pip install django-widget-tweaks
