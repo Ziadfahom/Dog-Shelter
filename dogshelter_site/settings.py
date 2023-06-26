@@ -83,11 +83,11 @@ WSGI_APPLICATION = 'dogshelter_site.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'dogshelterdb',
-        'USER': 'root',
-        'PASSWORD': 'mysql7',
-        'HOST': 'localhost',
-        'PORT': '3306'
+        'NAME': config('DATABASE_NAME'),
+        'USER': config('DATABASE_USER'),
+        'PASSWORD': config('DATABASE_PASSWORD'),
+        'HOST': config('DATABASE_HOST'),
+        'PORT': config('DATABASE_PORT')
     }
 }
 
@@ -138,12 +138,12 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Amazon S3 configurations for cloud storage
+# Amazon S3 configurations for cloud storage (Used post-production only)
 if not DEBUG:
     # AWS S3 settings
     AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
-    AWS_STORAGE_BUCKET_NAME = 'dogshelterlod'
+    AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
     AWS_DEFAULT_ACL = 'public-read'
     AWS_S3_REGION_NAME = 'eu-north-1'
     AWS_S3_FILE_OVERWRITE = False
@@ -160,6 +160,7 @@ else:
     STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 
+# For better looking HTML
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 
