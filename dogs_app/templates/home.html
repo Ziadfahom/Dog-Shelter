@@ -3,6 +3,12 @@
 {% load static %}
 {% block content %}
 
+<style>
+    body {
+      background-image: url('../../media/profile_pictures/cute-dog-tiled-background.jpg');
+    }
+</style>
+<body>
     <div class="container">
 
         {% if user.is_authenticated %}
@@ -233,6 +239,5 @@ $(document).ready(function() {
 });
 </script>
 
-
-
+</body>
 {% endblock %}
