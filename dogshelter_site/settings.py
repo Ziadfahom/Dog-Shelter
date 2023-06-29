@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'storages',         # For the AWS S3 cloud for pictures/videos uploads
     'crispy_forms',     # Better looking forms
     'crispy_bootstrap5',
+    'sorl.thumbnail',   # For dog image thumbnails
 ]
 
 MIDDLEWARE = [
@@ -156,8 +157,6 @@ if not DEBUG:
 else:
     MEDIA_URL = '/media/'
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-    STATIC_URL = '/static/'
-    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 
 # For better looking HTML

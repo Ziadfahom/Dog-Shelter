@@ -105,7 +105,6 @@
                         <th scope="col" class="text-center">Neutered?</th>
                         <th scope="col" class="text-center">Dangerous?</th>
                         <th scope="col" class="text-center">Kong Added</th>
-                        <th scope="col" class="text-center">Image</th>
                         <th scope="col" class="text-center">Owner</th>
                         </tr>
                         </thead>
@@ -115,30 +114,70 @@
                         {% if dogs %}
 
                             {% for dog in dogs %}
-                                <tr class="stylish-row">
-                                    <td class="text-center">
-                                        <a href="{% url 'dog_record' dog.dogID %}">
-                                            {{ dog.dogName|handle_none }}
-                                        </a>
-                                    </td>
+                                <!--For each dog, a table row is created with a clickable link and row.
+                                 Hovering shows a pointer cursor.-->
+                                <tr class="stylish-row" data-href="{% url 'dog_record' dog.dogID %}" style="cursor: pointer;">
+<td class="text-center">
+<a href="{% url 'dog_record' dog.dogID %}" style="cursor: default"
+   data-bs-toggle="tooltip" data-bs-html="true"
+   title="{% if dog.thumbnail and dog.thumbnail.url %}<img src='{{ dog.thumbnail.url }}' style='max-width: 200px;'>{% endif %}">
+    {{ dog.dogName|handle_none }}
+</a>
+</td>
+
+
+
                                     <td class="text-center">{{ dog.dateOfArrival|handle_none }}</td>
-                                    <td class="text-center">{{ dog.gender|gender_filter }}</td>
+                                    <td class="text-center">
+                                        {% if dog.gender == "M" %}
+                                            Male (⚦)
+                                        {% elif dog.gender == "F" %}
+                                            Female (⚥)
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
                                     <td class="text-center">{{ dog.breed|handle_none }}</td>
                                     <td class="text-center">{{ dog.furColor|handle_none }}</td>
                                     <td class="text-center">{{ dog.dateOfBirthEst|calculate_age }}</td>
                                     <td class="text-center">{{ dog.dateOfVaccination|handle_none }}</td>
-                                    <td class="text-center">{{ dog.isNeutered|yes_no_filter }}</td>
-                                    <td class="text-center">{{ dog.isDangerous|yes_no_filter }}</td>
-                                    <td class="text-center">{{ dog.kongDateAdded|handle_none }}</td>
                                     <td class="text-center">
-                                        {% if dog.dogImageURL %}
-                                            <a href="{{ dog.dogImageURL }}">Link</a>
-                                        {% else %}
-                                            <!-- keep it empty -->
-                                        {% endif %}
+                                        <div class="form-check d-flex justify-content-center">
+                                            <input class="form-check-input" type="checkbox" style="transform: scale(1.5);" {% if dog.isNeutered == "Y" %}checked{% endif %} disabled>
+                                        </div>
                                     </td>
+                                    <td class="text-center">
+                                        <div class="form-check d-flex justify-content-center">
+                                            <input class="form-check-input" type="checkbox" style="transform: scale(1.5);" {% if dog.isDangerous == "Y" %}checked{% endif %} disabled>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">{{ dog.kongDateAdded|handle_none }}</td>
                                     <td class="text-center">{{ dog.ownerSerialNum|handle_none }}</td>
                                 </tr>
+
+                                <!--Creates a hidden, unique Bootstrap modal for each dog.
+                                Displays upon clicking dog's name. -->
+                                <div class="modal fade" id="dogModal{{ dog.dogID }}" tabindex="-1"
+                                     aria-labelledby="dogModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-header text-center">
+                                                <h5 class="modal-title"
+                                                    id="dogModalLabel">{{ dog.dogName|handle_none }}</h5>
+                                                <button type="button" class="btn-close"
+                                                        data-bs-dismiss="modal" aria-label="Close">
+
+                                                </button>
+                                            </div>
+                                            <div class="modal-body">
+                                                {% if dog.dogImageURL %}
+                                                    <img src="{{ dog.dogImageURL }}"
+                                                         class="img-fluid rounded mx-auto d-block" style="max-width:100%; max-height:400px;">
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             {% endfor %}
 
                         {% endif %}
@@ -180,5 +219,20 @@
                 </div>
             </div>
         {% endif %}
+    </div>
+
+<script>
+$(document).ready(function() {
+    $(".img-popover").popover({
+        trigger : 'hover'
+    });
+});
+
+$(document).ready(function() {
+    $('[data-bs-toggle="tooltip"]').tooltip();
+});
+</script>
+
+
 
 {% endblock %}

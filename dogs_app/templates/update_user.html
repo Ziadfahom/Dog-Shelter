@@ -19,7 +19,6 @@
                     <!-- Current profile picture and controls -->
                     <div class="mb-3 text-center">
                         <label class="form-label"></label>
-          <!--Might wanna recheck -->
                         {% if user.profile.image and not user.profile.is_default_image %}
                             <img id="profile_picture" src="{{ profile.image.url }}" alt="Image not available" style="max-width: 200px;">
                         {% else %}

@@ -117,11 +117,10 @@ class AddDogForm(forms.ModelForm):
                                     widget=forms.widgets.Select(attrs={"placeholder": "Dangerous?",
                                                                        "class": "form-control"}),
                                     label="Dangerous?")
-    dogImageURL = forms.URLField(required=False,
-                                 max_length=200,
-                                 widget=forms.widgets.URLInput(attrs={"placeholder": "Dog Image Link",
-                                                                      "class": "form-control"}),
-                                 label="Dog Image Link")
+    dogImage = forms.ImageField(required=False,
+                                widget=forms.widgets.ClearableFileInput(attrs={"class": "form-control"}),
+                                label="Dog Image",
+                                help_text="Upload the dog's image here.")
     kongDateAdded = forms.DateField(required=False,
                                     widget=forms.widgets.DateInput(format='%Y-%m-%d',
                                                                    attrs={"type": "date",

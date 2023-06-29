@@ -7,15 +7,25 @@ from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from .forms import SignUpForm, AddDogForm, UpdateUserForm, ProfileUpdateForm
 from .models import Dog, News, Profile
+from sorl.thumbnail import get_thumbnail
+
 
 # Location of the default User profile picture if they don't have a picture
 DEFAULT_IMAGE_SOURCE = '/profile_pictures/default.jpg'
+
 
 # Main Page view for displaying either dog records if  user is logged in,
 # or a login page if user is logged out
 def home_view(request):
     # Get all the dog records in the database
     all_dogs = Dog.objects.all().order_by('-dateOfArrival')
+
+    # Fix dogs with null/empty image fields to instead have Default_dog.jpg as image
+    for dog in all_dogs:
+        if not dog.dogImage:  # if dogImage field is empty
+            dog.thumbnail = 'dog_pictures/default_dog.jpg'
+        else:
+            dog.thumbnail = get_thumbnail(dog.dogImage, '50x50', crop='center', quality=99)
 
     # Get the total number of dogs
     total_dogs = Dog.objects.count()
@@ -194,7 +204,7 @@ def add_dog_view(request):
         # If form is submitted (i.e., User has filled the form)
         if request.method == 'POST':
             # Initialize the form
-            form = AddDogForm(request.POST)
+            form = AddDogForm(request.POST, request.FILES)
             # Validate the form inputs
             if form.is_valid():
                 # Save new dog details to database + display success message
@@ -214,6 +224,7 @@ def add_dog_view(request):
         return redirect('home')
 
 
+# Updating a Dog record
 def update_dog_view(request, pk):
     # Check if user is logged in
     if request.user.is_authenticated:
@@ -224,12 +235,16 @@ def update_dog_view(request, pk):
         # Grab the Dog record
         current_dog = Dog.objects.get(dogID=pk)
         form = AddDogForm(request.POST or None, instance=current_dog)
+        # Check if form is submitted
         if form.is_valid():
-            form.save()
-            messages.success(request, f"{current_dog.dogName}'s Details Have Been Updated Successfully!")
-            return redirect('home')
+            form = AddDogForm(request.POST, request.FILES, instance=current_dog)
+            if form.is_valid():
+                form.save()
+                messages.success(request, f"{current_dog.dogName}'s Details Have Been Updated Successfully!")
+                return redirect('home')
         # If request is not POST (i.e., GET), just render the form
         else:
+            form = AddDogForm(instance=current_dog)
             return render(request, 'update_dog.html', {'form': form, 'current_dogID': current_dog.dogID})
     # User is not logged in, redirect them to login
     else:

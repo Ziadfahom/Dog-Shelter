@@ -3,10 +3,16 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import User
+from imagekit.models import ImageSpecField
+from imagekit.processors import ResizeToFill
 
-# Location of the default User profile picture if they don't have a picture
-DEFAULT_IMAGE_SOURCE = '/profile_pictures/default.jpg'
-ALTERNATIVE_DEFAULT_IMAGE_SOURCE = '/static/dogs_app/img/default.jpg'
+# Location of the default User profile picture if they don't have one
+DEFAULT_PROFILE_IMAGE_SOURCE = '/profile_pictures/default.jpg'
+ALTERNATIVE_DEFAULT_PROFILE_IMAGE_SOURCE = '/static/dogs_app/img/default.jpg'
+
+# Location of the default Dog pictures if they don't have one
+DEFAULT_DOG_IMAGE_SOURCE = '/dog_pictures/default_dog.jpg'
+ALTERNATIVE_DEFAULT_DOG_IMAGE_SOURCE = 'static/dogs_app/img/default_dog.jpg'
 
 
 # Adding more attributes to the User model
@@ -15,7 +21,7 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     phone_number = models.CharField(max_length=15, blank=True, null=True)
     address = models.CharField(max_length=255, blank=True, null=True)
-    image = models.ImageField(upload_to='profile_pictures', default=DEFAULT_IMAGE_SOURCE)
+    image = models.ImageField(upload_to='profile_pictures', default=DEFAULT_PROFILE_IMAGE_SOURCE)
 
     def __str__(self):
         return f'{self.user.username} Profile'
@@ -24,7 +30,7 @@ class Profile(models.Model):
     def is_default_image(self):
         if self.image is None:
             return True
-        return self.image.name in [DEFAULT_IMAGE_SOURCE, ALTERNATIVE_DEFAULT_IMAGE_SOURCE]
+        return self.image.name in [DEFAULT_PROFILE_IMAGE_SOURCE, ALTERNATIVE_DEFAULT_PROFILE_IMAGE_SOURCE]
 
 
 class Owner(models.Model):
@@ -87,9 +93,21 @@ class Dog(models.Model):
     furColor = models.CharField(max_length=20, blank=True, null=True)
     isNeutered = models.CharField(max_length=1, choices=IS_NEUTERED_CHOICES, blank=True, null=True)
     isDangerous = models.CharField(max_length=1, choices=IS_DANGEROUS_CHOICES, blank=True, null=True)
-    dogImageURL = models.URLField(max_length=200, blank=True, null=True)
+    dogImage = models.ImageField(upload_to='dog_pictures', default=DEFAULT_DOG_IMAGE_SOURCE, null=True, blank=True)
     kongDateAdded = models.DateField(blank=True, null=True)
     ownerSerialNum = models.ForeignKey(Owner, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Owner')
+
+    # For a smaller-sized version of the dog's image
+    thumbnail = ImageSpecField(source='dogImage',
+                               processors=[ResizeToFill(200, 200)],
+                               format='JPEG',
+                               options={'quality': 60})
+
+    # Returns True if the Dog's profile picture is the default.jpg
+    def is_default_image(self):
+        if self.dogImage is None:
+            return True
+        return self.dogImage.name in [DEFAULT_DOG_IMAGE_SOURCE, ALTERNATIVE_DEFAULT_DOG_IMAGE_SOURCE]
 
     def __str__(self):
         if self.breed is None:

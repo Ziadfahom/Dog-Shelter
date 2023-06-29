@@ -10,10 +10,35 @@
         <div class="card-header bg-primary text-white text-center stylish-card-header">
             <h1 class="">Update Dog Details</h1>
         </div>
-        <br>
         <div class="card-body stylish-card-body">
-            <form method="POST" class="form stylish-form" novalidate>
+            <form method="POST" class="form stylish-form" enctype="multipart/form-data">
                 {% csrf_token %}
+
+                <!-- Dog Image Display -->
+<div class="mb-3 text-center">
+    <label class="form-label"></label>
+    {% if form.instance.dogImage %}
+        <img id="dog_picture" src="{{ form.instance.dogImage.url }}" alt="Dog Image" style="max-width: 400px;">
+    {% else %}
+        <img id="dog_picture" src="/media/dog_pictures/default_dog.jpg" alt="Default Dog Image" style="max-width: 400px;">
+    {% endif %}
+    <p id="image_change_alert" style="display: none;" class="alert alert-warning mt-3">
+        Click the "Update Details" button at the bottom to save this new dog picture, or "Back" to cancel changes.
+    </p>
+
+    <div class="d-flex justify-content-center align-items-center mt-2">
+        {% if form.instance.dogImage %}
+            <button type="submit" class="btn btn-danger me-2" name="deleteImage"
+                    onclick="return confirm('Are you sure you want to permanently delete this dog picture?')">Remove Picture</button>
+        {% endif %}
+        <div style="display: none;">
+            {{ form.dogImage|add_class:"form-control" }}
+        </div>
+        <button type="button" id="customUploadButton" class="btn btn-primary">Edit Picture</button>
+    </div>
+</div>
+<!-- End of Dog Image Display -->
+
 
                 {% for field in form %}
                     {% if not field.name == "dogID" %}
@@ -41,5 +66,28 @@
         </div>
     </div>
 </div>
+
+    <!-- Dog Image Edit Javascript -->
+    <script>
+        document.getElementById('customUploadButton').addEventListener('click', function() {
+            document.getElementById('id_dogImage').click();
+        });
+
+        document.getElementById('id_dogImage').addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            var reader = new FileReader();
+
+            reader.onloadend = function() {
+                document.getElementById('dog_picture').src = reader.result;
+                document.getElementById('image_change_alert').style.display = 'block';  // Show the alert
+            }
+
+            if (file) {
+                reader.readAsDataURL(file);
+            } else {
+                document.getElementById('dog_picture').src = "/media/dog_pictures/default_dog.jpg";
+            }
+        });
+    </script>
 
 {% endblock %}
