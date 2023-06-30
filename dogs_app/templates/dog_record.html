@@ -2,127 +2,179 @@
 {% load group_check %}
 {% load dog_filters %}
 {% load static %}
+
 {% block content %}
+    <link href="{% static 'dogs_app/css/styles.css' %}" rel="stylesheet">
 
-<link href="{% static 'dogs_app/css/styles.css' %}" rel="stylesheet">
+    <style>
+        .modal-body {
+            display: flex;
+            justify-content: center;  /* align horizontally center in the div */
+            align-items: center;      /* align vertically center in the div */
+        }
+        .close-button-position {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+        }
+    </style>
 
-<div class="container mt-5 text-center">
-    <div class="col-md-9 mx-auto">
-        <div class="card border-secondary shadow-lg">
-            <div class="card-header bg-dark text-white">
-                <h2 class="card-title">{{ dog_record }}</h2>
-            </div>
-            <div class="card-header">
-                <img src="{{ dog_record.dogImageURL }}" class="card-img-top" alt="Image not available" style="width: 25rem; height: 20rem; object-fit: cover;">
-            </div>
-            <div class="card-body">
-                <ul class="list-group list-group-flush">
+    <div class="container mt-5 text-center">
+        <div class="col-md-9 mx-auto">
+            <div class="card border-secondary shadow-lg">
+                <div class="card-header bg-dark text-white">
+                    <h2 class="card-title">{{ dog_record }}</h2>
+                </div>
+                <div class="card-header">
+                    {% if dog_record.dogImage %}
+                        <img id="dog_picture" data-bs-toggle="modal" data-bs-target="#imageModal" src="{{ dog_record.dogImage.url }}" class="card-img-top" alt="Dog Image" style="width: 25rem; height: 20rem; object-fit: cover; cursor: pointer;">
+                    {% else %}
+                        <img id="dog_picture" data-bs-toggle="modal" data-bs-target="#imageModal" src="{% static 'dogs_app/img/default_dog.jpg' %}" class="card-img-top" alt="Default Dog Image" style="width: 25rem; height: 20rem; object-fit: cover;">
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
 
-                    <li class="list-group-item">
-                        <div class="text-start-strong">
-                        <strong>Dog Name: </strong> <span>{{ dog_record.dogName|handle_none }}</span>
+                        <li class="list-group-item">
+                            <div class="text-start-strong">
+                            <strong>Dog Name: </strong> <span>{{ dog_record.dogName|handle_none }}</span>
+                            </div>
+                        </li>
+
+                        <li class="list-group-item">
+                            <div class="text-start-strong">
+                            <strong>Date of Arrival: </strong><span>{{ dog_record.dateOfArrival|handle_none }}</span>
+                            </div>
+                        </li>
+
+                        <li class="list-group-item">
+                            <div class="text-start-strong">
+                            <strong>Chip Number: </strong><span>{{ dog_record.chipNum|handle_none }}</span>
+                            </div>
+                        </li>
+
+                        <li class="list-group-item">
+                            <div class="text-start-strong">
+                            <strong>Gender: </strong><span>{{ dog_record.gender|gender_filter }}</span>
+                            </div>
+                        </li>
+
+                        <li class="list-group-item">
+                            <div class="text-start-strong">
+                            <strong>Breed: </strong><span>{{ dog_record.breed|handle_none }}</span>
+                            </div>
+                        </li>
+
+                        <li class="list-group-item">
+                            <div class="text-start-strong">
+                            <strong>Fur Color: </strong><span>{{ dog_record.furColor|handle_none }}</span>
+                            </div>
+                        </li>
+
+                        <li class="list-group-item">
+                            <div class="text-start-strong">
+                            <strong>Estimated Date of Birth: </strong><span>{{ dog_record.dateOfBirthEst|handle_none }}</span>
+                            </div>
+                        </li>
+
+                        <li class="list-group-item">
+                            <div class="text-start-strong">
+                            <strong>Estimated Age (Years): </strong><span>{{ dog_record.dateOfBirthEst|calculate_age }} </span>
+                            </div>
+                        </li>
+
+                        <li class="list-group-item">
+                            <div class="text-start-strong">
+                            <strong>Date of Vaccination: </strong><span>{{ dog_record.dateOfVaccination|handle_none }}</span>
+                            </div>
+                        </li>
+
+                        <li class="list-group-item">
+                            <div class="text-start-strong">
+                            <strong>Neutered?: </strong><span>{{ dog_record.isNeutered|yes_no_filter }}</span>
+                            </div>
+                        </li>
+
+                        <li class="list-group-item">
+                            <div class="text-start-strong">
+                            <strong>Dangerous?: </strong><span>{{ dog_record.isDangerous|yes_no_filter }}</span>
+                            </div>
+                        </li>
+
+                        <li class="list-group-item">
+                            <div class="text-start-strong">
+                            <strong>Date Given Last Kong Toy: </strong><span>{{ dog_record.kongDateAdded|handle_none }}</span>
+                            </div>
+                        </li>
+
+                        <li class="list-group-item">
+                            <div class="text-start-strong">
+                            <strong>Full Image: </strong>
+                            <span>
+                                {% if dog_record.dogImageURL %}
+                                <a href="{{ dog_record.dogImageURL }}">Link</a><br>
+                                {% else %}
+                                <!-- keep it empty --><br>
+                                {% endif %}
+                            </span>
+                            </div>
+                        </li>
+
+                        <li class="list-group-item">
+                            <div class="text-start-strong">
+                            <strong>Owner: </strong><span>{{ dog_record.ownerSerialNum|handle_none }}</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-transparent">
+                    {% if user.is_authenticated and user|has_group:"Vet" %}
+                        <div class="add-dog-button mt-4 action-buttons">
+                            <a href="{% url 'update_dog' dog_record.dogID %}" class="btn btn-success me-2">Update</a>
+                            <a href="{% url 'delete_dog' dog_record.dogID %}" class="btn btn-danger">Delete</a>
                         </div>
-                    </li>
-
-                    <li class="list-group-item">
-                        <div class="text-start-strong">
-                        <strong>Date of Arrival: </strong><span>{{ dog_record.dateOfArrival|handle_none }}</span>
-                        </div>
-                    </li>
-
-                    <li class="list-group-item">
-                        <div class="text-start-strong">
-                        <strong>Chip Number: </strong><span>{{ dog_record.chipNum|handle_none }}</span>
-                        </div>
-                    </li>
-
-                    <li class="list-group-item">
-                        <div class="text-start-strong">
-                        <strong>Gender: </strong><span>{{ dog_record.gender|gender_filter }}</span>
-                        </div>
-                    </li>
-
-                    <li class="list-group-item">
-                        <div class="text-start-strong">
-                        <strong>Breed: </strong><span>{{ dog_record.breed|handle_none }}</span>
-                        </div>
-                    </li>
-
-                    <li class="list-group-item">
-                        <div class="text-start-strong">
-                        <strong>Fur Color: </strong><span>{{ dog_record.furColor|handle_none }}</span>
-                        </div>
-                    </li>
-
-                    <li class="list-group-item">
-                        <div class="text-start-strong">
-                        <strong>Estimated Date of Birth: </strong><span>{{ dog_record.dateOfBirthEst|handle_none }}</span>
-                        </div>
-                    </li>
-
-                    <li class="list-group-item">
-                        <div class="text-start-strong">
-                        <strong>Estimated Age (Years): </strong><span>{{ dog_record.dateOfBirthEst|calculate_age }} </span>
-                        </div>
-                    </li>
-
-                    <li class="list-group-item">
-                        <div class="text-start-strong">
-                        <strong>Date of Vaccination: </strong><span>{{ dog_record.dateOfVaccination|handle_none }}</span>
-                        </div>
-                    </li>
-
-                    <li class="list-group-item">
-                        <div class="text-start-strong">
-                        <strong>Neutered?: </strong><span>{{ dog_record.isNeutered|yes_no_filter }}</span>
-                        </div>
-                    </li>
-
-                    <li class="list-group-item">
-                        <div class="text-start-strong">
-                        <strong>Dangerous?: </strong><span>{{ dog_record.isDangerous|yes_no_filter }}</span>
-                        </div>
-                    </li>
-
-                    <li class="list-group-item">
-                        <div class="text-start-strong">
-                        <strong>Date Given Last Kong Toy: </strong><span>{{ dog_record.kongDateAdded|handle_none }}</span>
-                        </div>
-                    </li>
-
-                    <li class="list-group-item">
-                        <div class="text-start-strong">
-                        <strong>Full Image: </strong>
-                        <span>
-                            {% if dog_record.dogImageURL %}
-                            <a href="{{ dog_record.dogImageURL }}">Link</a><br>
-                            {% else %}
-                            <!-- keep it empty --><br>
-                            {% endif %}
-                        </span>
-                        </div>
-                    </li>
-
-                    <li class="list-group-item">
-                        <div class="text-start-strong">
-                        <strong>Owner: </strong><span>{{ dog_record.ownerSerialNum|handle_none }}</span>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-            <div class="card-footer bg-transparent">
-                {% if user.is_authenticated and user|has_group:"Vet" %}
-                    <div class="add-dog-button mt-4 action-buttons">
-                        <a href="{% url 'update_dog' dog_record.dogID %}" class="btn btn-success me-2">Update</a>
-                        <a href="{% url 'delete_dog' dog_record.dogID %}" class="btn btn-danger">Delete</a>
+                    {% endif %}
+                    <div class="back-button mt-2">
+                        <a href="{% url 'home' %}" class="btn btn-secondary">Back</a>
                     </div>
-                {% endif %}
-                <div class="back-button mt-2">
-                    <a href="{% url 'home' %}" class="btn btn-secondary">Back</a>
                 </div>
             </div>
         </div>
     </div>
-</div>
+
+    <!-- Image Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 id="dogName" class="modal-title text-center w-100"></h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <img id="fullImage" src="" alt="Full-sized Dog Image" style="width: 100%; height: 100%; object-fit: contain;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function(){
+            $('#imageModal').on('show.bs.modal', function (event) {
+                var imgElement = document.querySelector('#dog_picture');
+                var fullImageElement = document.querySelector('#fullImage');
+                fullImageElement.setAttribute('src', imgElement.getAttribute('src'));
+            });
+        });
+
+        $(document).ready(function(){
+            $('#imageModal').on('show.bs.modal', function (event) {
+                var imgElement = document.querySelector('#dog_picture');
+                var fullImageElement = document.querySelector('#fullImage');
+                var dogNameElement = document.querySelector('#dogName');
+                fullImageElement.setAttribute('src', imgElement.getAttribute('src'));
+                dogNameElement.textContent = '{{ dog_record.dogName }}';
+            });
+        });
+    </script>
 
 {% endblock %}

@@ -163,3 +163,5 @@ else:
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 
+# Useful in development to catch any issues with thumbnail generation.
+THUMBNAIL_DEBUG = True

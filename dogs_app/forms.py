@@ -137,6 +137,14 @@ class AddDogForm(forms.ModelForm):
         model = Dog
         fields = '__all__'
 
+    def __init__(self, *args, **kwargs):
+        super(AddDogForm, self).__init__(*args, **kwargs)
+        # Add a 'date-field' CSS class to date fields for easy targeting in JavaScript
+        self.fields['dateOfArrival'].widget.attrs.update({'class': 'date-field'})
+        self.fields['dateOfBirthEst'].widget.attrs.update({'class': 'date-field'})
+        self.fields['dateOfVaccination'].widget.attrs.update({'class': 'date-field'})
+        self.fields['kongDateAdded'].widget.attrs.update({'class': 'date-field'})
+
     def clean_dateOfBirthEst(self):
         dob = self.cleaned_data.get('dateOfBirthEst')
         if dob and dob > date.today():

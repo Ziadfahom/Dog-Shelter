@@ -3,15 +3,14 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import User
-from imagekit.models import ImageSpecField
-from imagekit.processors import ResizeToFill
+from sorl.thumbnail import get_thumbnail
 
 # Location of the default User profile picture if they don't have one
-DEFAULT_PROFILE_IMAGE_SOURCE = '/profile_pictures/default.jpg'
-ALTERNATIVE_DEFAULT_PROFILE_IMAGE_SOURCE = '/static/dogs_app/img/default.jpg'
+DEFAULT_PROFILE_IMAGE_SOURCE = 'profile_pictures/default.jpg'
+ALTERNATIVE_DEFAULT_PROFILE_IMAGE_SOURCE = 'static/dogs_app/img/default.jpg'
 
 # Location of the default Dog pictures if they don't have one
-DEFAULT_DOG_IMAGE_SOURCE = '/dog_pictures/default_dog.jpg'
+DEFAULT_DOG_IMAGE_SOURCE = 'dog_pictures/default_dog.jpg'
 ALTERNATIVE_DEFAULT_DOG_IMAGE_SOURCE = 'static/dogs_app/img/default_dog.jpg'
 
 
@@ -97,20 +96,14 @@ class Dog(models.Model):
     kongDateAdded = models.DateField(blank=True, null=True)
     ownerSerialNum = models.ForeignKey(Owner, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Owner')
 
-    # For a smaller-sized version of the dog's image
-    thumbnail = ImageSpecField(source='dogImage',
-                               processors=[ResizeToFill(200, 200)],
-                               format='JPEG',
-                               options={'quality': 60})
-
     # Returns True if the Dog's profile picture is the default.jpg
     def is_default_image(self):
-        if self.dogImage is None:
+        if not self.dogImage or self.dogImage.name == "":
             return True
-        return self.dogImage.name in [DEFAULT_DOG_IMAGE_SOURCE, ALTERNATIVE_DEFAULT_DOG_IMAGE_SOURCE]
+        return self.dogImage.name.startswith('default_dog')
 
     def __str__(self):
-        if self.breed is None:
+        if self.breed is None or self.breed == "":
             return f"{self.dogName}"
         else:
             return f"{self.dogName} the {self.breed}"
@@ -121,6 +114,11 @@ class Dog(models.Model):
 
     def save(self, *args, **kwargs):
         self.full_clean()
+
+        # Check if dogImage is being deleted (i.e., set to None)
+        if not self.dogImage:
+            self.dogImage = DEFAULT_DOG_IMAGE_SOURCE
+
         super().save(*args, **kwargs)
 
 

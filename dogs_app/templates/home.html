@@ -1,17 +1,34 @@
 {% extends 'base.html' %}
 {% load dog_filters %}
 {% load static %}
-{% block content %}
 
+{% block content %}
 <style>
-    body {
-      background-image: url('../../media/profile_pictures/cute-dog-tiled-background.jpg');
+    .tooltip-inner {
+        border: 1px solid black; /* Add a black border around the tooltip */
+        background-color: rgba(0, 0, 0, 0.1); /* Add a semi-transparent black background */
+        padding: 10px; /* Add some space between the image and the border */
+        max-width: 220px; /* Adjust as per your image size and padding */
+    }
+    .tooltip-inner img {
+        width: 200px; /* You can change it according to your image's width */
+        height: 200px; /* You can change it according to your image's height */
+    }
+    .bs-tooltip-auto[x-placement^=bottom] .arrow::before, .bs-tooltip-bottom .arrow::before {
+        border-bottom-color: rgba(0, 0, 0, 0.1);
     }
 </style>
-<body>
+
+
+
+
+    <!-- Container for all content -->
     <div class="container">
 
+        <!-- Check if the user is authenticated -->
         {% if user.is_authenticated %}
+
+            <!-- Welcome message -->
             <div class="card border-dark mb-3 text-center">
                 <div class="card-header text-white bg-dark">
                     <h2>Welcome to the Dogs Shelter system, {{ user.username }}!</h2>
@@ -61,7 +78,7 @@
                         </ul>
                     </div>
                 </div>
-                <!-- Other sections go here -->
+
                 <div class="col-md-8">
                     <!-- User Profile -->
                     <div class="card border-primary mb-3 mt-4 text-center">
@@ -90,9 +107,9 @@
                         </div>
                     </div>
                 </div>
-
             </div>
 
+            <!-- Dogs table -->
             <div class="row justify-content-center">
                 <div class="table-responsive mt-4 stylish-table">
                     <table class="table table-striped table-hover">
@@ -117,21 +134,20 @@
 
                         <tbody class="small stylish-tbody">
 
+                        <!-- Check if there are any dogs -->
                         {% if dogs %}
 
+                            <!-- Iterate over each dog -->
                             {% for dog in dogs %}
-                                <!--For each dog, a table row is created with a clickable link and row.
-                                 Hovering shows a pointer cursor.-->
-                                <tr class="stylish-row" data-href="{% url 'dog_record' dog.dogID %}" style="cursor: pointer;">
-<td class="text-center">
-<a href="{% url 'dog_record' dog.dogID %}" style="cursor: default"
-   data-bs-toggle="tooltip" data-bs-html="true"
-   title="{% if dog.thumbnail and dog.thumbnail.url %}<img src='{{ dog.thumbnail.url }}' style='max-width: 200px;'>{% endif %}">
-    {{ dog.dogName|handle_none }}
-</a>
-</td>
-
-
+                                <!--For each dog, a table row is created.
+                                The row is clickable (redirects to the dog's record page), and hovering over it
+                                 shows a pointer cursor and displays a tooltip with the dog's thumbnail.-->
+                                <tr class="dog-row"
+    data-href="{% url 'dog_record' dog.dogID %}"
+    style="cursor: pointer;"
+    data-bs-toggle="tooltip" data-bs-html="true"
+    title="{% if dog.dogImage %}<img src='{{ dog.dogImage.url }}' alt='Thumbnail of {{ dog.dogName }}' style='max-width: 200px;'>{% else %}<img src='{% static 'dogs_app/img/default_dog.jpg' %}' alt='Default dog thumbnail'>{% endif %}">
+    <td class="text-center">{{ dog.dogName|handle_none }}</td>
 
                                     <td class="text-center">{{ dog.dateOfArrival|handle_none }}</td>
                                     <td class="text-center">
@@ -161,38 +177,14 @@
                                     <td class="text-center">{{ dog.ownerSerialNum|handle_none }}</td>
                                 </tr>
 
-                                <!--Creates a hidden, unique Bootstrap modal for each dog.
-                                Displays upon clicking dog's name. -->
-                                <div class="modal fade" id="dogModal{{ dog.dogID }}" tabindex="-1"
-                                     aria-labelledby="dogModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog modal-dialog-centered">
-                                        <div class="modal-content">
-                                            <div class="modal-header text-center">
-                                                <h5 class="modal-title"
-                                                    id="dogModalLabel">{{ dog.dogName|handle_none }}</h5>
-                                                <button type="button" class="btn-close"
-                                                        data-bs-dismiss="modal" aria-label="Close">
-
-                                                </button>
-                                            </div>
-                                            <div class="modal-body">
-                                                {% if dog.dogImageURL %}
-                                                    <img src="{{ dog.dogImageURL }}"
-                                                         class="img-fluid rounded mx-auto d-block" style="max-width:100%; max-height:400px;">
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                             {% endfor %}
-
                         {% endif %}
-
                         </tbody>
                     </table>
                 </div>
             </div>
 
+        <!-- If the user is not authenticated, show a login form -->
         {% else %}
             <div class="container">
                 <div class="row justify-content-center">
@@ -227,17 +219,42 @@
         {% endif %}
     </div>
 
-<script>
-$(document).ready(function() {
-    $(".img-popover").popover({
-        trigger : 'hover'
-    });
-});
+    <script>
+        // This script is run when the document is fully loaded.
+        $(document).ready(function() {
+            // Initialize tooltips with a custom configuration.
+            // The tooltip trigger is set to 'hover', so the tooltip will be shown when the mouse hovers over the element.
+            // The tooltip boundary is set to 'window', so the tooltip will not overflow the window.
+            // The tooltip's HTML is enabled, so you can use HTML tags in the tooltip.
+            // The tooltip animation is disabled for performance reasons.
+            // The tooltip is added to the 'body' container to ensure that it is not confined by the layout of the page.
+            // The placement function is used to determine the position of the tooltip based on the position of the mouse.
+            $('[data-bs-toggle="tooltip"]').tooltip({
+                trigger: 'hover',
+                boundary: 'window',
+                html: true,
+                animation: false,
+                container: 'body',
+                placement: function(context, source){
+                    var position = $(source).offset();
+                    if (position.left < 515){
+                        return "right";
+                    }
+                    if (position.left > 515){
+                        return "left";
+                    }
+                    if (position.top < 110){
+                        return "bottom";
+                    }
+                    return "top";
+                }
+            });
 
-$(document).ready(function() {
-    $('[data-bs-toggle="tooltip"]').tooltip();
-});
-</script>
+            // When a row with the class 'dog-row' is clicked, the user is redirected to the URL specified in the 'data-href' attribute of the row.
+            $(".dog-row").click(function() {
+                window.location = $(this).data("href");
+            });
+        });
+    </script>
 
-</body>
 {% endblock %}
