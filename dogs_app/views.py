@@ -5,11 +5,11 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
+from django.http import HttpResponseRedirect
 from .forms import SignUpForm, AddDogForm, UpdateUserForm, ProfileUpdateForm
 from .models import Dog, News, Profile
 from django.conf import settings
 import os
-from sorl.thumbnail import delete
 
 
 # Location of the default User profile picture if they don't have a picture
@@ -241,14 +241,14 @@ def update_dog_view(request, pk):
             current_dog.dogImage = None
             current_dog.save()
             messages.success(request, f"{current_dog.dogName}'s Picture Has Been Removed Successfully!")
-            return redirect('dog_record', pk=current_dog.dogID)
+            # Refresh the current page
+            return HttpResponseRedirect(request.path_info)
 
         # Check if form is submitted
         if form.is_valid():
             form.save()
             messages.success(request, f"{current_dog.dogName}'s Details Have Been Updated Successfully!")
-            return redirect('home')
-
+            return redirect('dog_record', pk=current_dog.dogID)
         return render(request, 'update_dog.html', {'form': form, 'current_dogID': current_dog.dogID})
 
     # User is not logged in, redirect them to login
@@ -318,17 +318,29 @@ def delete_user_view(request, pk):
 def update_user_view(request, pk):
     # Check if user is logged in
     if request.user.is_authenticated:
-        current_user = User.objects.get(pk=pk)
-        initial = {'role': get_user_role(current_user)}
+        user_to_update = User.objects.get(pk=pk)
+        initial = {'role': get_user_role(user_to_update)}
         # Main User Form
         user_form = UpdateUserForm(request.POST or None,
-                                   instance=current_user,
+                                   instance=user_to_update,
                                    initial=initial,
                                    request_user=request.user)
         # Addition User Details Form (phone, address, image)
         profile_form = ProfileUpdateForm(request.POST or None,
                                          request.FILES or None,
-                                         instance=current_user.profile)
+                                         instance=user_to_update.profile)
+
+        # Check if the "deleteImage" button was clicked
+        if 'deleteImage' in request.POST:
+            # Delete the user's profile image if it is not the default image
+            if user_to_update.profile.image and 'default.jpg' not in user_to_update.profile.image.name:
+                os.remove(os.path.join(settings.MEDIA_ROOT, user_to_update.profile.image.name))
+
+            user_to_update.profile.image = DEFAULT_IMAGE_SOURCE
+            user_to_update.profile.save()
+            messages.success(request, f"{user_to_update.first_name} {user_to_update.last_name}'s Picture Has Been Removed Successfully!")
+            # Refresh the current page
+            return HttpResponseRedirect(request.path_info)
 
         if user_form.is_valid() and profile_form.is_valid():
             # Save form without committing (we'll modify the user before saving)
@@ -340,14 +352,14 @@ def update_user_view(request, pk):
                 if role == 'Admin':
                     user.is_superuser = True
                     user.is_staff = True
-                    current_user.groups.clear()
+                    user_to_update.groups.clear()
                 else:
                     # For other groups, get the chosen group
                     chosen_group = Group.objects.get(name=role)
                     # Remove the user from all the other groups
-                    current_user.groups.clear()
+                    user_to_update.groups.clear()
                     # Add the user to the chosen group
-                    current_user.groups.add(chosen_group)
+                    user_to_update.groups.add(chosen_group)
                     # Update user's is_superuser status
                     user.is_superuser = False
                     user.is_staff = False
@@ -355,13 +367,14 @@ def update_user_view(request, pk):
             # Now commit the save
             user.save()
             profile_form.save()
-            messages.success(request, f"{current_user.first_name} {current_user.last_name}'s Details"
+            messages.success(request, f"{user_to_update.first_name} {user_to_update.last_name}'s Details"
                                       f" Have Been Updated Successfully!")
             return redirect('view_users')
         context = {
             'user_form': user_form,
             'profile_form': profile_form,
-            'profile': current_user.profile
+            'user_to_update': user_to_update,
+            'profile': user_to_update.profile
         }
         return render(request, 'update_user.html', context=context)
     # User is not logged in, redirect them to login
@@ -375,18 +388,18 @@ def update_user_view(request, pk):
 @login_required
 def update_user_self_view(request):
     if request.user.is_authenticated:
-        current_user = User.objects.get(pk=request.user.pk)
-        initial = {'role': get_user_role(current_user)}
-
+        user_to_update = User.objects.get(pk=request.user.pk)
+        initial = {'role': get_user_role(user_to_update)}
+        # Main User Form
         user_form = UpdateUserForm(request.POST or None,
-                                   instance=current_user,
+                                   instance=user_to_update,
                                    initial=initial,
-                                   request_user=request.user)
+                                   request_user=user_to_update)
 
-        profile, created = Profile.objects.get_or_create(user=current_user)
+        profile_to_update = user_to_update.profile
         profile_form = ProfileUpdateForm(request.POST or None,
                                          request.FILES or None,
-                                         instance=profile)
+                                         instance=user_to_update.profile)
         if request.method == 'POST':
             if user_form.is_valid() and profile_form.is_valid():
                 user = user_form.save(commit=False)
@@ -395,14 +408,22 @@ def update_user_self_view(request):
                     messages.error(request, "You are not allowed to change your role.")
                     return render(request, 'update_user.html', {
                         'user_form': user_form,
-                        'profile_form': profile_form
+                        'profile_form': profile_form,
+                        'profile': profile_to_update,
                     })
 
                 # Check if the delete image button was clicked
                 if 'deleteImage' in request.POST:
-                    if profile.image:  # Only delete the image if one exists
-                        profile.image.delete()  # Deletes the image file
-                        profile.image = DEFAULT_IMAGE_SOURCE  # Removes the image from the profile
+                    # Delete the user's profile image if it is not the default image
+                    if profile_to_update.image and 'default.jpg' not in profile_to_update.image.name:
+                        os.remove(os.path.join(settings.MEDIA_ROOT, profile_to_update.image.name))
+
+                    profile_to_update.image = DEFAULT_IMAGE_SOURCE
+                    profile_to_update.save()
+
+                    messages.success(request, "Your Picture Has Been Removed Successfully!")
+                    # Refresh the current page
+                    return HttpResponseRedirect(request.path_info)
 
                 profile_form.save()
                 user.save()
@@ -412,13 +433,15 @@ def update_user_self_view(request):
             else:
                 return render(request, 'update_user.html', {
                     'user_form': user_form,
-                    'profile_form': profile_form
+                    'profile_form': profile_form,
+                    'profile': profile_to_update,
                 })
         else:
             context = {
                 'user_form': user_form,
                 'profile_form': profile_form,
-                'profile': profile,
+                'profile_to_update': profile_to_update,
+                'user_to_update': user_to_update
             }
             return render(request, 'update_user.html', context)
     else:

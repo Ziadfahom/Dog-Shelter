@@ -6,8 +6,8 @@ register = template.Library()
 
 @register.filter
 def handle_none(value):
-    if value is None:
-        return ""
+    if value is None or value == "":
+        return "-"
     else:
         return value
 
@@ -17,8 +17,8 @@ def gender_filter(value):
         return "Male"
     elif value == 'F':
         return "Female"
-    elif value is None:
-        return ""
+    elif value is None or value == "":
+        return "-"
     else:
         return value
 
@@ -28,8 +28,8 @@ def yes_no_filter(value):
         return "Yes"
     elif value == 'N':
         return "No"
-    elif value is None:
-        return ""
+    elif value is None or value == "":
+        return "-"
     else:
         return value
 
@@ -37,7 +37,7 @@ def yes_no_filter(value):
 # Calculates dog's age based on their date of birth, returns age in years
 @register.filter
 def calculate_age(birth_date):
-    if birth_date is None:
+    if birth_date is None or birth_date == "":
         return "-"
     else:
         today = date.today()

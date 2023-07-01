@@ -19,25 +19,28 @@
                     <!-- Current profile picture and controls -->
                     <div class="mb-3 text-center">
                         <label class="form-label"></label>
-                        {% if user.profile.image and not user.profile.is_default_image %}
-                            <img id="profile_picture" src="{{ profile.image.url }}" alt="Image not available" style="max-width: 200px;">
+                        {% if user_to_update.profile.image and user_to_update.profile.image.url and not user_to_update.profile.is_default_image %}
+                            <img id="profile_picture" src="{{ user_to_update.profile.image.url }}" alt="Image not available" style="max-width: 200px; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#imageModal">
                         {% else %}
-                            <img id="profile_picture" src="/static/dogs_app/img/default.jpg" alt="Image not available" style="max-width: 200px;">
+                            <img id="profile_picture"  src="{% static 'dogs_app/img/default.jpg' %}" alt="Image not available" style="max-width: 200px;">
                         {% endif %}
                         <p id="image_change_alert" style="display: none;" class="alert alert-warning mt-3">
                             Click the "Save" button at the bottom to save this new profile picture, or "Back" to cancel changes
                         </p>
 
                         <div class="d-flex justify-content-center align-items-center mt-2">
-                            {% if profile.image and not profile.is_default_image %}
+                            {% if user_to_update.profile.image and 'default.jpg' not in user_to_update.profile.image.name %}
                                 <button type="submit" class="btn btn-danger me-2" name="deleteImage"
-                                        onclick="return confirm('Are you sure you want to permanently delete your profile picture?')">Remove Picture</button>
+                                        onclick="return confirm('Are you sure you want to permanently delete this profile picture?')">Remove Picture</button>
+                                <button type="button" id="customUploadButton" class="btn btn-primary">Edit Picture</button>
+                            {% else %}
+                                <button type="button" id="customUploadButton" class="btn btn-primary">Upload Picture</button>
                             {% endif %}
                             <div style="display: none;">
                                 {{ profile_form.image|add_class:"form-control"|as_crispy_field }}
                             </div>
-                            <button type="button" id="customUploadButton" class="btn btn-primary">Edit Picture</button>
                         </div>
+
                     </div>
 
                     {% for field in user_form %}
@@ -86,6 +89,20 @@
         </div>
     </div>
 
+    <!-- Image Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-body">
+            <img id="modal_image" src="" class="img-fluid rounded mx-auto d-block">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script>
         document.getElementById('customUploadButton').addEventListener('click', function() {
             document.getElementById('id_image').click();
@@ -105,6 +122,12 @@
             } else {
                 document.getElementById('profile_picture').src = "/static/dogs_app/img/default.jpg";
             }
+        });
+
+        $('#profile_picture').click(function() {
+            var imgSrc = $(this).attr('src');
+            $('#modal_image').attr('src', imgSrc);
+            $('#imageModal').modal('show');
         });
     </script>
 

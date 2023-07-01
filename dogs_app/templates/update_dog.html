@@ -19,9 +19,9 @@
                     <div class="mb-3 text-center">
                         <label class="form-label"></label>
                         {% if form.instance.dogImage %}
-                            <img id="dog_picture" src="{{ form.instance.dogImage.url }}" alt="Dog Image" style="max-width: 400px;">
+                            <img id="dog_picture" src="{{ form.instance.dogImage.url }}" alt="Dog Image" style="max-width: 300px;">
                         {% else %}
-                            <img id="dog_picture" src="/media/dog_pictures/default_dog.jpg" alt="Default Dog Image" style="max-width: 400px;">
+                            <img id="dog_picture" src="{% static 'dogs_app/img/default_dog.jpg' %}" alt="Default Dog Image" style="max-width: 300px;">
                         {% endif %}
                         <p id="image_change_alert" style="display: none;" class="alert alert-warning mt-3">
                             Click the "Update Details" button at the bottom to save this new dog picture, or "Back" to cancel changes.
@@ -44,34 +44,34 @@
                     <!-- End of Dog Image Display -->
 
 
-{% for field in form %}
-{% if not field.name == "dogID" and not field.name == "dogImage" %}
-    <div class="mb-3">
-        <strong><label for="{{ field.id_for_label }}" class="form-label stylish-label">{{ field.label }}</label></strong>
+                    {% for field in form %}
+                    {% if not field.name == "dogID" and not field.name == "dogImage" %}
+                        <div class="mb-3">
+                            <strong><label for="{{ field.id_for_label }}" class="form-label stylish-label">{{ field.label }}</label></strong>
 
-        {% if field.field.widget.input_type == "date" %}
-            <!-- Wrap date field and reset link in a div for layout control -->
-            <div class="d-flex align-items-center">
-                <!-- Add 'date-field' CSS class to date fields for easy targeting in JavaScript -->
-                {{ field|add_class:"form-control stylish-form-control date-field" }}
-                <!-- Reset link that will clear the associated date field when clicked -->
-                <a href="#" style="padding-left: 8px;" class="reset-date-link ml-2">Reset</a>
-            </div>
-        {% else %}
-            {{ field|add_class:"form-control stylish-form-control" }}
-        {% endif %}
+                            {% if field.field.widget.input_type == "date" %}
+                                <!-- Wrap date field and reset link in a div for layout control -->
+                                <div class="d-flex align-items-center">
+                                    <!-- Add 'date-field' CSS class to date fields for easy targeting in JavaScript -->
+                                    {{ field|add_class:"form-control stylish-form-control date-field" }}
+                                    <!-- Reset link that will clear the associated date field when clicked -->
+                                    <a href="#" style="padding-left: 8px;" class="reset-date-link ml-2">Reset</a>
+                                </div>
+                            {% else %}
+                                {{ field|add_class:"form-control stylish-form-control" }}
+                            {% endif %}
 
-        {% if field.errors %}
-            <div class="alert alert-warning mt-2" role="alert">
-                {{ field.errors }}
-            </div>
-        {% endif %}
-    </div>
-{% endif %}
-{% endfor %}
+                            {% if field.errors %}
+                                <div class="alert alert-warning mt-2" role="alert">
+                                    {{ field.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                    {% endfor %}
 
                     <div class="add-dog-button mt-4 action-buttons">
-                        <button type="submit" class="btn btn-success">Update Details</button>
+                        <button type="submit" class="btn btn-success">Save Changes</button>
                     </div>
                     <div class="back-button mt-2">
                         <a href="{% url 'dog_record' current_dogID %}" class="btn btn-secondary">Back</a>
@@ -115,19 +115,19 @@
             }
         });
 
-// Get all date fields and reset links
-var dateFields = document.querySelectorAll('.date-field');
-var resetLinks = document.querySelectorAll('.reset-date-link');
+        // Get all date fields and reset links
+        var dateFields = document.querySelectorAll('.date-field');
+        var resetLinks = document.querySelectorAll('.reset-date-link');
 
-// For each reset link...
-resetLinks.forEach((link, index) => {
-    // ...add a click event listener. When the link is clicked...
-    link.addEventListener('click', function(e) {
-        e.preventDefault();  // Prevent the default action
-        // ...it clears the associated date field.
-        dateFields[index].value = "";
-    });
-});
+        // For each reset link...
+        resetLinks.forEach((link, index) => {
+            // ...add a click event listener. When the link is clicked...
+            link.addEventListener('click', function(e) {
+                e.preventDefault();  // Prevent the default action
+                // ...it clears the associated date field.
+                dateFields[index].value = "";
+            });
+        });
 
     </script>
 

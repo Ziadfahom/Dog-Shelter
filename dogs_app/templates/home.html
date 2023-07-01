@@ -3,24 +3,20 @@
 {% load static %}
 
 {% block content %}
-<style>
-    .tooltip-inner {
-        border: 1px solid black; /* Add a black border around the tooltip */
-        background-color: rgba(0, 0, 0, 0.1); /* Add a semi-transparent black background */
-        padding: 10px; /* Add some space between the image and the border */
-        max-width: 220px; /* Adjust as per your image size and padding */
-    }
-    .tooltip-inner img {
-        width: 200px; /* You can change it according to your image's width */
-        height: 200px; /* You can change it according to your image's height */
-    }
-    .bs-tooltip-auto[x-placement^=bottom] .arrow::before, .bs-tooltip-bottom .arrow::before {
-        border-bottom-color: rgba(0, 0, 0, 0.1);
-    }
-</style>
-
-
-
+    <style>
+        .tooltip-inner {
+            border: 1px solid black; /* Add a black border around the tooltip */
+            background-color: rgba(0, 0, 0, 0.1); /* Add a semi-transparent black background */
+            padding: 6px; /* Add some space between the image and the border */
+            max-width: 200px; /* Adjust as per your image size and padding */
+        }
+        .tooltip-inner img {
+            max-width: 180px; /* You can change it according to your image's height */
+        }
+        .bs-tooltip-auto[x-placement^=bottom] .arrow::before, .bs-tooltip-bottom .arrow::before {
+            border-bottom-color: rgba(0, 0, 0, 0.1);
+        }
+    </style>
 
     <!-- Container for all content -->
     <div class="container">
@@ -87,7 +83,7 @@
                         </div>
                         <div class="card-body">
                             <!-- Profile Picture -->
-                            {% if user.profile.image %}
+                            {% if user.profile.image and not user.profile.is_default_image %}
                                 <img src="{{ user.profile.image.url }}" class="rounded-circle mb-3" alt="{{ user.username }}'s profile picture" width="200" height="200">
                             {% else %}
                                 <img src="{% static 'dogs_app/img/default.jpg' %}" class="rounded-circle mb-3" alt="{{ user.username }}'s profile picture" width="200" height="200">
@@ -143,11 +139,11 @@
                                 The row is clickable (redirects to the dog's record page), and hovering over it
                                  shows a pointer cursor and displays a tooltip with the dog's thumbnail.-->
                                 <tr class="dog-row"
-    data-href="{% url 'dog_record' dog.dogID %}"
-    style="cursor: pointer;"
-    data-bs-toggle="tooltip" data-bs-html="true"
-    title="{% if dog.dogImage %}<img src='{{ dog.dogImage.url }}' alt='Thumbnail of {{ dog.dogName }}' style='max-width: 200px;'>{% else %}<img src='{% static 'dogs_app/img/default_dog.jpg' %}' alt='Default dog thumbnail'>{% endif %}">
-    <td class="text-center">{{ dog.dogName|handle_none }}</td>
+                                    data-href="{% url 'dog_record' dog.dogID %}"
+                                    style="cursor: pointer;"
+                                    data-bs-toggle="tooltip" data-bs-html="true"
+                                    title="{% if dog.dogImage %}<img src='{{ dog.dogImage.url }}' alt='Thumbnail of {{ dog.dogName }}' style='max-width: 200px;'>{% else %}<img src='{% static 'dogs_app/img/default_dog.jpg' %}' alt='Default dog thumbnail'>{% endif %}">
+                                    <td class="text-center">{{ dog.dogName|handle_none }}</td>
 
                                     <td class="text-center">{{ dog.dateOfArrival|handle_none }}</td>
                                     <td class="text-center">

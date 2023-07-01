@@ -15,10 +15,12 @@
                     <div class="card-header">
                         {% if delete_user.profile.image.name %}
                             <img src="{{ delete_user.profile.image.url }}" class="card-img-top" alt="Image not available" style="width: 25rem; height: 20rem; object-fit: cover;">
+                        {% else %}
+                            <img src="{% static 'dogs_app/img/default.jpg' %}" class="card-img-top" alt="Image not available" style="width: 25rem; height: 20rem; object-fit: cover;">
                         {% endif %}
                     </div>
                     <ul class="list-group list-group-flush">
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <li class="list-group-item">
                             <strong>UserName: </strong><span class="centered-content">{{ delete_user.username }}</span>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">

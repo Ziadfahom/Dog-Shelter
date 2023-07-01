@@ -2,13 +2,14 @@
 .list-group-item {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     padding: 1rem;
     border-bottom: 1px solid #ddd;
 }
 
 .centered-content {
     text-align: center;
-    flex-grow: 1;
+    width: 350px;
 }
 
 .prompt {
@@ -117,7 +118,6 @@
 .stylish-card {
     border-radius: 15px;
     overflow: hidden;
-    border-radius: 20px;
     box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
 }
 
@@ -135,10 +135,9 @@
 
 .card-body,
 .stylish-card-body {
-    padding: 2rem;
     padding: 20px;
-    border-radius: 20px;
-    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+    border-radius: 10px;
+    box-shadow: 0 1px 8px 0 rgba(0,0,0,0.2);
 }
 
 /* Forms and Labels */
@@ -223,5 +222,22 @@ input[type='password']:focus {
     color: #0d6efd;
 }
 
+/* Input types */
+input[type='password'] {
+    border-radius: 10px;
+    border: 1px solid #ced4da;
+}
+
+input[type='password']:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+/* New rule for date input fields */
+input[type='date'] {
+    height: calc(1.8em + .75rem + 2px); /* This is Bootstrap 4's default height for form inputs */
+    line-height: 1.5; /* Bootstrap 4's default line-height for form inputs */
+}
 
 

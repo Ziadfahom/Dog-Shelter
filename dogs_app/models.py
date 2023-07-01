@@ -27,7 +27,7 @@ class Profile(models.Model):
 
     # Returns True if the user's profile picture is the default.jpg
     def is_default_image(self):
-        if self.image is None:
+        if self.image is None or self.image.name == "":
             return True
         return self.image.name in [DEFAULT_PROFILE_IMAGE_SOURCE, ALTERNATIVE_DEFAULT_PROFILE_IMAGE_SOURCE]
 
