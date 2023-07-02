@@ -40,11 +40,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'widget_tweaks',    # Tweaks for widgets
-    'storages',         # For the AWS S3 cloud for pictures/videos uploads
-    'crispy_forms',     # Better looking forms
+    'django_extensions',        # Was used to reset the database
+    'widget_tweaks',            # Tweaks for widgets
+    'storages',                 # For the AWS S3 cloud for pictures/videos uploads
+    'crispy_forms',             # Better looking forms
     'crispy_bootstrap5',
-    'sorl.thumbnail',   # For dog image thumbnails
 ]
 
 MIDDLEWARE = [
@@ -165,3 +165,6 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 
 # Useful in development to catch any issues with thumbnail generation.
 THUMBNAIL_DEBUG = True
+
+# List of video files allowed to upload to the system
+ALLOWED_VIDEO_FILE_EXTENSIONS = ['.mp4', '.avi', '.mov', '.flv', '.wmv']

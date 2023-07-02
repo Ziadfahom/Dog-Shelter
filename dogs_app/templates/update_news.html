@@ -6,8 +6,8 @@
 
 <div class="container mt-5 text-center">
     <div class="col-md-7 mx-auto">
-        <div class="card border-dark shadow-lg">
-            <div class="card-header bg-dark text-white">
+        <div class="card border-warning shadow-lg">
+            <div class="card-header bg-warning text-black">
                 <h2 class="card-title">Edit News</h2>
             </div>
             <div class="card-body">
@@ -22,7 +22,7 @@
                         <textarea class="form-control" id="content" name="content" rows="6">{{ news.content }}</textarea>
                     </div>
                     <div class="update-news-button mt-4">
-                        <button type="submit" class="btn btn-primary">Update News</button>
+                        <button type="submit" class="btn btn-success">Update News</button>
                     </div>
                     <div class="back-button mt-2">
                         <a href="{% url 'home' %}" class="btn btn-secondary">Back</a>

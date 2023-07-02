@@ -26,7 +26,7 @@ def home_view(request):
     total_dogs = Dog.objects.count()
 
     # Get the number of dogs that have received toy treatments
-    toy_treatment_dogs = Dog.objects.filter(observation__isKong='Y').distinct().count()
+    toy_treatment_dogs = Dog.objects.filter(observers__observation__isKong='Y').distinct().count()
 
     # Get all the website News to display them in descending order
     news_items = News.objects.all().order_by('-created_at')

@@ -77,8 +77,8 @@
 
                 <div class="col-md-8">
                     <!-- User Profile -->
-                    <div class="card border-primary mb-3 mt-4 text-center">
-                        <div class="card-header text-center text-white bg-primary">
+                    <div class="card border-dark mb-3 mt-4 text-center">
+                        <div class="card-header text-center text-white bg-dark">
                             <h2>User Profile</h2>
                         </div>
                         <div class="card-body">
@@ -170,7 +170,7 @@
                                         </div>
                                     </td>
                                     <td class="text-center">{{ dog.kongDateAdded|handle_none }}</td>
-                                    <td class="text-center">{{ dog.ownerSerialNum|handle_none }}</td>
+                                    <td class="text-center">{{ dog.owner|handle_none }}</td>
                                 </tr>
 
                             {% endfor %}

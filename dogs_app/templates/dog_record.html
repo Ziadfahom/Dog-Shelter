@@ -120,7 +120,7 @@
 
                             <tr>
                                 <td><strong>Owner</strong></td>
-                                <td>{{ dog_record.ownerSerialNum|handle_none }}</td>
+                                <td>{{ dog_record.owner|handle_none }}</td>
                             </tr>
 
                         </tbody>
@@ -130,7 +130,7 @@
                 <div class="card-footer bg-transparent">
                     {% if user.is_authenticated and user|has_group:"Vet" %}
                         <div class="add-dog-button mt-1 action-buttons">
-                            <a href="{% url 'update_dog' dog_record.dogID %}" class="btn btn-success me-2">Update</a>
+                            <a href="{% url 'update_dog' dog_record.dogID %}" class="btn btn-warning me-2">Update</a>
                             <a href="{% url 'delete_dog' dog_record.dogID %}" class="btn btn-danger">Delete</a>
                         </div>
                     {% endif %}

@@ -8,8 +8,8 @@
     <link href="{% static 'dogs_app/css/styles.css' %}" rel="stylesheet">
 
     <div class="container mt-5 col-md-9">
-        <div class="card border-secondary stylish-card shadow">
-            <div class="card-header bg-primary text-white text-center">
+        <div class="card border-warning stylish-card shadow">
+            <div class="card-header bg-warning text-black text-center">
                 <h1>Edit Account Details</h1>
             </div>
             <div class="card-body stylish-card-body">
@@ -19,7 +19,7 @@
                     <!-- Current profile picture and controls -->
                     <div class="mb-3 text-center">
                         <label class="form-label"></label>
-                        {% if user_to_update.profile.image and user_to_update.profile.image.url and not user_to_update.profile.is_default_image %}
+                        {% if user_to_update.profile.image and user_to_update.profile.image.url and 'default.jpg' not in user_to_update.profile.image.name %}
                             <img id="profile_picture" src="{{ user_to_update.profile.image.url }}" alt="Image not available" style="max-width: 200px; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#imageModal">
                         {% else %}
                             <img id="profile_picture"  src="{% static 'dogs_app/img/default.jpg' %}" alt="Image not available" style="max-width: 200px;">
