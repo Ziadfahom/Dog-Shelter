@@ -107,7 +107,7 @@ class Dog(models.Model):
     def is_default_image(self):
         if not self.dogImage:
             return True
-        return self.dogImage.name.startswith('default_dog')
+        return 'default_dog' in self.dogImage.name
 
     # For insuring dogImage is deleted if requested upon saving
     def save(self, *args, **kwargs):
@@ -255,6 +255,13 @@ class DogPlacement(models.Model):
             raise ValidationError('Dog and Kennel are required fields.')
         super().save(*args, **kwargs)
 
+    # Calculates dog's stay duration in the kennel (expiratedDate-entranceDate)
+    def duration(self):
+        if self.expirationDate and self.entranceDate:
+            return (self.expirationDate - self.entranceDate).days
+        else:
+            return 'N/A'
+
     class Meta:
         unique_together = (('dog', 'kennel', 'entranceDate'),)
         ordering = ['-entranceDate']
@@ -368,10 +375,9 @@ class DogStance(models.Model):
 
     # Format the date and check if entity contains a valid Observation to display
     def __str__(self):
-        formatted_date = self.observation.obsDateTime.strftime("%d-%m-%Y at %H:%M")
         formatted_time = self.stanceStartTime.strftime("%H:%M")
         observation_str = str(self.observation) if self.observation else "Unknown observation"
-        return f"{observation_str}, on {formatted_date}, starting at {formatted_time}"
+        return f"{observation_str}, starting at {formatted_time}"
 
     def save(self, *args, **kwargs):
         """

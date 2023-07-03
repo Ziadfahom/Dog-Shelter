@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect
 from .forms import SignUpForm, AddDogForm, UpdateUserForm, ProfileUpdateForm
-from .models import Dog, News, Profile
+from .models import *
 from django.conf import settings
 import os
 
@@ -157,9 +157,24 @@ def add_news(request):
 def dog_record_view(request, pk):
     # Check if the user is logged in
     if request.user.is_authenticated:
-        # Look up and save the dog's record
-        dog_record = Dog.objects.get(dogID=pk)
-        return render(request, 'dog_record.html', {'dog_record': dog_record})
+        # Look up and save the dog's record and all relevant data of that dog
+        dog_record = Dog.objects.select_related('owner').prefetch_related(
+            'treatment_set',
+            'entranceexamination_set',
+            'observers__observation_set',
+            'dogplacement_set__kennel',  # For Cameras related to DogPlacement's kennel
+            'observers__observation_set__dogstance_set',  # For DogStances related to Observations
+        ).get(dogID=pk)
+
+        context = {
+            'dog_record': dog_record,
+            'treatments': Treatment.objects.filter(dog=dog_record).order_by('-treatmentDate'),
+            'examinations': EntranceExamination.objects.filter(dog=dog_record).order_by('-examinationDate'),
+            'observations': Observation.objects.filter(observes__dog=dog_record).order_by('-obsDateTime'),
+            'placements': DogPlacement.objects.filter(dog=dog_record).order_by('-entranceDate'),
+        }
+
+        return render(request, 'dog_record.html', context=context)
 
     # User is NOT logged in --> send them to login page
     else:
@@ -338,7 +353,8 @@ def update_user_view(request, pk):
 
             user_to_update.profile.image = DEFAULT_IMAGE_SOURCE
             user_to_update.profile.save()
-            messages.success(request, f"{user_to_update.first_name} {user_to_update.last_name}'s Picture Has Been Removed Successfully!")
+            messages.success(request, f"{user_to_update.first_name} {user_to_update.last_name}'s"
+                                      f" Picture Has Been Removed Successfully!")
             # Refresh the current page
             return HttpResponseRedirect(request.path_info)
 
