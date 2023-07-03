@@ -26,7 +26,7 @@
 
             <!-- Welcome message -->
             <div class="card border-dark mb-3 text-center">
-                <div class="card-header text-white bg-dark">
+                <div class="card-header text-white bg-dark bg-gradient">
                     <h2>Welcome to the Dogs Shelter system, {{ user.username }}!</h2>
                 </div>
                 <div class="card-body">
@@ -41,7 +41,7 @@
             <div class="row">
                 <div class="col-md-4">
                     <div class="card border-dark mt-4 text-center">
-                        <div class="card-header text-white bg-dark">
+                        <div class="card-header text-white bg-dark bg-gradient">
                             <h3>Our Latest News</h3>
                         </div>
                         <ul class="list-group list-group-flush">
@@ -78,7 +78,7 @@
                 <div class="col-md-8">
                     <!-- User Profile -->
                     <div class="card border-dark mb-3 mt-4 text-center">
-                        <div class="card-header text-center text-white bg-dark">
+                        <div class="card-header text-center text-white bg-dark bg-gradient">
                             <h2>User Profile</h2>
                         </div>
                         <div class="card-body">
@@ -110,24 +110,23 @@
                 <div class="table-responsive mt-4 stylish-table">
                     <table class="table table-striped table-hover">
 
-                        <caption style="caption-side: top;" class="text-center table-caption">Current dogs in our system</caption>
+                        <caption style="caption-side: top; padding: 10px; color: #555; font-size: 20px; background-color: #fff;" class="text-center table-caption">Current dogs in our system</caption>
 
                         <thead class="text-center small stylish-thead table-dark">
                         <tr>
-                        <th scope="col" class="text-center">Dog Name</th>
-                        <th scope="col" class="text-center">Arrival Date</th>
-                        <th scope="col" class="text-center">Gender</th>
-                        <th scope="col" class="text-center">Breed</th>
-                        <th scope="col" class="text-center">Fur Color</th>
-                        <th scope="col" class="text-center">Age (Years)</th>
-                        <th scope="col" class="text-center">Vaccination Date</th>
-                        <th scope="col" class="text-center">Neutered?</th>
-                        <th scope="col" class="text-center">Dangerous?</th>
-                        <th scope="col" class="text-center">Kong Added</th>
-                        <th scope="col" class="text-center">Owner</th>
+                            <th scope="col" class="text-center" style="border-top-left-radius: 10px;">Dog Name</th>
+                            <th scope="col" class="text-center">Arrival Date</th>
+                            <th scope="col" class="text-center">Gender</th>
+                            <th scope="col" class="text-center">Breed</th>
+                            <th scope="col" class="text-center">Fur Color</th>
+                            <th scope="col" class="text-center">Age (Years)</th>
+                            <th scope="col" class="text-center">Vaccination Date</th>
+                            <th scope="col" class="text-center">Neutered?</th>
+                            <th scope="col" class="text-center">Dangerous?</th>
+                            <th scope="col" class="text-center">Kong Added</th>
+                            <th scope="col" class="text-center" style="border-top-right-radius: 10px;">Owner</th>
                         </tr>
                         </thead>
-
                         <tbody class="small stylish-tbody">
 
                         <!-- Check if there are any dogs -->
@@ -148,9 +147,9 @@
                                     <td class="text-center">{{ dog.dateOfArrival|handle_none }}</td>
                                     <td class="text-center">
                                         {% if dog.gender == "M" %}
-                                            Male (⚦)
+                                            Male(⚦)
                                         {% elif dog.gender == "F" %}
-                                            Female (⚥)
+                                            Female(⚥)
                                         {% else %}
                                             -
                                         {% endif %}
