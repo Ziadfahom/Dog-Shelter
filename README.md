@@ -4,11 +4,12 @@ Getting Started:
 
 We recommend creating a Python virtual environment for this project to avoid conflicts with packages in your global Python environment. You can create a virtual environment using the following command:
 
-python -m venv venv
+`python -m venv venv`
 
 Then, activate it with the following command:
 
 `source venv/bin/activate  # For Linux/Mac`
+
 `venv\Scripts\activate     # For Windows`
 
 After setting up and activating the virtual environment, you can install the required packages. We have listed them at the bottom under "Manual Installations", or you can simply run this command to install the necessary packages:
