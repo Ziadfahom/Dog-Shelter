@@ -11,7 +11,7 @@ Then, activate it with the following command:
 source venv/bin/activate  # For Linux/Mac
 venv\Scripts\activate     # For Windows
 
-After setting up and activating the virtual environment, you can install the required packages. We have listed them below under "Manual Installations", or you can simply run this command to install the necessary packages:
+After setting up and activating the virtual environment, you can install the required packages. We have listed them at the bottom under "Manual Installations", or you can simply run this command to install the necessary packages:
 
 pip install -r requirements.txt
 
@@ -26,9 +26,13 @@ The requirements.txt is a list of the packages and versions we used. It was auto
 After downloading the packages, you will need to set up a .env file with the necessary environment variables for your database and AWS (if in production mode) like this (place this code inside a file named '.env' with your Database details):
 
 DATABASE_NAME=
+
 DATABASE_USER=
+
 DATABASE_PASSWORD=
+
 DATABASE_HOST=
+
 DATABASE_PORT=
 
 These variables are used in settings.py to set up the connection to the MySQL Database, and appear in Django's settings.py as follows:
