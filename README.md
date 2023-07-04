@@ -14,13 +14,13 @@ Then, activate it with the following command:
 
 After setting up and activating the virtual environment, you can install the required packages. We have listed them at the bottom under "Manual Installations", or you can simply run this command to install the necessary packages:
 
-pip install -r requirements.txt
+`pip install -r requirements.txt`
 
 The requirements.txt is a list of the packages and versions we used. It was automatically generated using "pip freeze > requirements.txt".
 
 **Make sure you also run the following command to install python-decouple, in case Environment Variables for passwords/keys don't work correctly:**
 
-**pip install python-decouple**
+`**pip install python-decouple**`
 
 
 
