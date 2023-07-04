@@ -20,7 +20,7 @@ The requirements.txt is a list of the packages and versions we used. It was auto
 
 **Make sure you also run the following command to install python-decouple, in case Environment Variables for passwords/keys don't work correctly:**
 
-`**pip install python-decouple**`
+**`pip install python-decouple`**
 
 
 
