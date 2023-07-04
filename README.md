@@ -19,8 +19,9 @@ The requirements.txt is a list of the packages and versions we used. It was auto
 
 **Make sure you also run the following command to install python-decouple, in case Environment Variables for passwords/keys don't work correctly:**
 
-pip install python-decouple
----------------------------
+**pip install python-decouple**
+
+
 
 After downloading the packages, you will need to set up a .env file with the necessary environment variables for your database and AWS (if in production mode) like this (place this code inside a file named '.env' with your Database details):
 
@@ -42,7 +43,8 @@ DATABASES = {
         'PORT': config('DATABASE_PORT'),
     }
 }
----------------------------
+
+
 
 The AWS S3 settings are also configured via environment variables in the settings.py like below, but you can leave these as they are for now. They will only come into play once the project moves from the Development stage to the Production stage, when DEBUG is set to False. Currently, during the Development stage, images, videos, and JSON files are all stored locally inside the project files:
 
@@ -51,7 +53,9 @@ if not DEBUG:
     AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
     AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
----------------------------
+
+
+
 
 Once the environment variables are set and the packages are installed, you can run the migrations for the database:
 
@@ -67,19 +71,32 @@ python manage.py runserver
 Manual Installations (optional):
 ----------------------------------------
 pip install Django
+
 pip install mysql
+
 pip install mysql-connector-python
+
 pip install mysql-connector
+
 pip install django-widget-tweaks
+
 pip install django-storages boto3
+
 pip install python-decouple           #For hiding environmental variables such as Amazon Access Key
+
 pip install pillow		                #For managing locally saved images/videos/files when DEBUG=True
+
 pip install django-crispy-forms	      #Better looking forms
+
 pip install crispy-bootstrap5
 
+
 pip install django-imagekit           #Handling image thumbnails for smaller-sized dog images
+
 pip install sorl-thumbnail	          #Handling thumbnails
+
 pip install django-extensions 	      #Used for resetting DB
+
 
 
 ____________________
