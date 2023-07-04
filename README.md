@@ -25,7 +25,6 @@ The requirements.txt is a list of the packages and versions we used. It was auto
 
 
 After downloading the packages, you will need to set up a .env file with the necessary environment variables for your database and AWS (if in production mode) like this (place this code inside a file named '.env' with your Database details):
-
 ```
 DATABASE_NAME=
 DATABASE_USER=
@@ -35,7 +34,7 @@ DATABASE_PORT=
 ```
 
 These variables are used in settings.py to set up the connection to the MySQL Database, and appear in Django's settings.py as follows:
-
+```
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -46,33 +45,34 @@ DATABASES = {
         'PORT': config('DATABASE_PORT'),
     }
 }
-
+```
 
 
 The AWS S3 settings are also configured via environment variables in the settings.py like below, but you can leave these as they are for now. They will only come into play once the project moves from the Development stage to the Production stage, when DEBUG is set to False. Currently, during the Development stage, images, videos, and JSON files are all stored locally inside the project files:
-
+```
 if not DEBUG:
     # AWS S3 settings
     AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
     AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
-
+```
 
 
 
 Once the environment variables are set and the packages are installed, you can run the migrations for the database:
 
-python manage.py migrate
+`python manage.py migrate`
 
 Now, you should be ready to run the server:
 
-python manage.py runserver
+`python manage.py runserver`
 
 
 
 ----------------------------------------
 Manual Installations (optional):
 ----------------------------------------
+```
 pip install Django
 
 pip install mysql
@@ -99,11 +99,11 @@ pip install django-imagekit           #Handling image thumbnails for smaller-siz
 pip install sorl-thumbnail	          #Handling thumbnails
 
 pip install django-extensions 	      #Used for resetting DB
-
+```
 
 
 ____________________
 ----------------------------------------
 Running the Website:
 ----------------------------------------
-python manage.py runserver
+`python manage.py runserver`
