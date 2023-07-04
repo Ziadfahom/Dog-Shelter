@@ -56,8 +56,8 @@
                                     <p>{{ news.content }}</p>
                                     {% if user.is_superuser %}
                                         <div>
-                                            <a href="{% url 'update_news' news.id %}" class="btn btn-warning btn-sm">Edit</a>
-                                            <a href="{% url 'delete_news' news.id %}" class="btn btn-danger btn-sm">Delete</a>
+                                            <a href="{% url 'dogs_app:update_news' news.id %}" class="btn btn-warning btn-sm">Edit</a>
+                                            <a href="{% url 'dogs_app:delete_news' news.id %}" class="btn btn-danger btn-sm">Delete</a>
                                         </div>
                                     {% endif %}
                                 </li>
@@ -68,7 +68,7 @@
                             {% endfor %}
                             {% if user.is_superuser %}
                                 <li class="list-group-item">
-                                    <a href="{% url 'add_news' %}" class="btn btn-primary btn-sm">Add News</a>
+                                    <a href="{% url 'dogs_app:add_news' %}" class="btn btn-primary btn-sm">Add News</a>
                                 </li>
                             {% endif %}
                         </ul>
@@ -138,7 +138,7 @@
                                 The row is clickable (redirects to the dog's record page), and hovering over it
                                  shows a pointer cursor and displays a tooltip with the dog's thumbnail.-->
                                 <tr class="dog-row"
-                                    data-href="{% url 'dog_record' dog.dogID %}"
+                                    data-href="{% url 'dogs_app:dog_record' dog.dogID %}"
                                     style="cursor: pointer;"
                                     data-bs-toggle="tooltip" data-bs-html="true"
                                     title="{% if dog.dogImage %}<img src='{{ dog.dogImage.url }}' alt='Thumbnail of {{ dog.dogName }}' style='max-width: 200px;'>{% else %}<img src='{% static 'dogs_app/img/default_dog.jpg' %}' alt='Default dog thumbnail'>{% endif %}">
@@ -189,7 +189,7 @@
                                 <h1>Login</h1>
                             </div>
                             <div class="card-body">
-                                <form method="POST" action="{% url 'home' %}">
+                                <form method="POST" action="{% url 'dogs_app:home' %}">
                                     {% csrf_token %}
 
                                     <div class="form-floating mb-3">

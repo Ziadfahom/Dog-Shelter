@@ -3,8 +3,8 @@
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark bg-gradient fixed-top">
     <div class="container-fluid">
-        <a class="navbar-brand mb-0 h1" href="{% url 'home' %}">
-            <a class="navbar-brand mb-0 h1" href="{% url 'home' %}">
+        <a class="navbar-brand mb-0 h1" href="{% url 'dogs_app:home' %}">
+            <a class="navbar-brand mb-0 h1" href="{% url 'dogs_app:home' %}">
                 <img src="{% static 'dogs_app/img/favicon.ico' %}" alt="Site Favicon" width="30" height="30">
                 Dogs Shelter
             </a>
@@ -14,12 +14,17 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
-                    <a class="nav-link" aria-current="page" href="{% url 'home' %}"><i class="bi bi-house-door-fill"></i> Home</a>
+                    <a class="nav-link" aria-current="page" href="{% url 'dogs_app:home' %}"><i class="bi bi-house-door-fill"></i> Home</a>
                 </li>
                 {% if user.is_authenticated and user|has_group:"Vet" %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'add_dog' %}"><i class="bi bi-plus-circle-fill"></i> Add New Dog</a>
+                        <a class="nav-link" href="{% url 'dogs_app:add_dog' %}"><i class="bi bi-plus-circle-fill"></i> Add New Dog</a>
                     </li>
+                {% endif %}
+                {% if user.is_authenticated %}
+                <li class="nav-item">
+<a class="nav-link" href="{% url 'dogs_app:graphs' %}"><i class="bi bi-bar-chart-fill"></i> View Graphs</a>
+                </li>
                 {% endif %}
 
             </ul>
@@ -31,8 +36,8 @@
                                 <i class="bi bi-gear-fill"></i> Admin Controls
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="{% url 'view_users' %}">View Users</a></li>
-                                <li><a class="dropdown-item" href="{% url 'add_news' %}">Add News</a></li>
+                                <li><a class="dropdown-item" href="{% url 'dogs_app:view_users' %}">View Users</a></li>
+                                <li><a class="dropdown-item" href="{% url 'dogs_app:add_news' %}">Add News</a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{% url 'admin:index' %}">Admin Page</a></li>
                             </ul>
@@ -40,10 +45,10 @@
                     {% endif %}
                 {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'register' %}"><i class="bi bi-person-plus-fill"></i> Register</a>
+                        <a class="nav-link" href="{% url 'dogs_app:register' %}"><i class="bi bi-person-plus-fill"></i> Register</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'home' %}"><i class="bi bi-box-arrow-in-right"></i> Login</a>
+                        <a class="nav-link" href="{% url 'dogs_app:home' %}"><i class="bi bi-box-arrow-in-right"></i> Login</a>
                     </li>
                 {% endif %}
             {% if user.is_authenticated %}
@@ -53,15 +58,15 @@
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li>
-                            <a href="{% url 'update_user_self' %}" class="dropdown-item">Manage Details</a>
+                            <a href="{% url 'dogs_app:update_user_self' %}" class="dropdown-item">Manage Details</a>
                         </li>
                         <li>
-                            <a href="{% url 'change_password' %}" class="dropdown-item">Change Password</a>
+                            <a href="{% url 'dogs_app:change_password' %}" class="dropdown-item">Change Password</a>
                         </li>
                     </ul>
                 </li>
                 <li class="nav-item">
-                        <a class="nav-link" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right"></i> Logout</a>
+                        <a class="nav-link" href="{% url 'dogs_app:logout' %}"><i class="bi bi-box-arrow-right"></i> Logout</a>
                 </li>
             {% endif %}
 

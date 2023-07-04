@@ -5,11 +5,21 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from .forms import SignUpForm, AddDogForm, UpdateUserForm, ProfileUpdateForm
 from .models import *
 from django.conf import settings
 import os
+from django.core import serializers
+from django.db.models import Count, Sum
+from django.db.models.functions import TruncDate
+from django.template.defaultfilters import date
+
+import logging
+from django.db.models import F
+from django.db.models.functions import Cast
+from django.db.models import CharField
+from pytz import timezone
 
 
 # Location of the default User profile picture if they don't have a picture
@@ -48,18 +58,18 @@ def home_view(request):
                 if user is not None:
                     login(request, user=user)
                     messages.success(request, message='You have successfully logged in!')
-                    return redirect('home')
+                    return redirect('dogs_app:home')
                 else:
                     # Username exists but password was incorrect
                     messages.error(request, message='The password is incorrect. Please try again...')
-                    return redirect('home')
+                    return redirect('dogs_app:home')
             except Exception as e:
                 messages.error(request, message=f'An error occurred during login: {e}')
-                return redirect('home')
+                return redirect('dogs_app:home')
         else:
             # Username does not exist
             messages.error(request, message='The username does not exist. Please try again...')
-            return redirect('home')
+            return redirect('dogs_app:home')
     else:
         # User is not logged in, redirect them to login page (home)
 
@@ -80,7 +90,7 @@ def home_view(request):
 def logout_user_view(request):
     logout(request)
     messages.success(request, message='You have been logged out..')
-    return redirect('home')
+    return redirect('dogs_app:home')
 
 
 # User Registration view for new users
@@ -109,7 +119,7 @@ def register_user_view(request):
 
             messages.success(request, f"Welcome, {username} and thank you for signing up! "
                                       "You're now a member of our Dogs Shelter community.")
-            return redirect('home')
+            return redirect('dogs_app:home')
     else:
         form = SignUpForm()
         profile_form = ProfileUpdateForm()
@@ -127,7 +137,7 @@ def change_password(request):
             user = form.save()
             update_session_auth_hash(request, user)  # Important! Re-logins the user after password change
             messages.success(request, 'Your password was successfully updated!')
-            return redirect('home')
+            return redirect('dogs_app:home')
         # Issues with the filled details
         else:
             messages.error(request, 'Please correct the error below')
@@ -148,7 +158,7 @@ def add_news(request):
         news_title = request.POST.get('title')
         news_content = request.POST.get('content')
         News.objects.create(title=news_title, content=news_content)
-        return redirect('home')
+        return redirect('dogs_app:home')
     return render(request, 'add_news.html')
 
 
@@ -179,7 +189,7 @@ def dog_record_view(request, pk):
     # User is NOT logged in --> send them to login page
     else:
         messages.error(request, message='You Must Be Logged In To View That Page...')
-        return redirect('home')
+        return redirect('dogs_app:home')
 
 
 # Deleting a dog record
@@ -196,13 +206,13 @@ def delete_dog_view(request, pk):
             dog_name = delete_dog.dogName
             delete_dog.delete()
             messages.success(request, f'{dog_name} Has Been Deleted Successfully...')
-            return redirect('home')
+            return redirect('dogs_app:home')
         # User clicked "Delete" button to confirm deletion
         return render(request, 'delete_dog.html', {'dog': delete_dog})
     # User not logged in, must login first
     else:
         messages.error(request, 'You must be logged in to do that...')
-        return redirect('home')
+        return redirect('dogs_app:home')
 
 
 def add_dog_view(request):
@@ -221,7 +231,7 @@ def add_dog_view(request):
                 # Save new dog details to database + display success message
                 form.save()
                 messages.success(request, f"{form.cleaned_data['dogName']} Has Been Added Successfully...")
-                return redirect('home')
+                return redirect('dogs_app:home')
             # If form is not valid, render errors
             else:
                 return render(request, 'add_dog.html', {"form": form})
@@ -232,7 +242,7 @@ def add_dog_view(request):
     # If user is not logged in/authenticated, show an error message and redirect to home.
     else:
         messages.error(request, "You Must Be Logged In To Add New Dogs...")
-        return redirect('home')
+        return redirect('dogs_app:home')
 
 
 # Updating a Dog record
@@ -263,13 +273,13 @@ def update_dog_view(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, f"{current_dog.dogName}'s Details Have Been Updated Successfully!")
-            return redirect('dog_record', pk=current_dog.dogID)
+            return redirect('dogs_app:dog_record', pk=current_dog.dogID)
         return render(request, 'update_dog.html', {'form': form, 'current_dogID': current_dog.dogID})
 
     # User is not logged in, redirect them to login
     else:
         messages.error(request, "You must be logged in to do that...")
-        return redirect('home')
+        return redirect('dogs_app:home')
 
 
 # Display all users for the admins only in view_users.html
@@ -318,13 +328,13 @@ def delete_user_view(request, pk):
             user_name = delete_user.username
             delete_user.delete()
             messages.success(request, f'{user_name} Has Been Deleted Successfully...')
-            return redirect('view_users')
+            return redirect('dogs_app:view_users')
         # User clicked "Delete" button to confirm deletion
         return render(request, 'delete_user.html', {'delete_user': delete_user})
     # User not logged in, must login first
     else:
         messages.error(request, message='You must be logged in to do that...')
-        return redirect('home')
+        return redirect('dogs_app:home')
 
 
 # View for updating user details
@@ -385,7 +395,7 @@ def update_user_view(request, pk):
             profile_form.save()
             messages.success(request, f"{user_to_update.first_name} {user_to_update.last_name}'s Details"
                                       f" Have Been Updated Successfully!")
-            return redirect('view_users')
+            return redirect('dogs_app:view_users')
         context = {
             'user_form': user_form,
             'profile_form': profile_form,
@@ -396,7 +406,7 @@ def update_user_view(request, pk):
     # User is not logged in, redirect them to login
     else:
         messages.error(request, "You must be logged in to do that...")
-        return redirect('home')
+        return redirect('dogs_app:home')
 
 
 # User updating their own details view
@@ -445,7 +455,7 @@ def update_user_self_view(request):
                 user.save()
 
                 messages.success(request, f"Your Details Have Been Updated Successfully!")
-                return redirect('update_user_self')
+                return redirect('dogs_app:update_user_self')
             else:
                 return render(request, 'update_user.html', {
                     'user_form': user_form,
@@ -462,7 +472,7 @@ def update_user_self_view(request):
             return render(request, 'update_user.html', context)
     else:
         messages.error(request, "You must be logged in to do that...")
-        return redirect('home')
+        return redirect('dogs_app:home')
 
 
 # Page for editing the news from the homepage. Only visible to Admins
@@ -474,7 +484,7 @@ def update_news(request, news_id):
         news.content = request.POST['content']
         news.save()
         messages.success(request, f"News Story: '{request.POST['title']}' has been successfully edited...")
-        return redirect('home')
+        return redirect('dogs_app:home')
     return render(request, 'update_news.html', {'news': news})
 
 
@@ -486,5 +496,93 @@ def delete_news(request, news_id):
         news_title = news.title
         news.delete()
         messages.success(request, f"News Story: '{news_title}' has been successfully deleted...")
-        return redirect('home')
+        return redirect('dogs_app:home')
     return render(request, 'delete_news.html', {'news': news})
+
+
+# View for the Dynamic Graphs page
+def chart_data(request):
+    #DELETE#
+    logger = logging.getLogger(__name__)
+
+    from datetime import datetime, timedelta
+
+    # Debugging code
+    obs_with_kong = Observation.objects.filter(isKong='Y', obsDateTime__isnull=False)
+    obs_with_kong_dates = [{'date': obs.obsDateTime.date()} for obs in obs_with_kong]
+    logger.info(f"obs_with_kong_dates: {obs_with_kong_dates[:10]}")
+
+    obs_without_kong = Observation.objects.filter(isKong='N', obsDateTime__isnull=False)
+    obs_without_kong_dates = [{'date': obs.obsDateTime.date()} for obs in obs_without_kong]
+    logger.info(f"obs_without_kong_dates: {obs_without_kong_dates[:10]}")
+
+    # Now we manually aggregate and sum the session duration in Python
+    obs_with_kong_grouped = {}
+    for obs in obs_with_kong:
+        date = obs.obsDateTime.date()
+        if date not in obs_with_kong_grouped:
+            obs_with_kong_grouped[date] = 0
+        obs_with_kong_grouped[date] += obs.sessionDurationInMins
+
+    obs_without_kong_grouped = {}
+    for obs in obs_without_kong:
+        date = obs.obsDateTime.date()
+
+        if date not in obs_without_kong_grouped:
+            obs_without_kong_grouped[date] = 0
+        obs_without_kong_grouped[date] += obs.sessionDurationInMins
+
+    logger.info(f"With kong data: {obs_with_kong_grouped}")
+    logger.info(f"Without kong data: {obs_without_kong_grouped}")
+
+    # Get all the Dogs that have received a Kong Toy
+    dogs_with_kong = Dog.objects.filter(kongDateAdded__isnull=False)
+
+    # Get all Observations with and without a Kong Toy
+    obs_with_kong = Observation.objects.filter(isKong='Y', obsDateTime__isnull=False)
+    obs_without_kong = Observation.objects.filter(isKong='N', obsDateTime__isnull=False)
+
+    # Getting breeds and their counts
+    dog_breeds = Dog.objects.values('breed').annotate(total=Count('breed')).order_by('-total')
+
+    # Count of DogStances with and without kong toy
+    stances_with_kong = DogStance.objects.filter(observation__in=obs_with_kong).values('dogStance').annotate(
+        total=models.Count('observation'))
+    stances_without_kong = DogStance.objects.filter(observation__in=obs_without_kong).values('dogStance').annotate(
+        total=models.Count('observation'))
+
+    # Make obsDateTime timezone-aware
+    filtered_obs_with_kong = [{'date': k, 'total': v} for k, v in obs_with_kong_grouped.items()]
+    filtered_obs_without_kong = [{'date': k, 'total': v} for k, v in obs_without_kong_grouped.items()]
+
+    # Format dates for JavaScript
+    jsl_tz = timezone('Asia/Jerusalem')
+
+    for obs in filtered_obs_with_kong:
+        if obs['date']:
+            obs['date'] = obs['date'].strftime("%m/%d/%Y")
+
+    for obs in filtered_obs_without_kong:
+        if obs['date']:
+            obs['date'] = obs['date'].strftime("%m/%d/%Y")
+
+    #DELETE#
+    # Log the data
+    logger.info(f"With kong data: {list(filtered_obs_with_kong)}")
+    logger.info(f"Without kong data: {list(filtered_obs_without_kong)}")
+
+    # Preparing data to be used in the frontend
+    data = {
+        'dogs_with_kong': serializers.serialize('json', dogs_with_kong),
+        'stances_with_kong': list(stances_with_kong),
+        'stances_without_kong': list(stances_without_kong),
+        'dog_breeds': list(dog_breeds),
+        'durations_with_kong': list(filtered_obs_with_kong),
+        'durations_without_kong': list(filtered_obs_without_kong),
+    }
+
+    return JsonResponse(data)
+
+
+def graphs(request):
+    return render(request, 'graphs.html')

@@ -33,10 +33,10 @@
                             <td>{{ user.profile.phone_number }}</td>
                             <td>{{ user.profile.address }}</td>
                             <td>
-                                <a href="{% url 'update_user' user.id %}" class="btn btn-warning btn-sm">Edit</a>
+                                <a href="{% url 'dogs_app:update_user' user.id %}" class="btn btn-warning btn-sm">Edit</a>
                             </td>
                             <td>
-                                <a href="{% url 'delete_user' user.id %}" class="btn btn-danger btn-sm">Delete</a>
+                                <a href="{% url 'dogs_app:delete_user' user.id %}" class="btn btn-danger btn-sm">Delete</a>
                             </td>
                         </tr>
                     {% empty %}
