@@ -100,9 +100,9 @@ def register_user_view(request):
         profile_form = ProfileUpdateForm(request.POST, request.FILES)
         if form.is_valid() and profile_form.is_valid():
             user = form.save()
-            # Add User to the Regulars Group
-            regulars_group = Group.objects.get(name="Regular")
-            user.groups.add(regulars_group)
+            # Add User to the Viewers Group
+            viewers_group = Group.objects.get(name="Viewer")
+            user.groups.add(viewers_group)
 
             # Check if a profile already exists for the user
             profile = Profile.objects.filter(user=user).first()
@@ -290,7 +290,7 @@ def update_dog_view(request, pk):
 def view_users(request):
     # Retrieve all the users in the system, prefetch their groups, and select their profiles
     users = User.objects.all().prefetch_related('groups').select_related('profile')
-    # Fetch each user's Status (E.g: "Admin", "Vet" or "Regular")
+    # Fetch each user's Status (E.g: "Admin", "Vet" or "Viewer")
     for user in users:
         user.role = get_user_role(user)
     # pass all users on to viewers_users.html
@@ -304,8 +304,8 @@ def get_user_role(user):
         return "Admin"
     elif user.groups.filter(name="Vet").exists():
         return "Vet"
-    elif user.groups.filter(name="Regular").exists():
-        return "Regular"
+    elif user.groups.filter(name="Viewer").exists():
+        return "Viewer"
     else:
         return ""
 
@@ -510,11 +510,11 @@ def chart_data(request):
     # Debugging code
     obs_with_kong = Observation.objects.filter(isKong='Y', obsDateTime__isnull=False)
     obs_with_kong_dates = [{'date': obs.obsDateTime.date()} for obs in obs_with_kong]
-    logger.info(f"obs_with_kong_dates: {obs_with_kong_dates[:10]}")
+    logger.info(f"1) obs_with_kong_dates: {obs_with_kong_dates[:10]}")
 
     obs_without_kong = Observation.objects.filter(isKong='N', obsDateTime__isnull=False)
     obs_without_kong_dates = [{'date': obs.obsDateTime.date()} for obs in obs_without_kong]
-    logger.info(f"obs_without_kong_dates: {obs_without_kong_dates[:10]}")
+    logger.info(f"2) obs_without_kong_dates: {obs_without_kong_dates[:10]}")
 
     # Now we manually aggregate and sum the session duration in Python
     obs_with_kong_grouped = {}
@@ -532,8 +532,8 @@ def chart_data(request):
             obs_without_kong_grouped[date] = 0
         obs_without_kong_grouped[date] += obs.sessionDurationInMins
 
-    logger.info(f"With kong data: {obs_with_kong_grouped}")
-    logger.info(f"Without kong data: {obs_without_kong_grouped}")
+    logger.info(f"3) With kong data: {obs_with_kong_grouped}")
+    logger.info(f"4) Without kong data: {obs_without_kong_grouped}")
 
     # Get all the Dogs that have received a Kong Toy
     dogs_with_kong = Dog.objects.filter(kongDateAdded__isnull=False)
@@ -568,8 +568,8 @@ def chart_data(request):
 
     #DELETE#
     # Log the data
-    logger.info(f"With kong data: {list(filtered_obs_with_kong)}")
-    logger.info(f"Without kong data: {list(filtered_obs_without_kong)}")
+    logger.info(f"5) With kong data: {list(filtered_obs_with_kong)}")
+    logger.info(f"6) Without kong data: {list(filtered_obs_without_kong)}")
 
     # Preparing data to be used in the frontend
     data = {

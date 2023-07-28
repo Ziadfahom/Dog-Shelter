@@ -164,7 +164,7 @@ class UpdateUserForm(UserChangeForm):
                                                               'placeholder': 'Last Name'}))
     # For displaying User Status (ranking)
     ROLE_CHOICES = [
-        ('Regular', 'Regular'),
+        ('Viewer', 'Viewer'),
         ('Vet', 'Vet'),
         ('Admin', 'Admin'),
     ]
@@ -175,7 +175,7 @@ class UpdateUserForm(UserChangeForm):
         model = User
         fields = ('username', 'first_name', 'last_name', 'email', 'role')
 
-    # Admins can't change their own role to "Vet" or "Regular"
+    # Admins can't change their own role to "Vet" or "Viewer"
     # They can only change other admins
     def __init__(self, *args, **kwargs):
         self.request_user = kwargs.pop('request_user', None)
@@ -187,8 +187,8 @@ class UpdateUserForm(UserChangeForm):
                 return "Admin"
             elif user.groups.filter(name="Vet").exists():
                 return "Vet"
-            elif user.groups.filter(name="Regular").exists():
-                return "Regular"
+            elif user.groups.filter(name="Viewer").exists():
+                return "Viewer"
             else:
                 return ""
 
@@ -204,8 +204,8 @@ class UpdateUserForm(UserChangeForm):
                 current_role = get_user_role(self.request_user)
                 if current_role == 'Vet':
                     self.fields['role'].choices = [('Vet', 'Vet')]
-                elif current_role == 'Regular':
-                    self.fields['role'].choices = [('Regular', 'Regular')]
+                elif current_role == 'Viewer':
+                    self.fields['role'].choices = [('Viewer', 'Viewer')]
 
 
 # Add more attributes to User profiles

@@ -91,15 +91,15 @@
             <canvas id="chart_dogBreeds"></canvas>
         </div>
     </div>
-{#    <div class="card chart-container">#}
-{#        <div class="card-body">#}
-{#            <h2 class="card-title">Duration of Engagement</h2>#}
-{#            <canvas id="chart_duration_of_engagement"></canvas>#}
-{#        </div>#}
-{#    </div>#}
+    <div class="card chart-container">
+        <div class="card-body">
+            <h2 class="card-title">Duration of Engagement</h2>
+            <canvas id="chart_duration_of_engagement"></canvas>
+        </div>
+    </div>
 
     <script>
-        var loadingElement = document.getElementById('loading');
+        const loadingElement = document.getElementById('loading');
         var detailedData_with_kong = [];
         var detailedData_without_kong = [];
 
@@ -324,7 +324,7 @@
 
                 .catch(function() {
                     console.error("Error fetching data.");
-                    loadingElement.innerHTML = "<p>Error fetching data.</p>";
+                    loadingElement.innerHTML = "<p>Error fetching data. </p>";
                 });
         }
 

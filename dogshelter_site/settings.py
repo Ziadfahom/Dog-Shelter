@@ -171,6 +171,8 @@ THUMBNAIL_DEBUG = True
 # List of video files allowed to upload to the system
 ALLOWED_VIDEO_FILE_EXTENSIONS = ['.mp4', '.avi', '.mov', '.flv', '.wmv']
 
+
+# Delete Eventually, being used for testing
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
