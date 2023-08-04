@@ -3,9 +3,10 @@
 {% load crispy_forms_tags %}
 {% load widget_tweaks %}
 {% load static %}
+
 {% block content %}
 
-    <link href="{% static 'dogs_app/css/styles.css' %}" rel="stylesheet">
+    <link href="{% static 'dogs_app/css/update_user.css' %}" rel="stylesheet">
 
     <div class="container mt-5 col-md-9">
         <div class="card border-warning stylish-card shadow">
@@ -74,7 +75,7 @@
                         {% endif %}
                     {% endfor %}
 
-                    <div class="add-dog-button mt-4 action-buttons">
+                    <div class="action-buttons mt-4">
                         <button type="submit" class="btn btn-success">Save</button>
                     </div>
                     <div class="back-button mt-2">
@@ -103,32 +104,6 @@
       </div>
     </div>
 
-    <script>
-        document.getElementById('customUploadButton').addEventListener('click', function() {
-            document.getElementById('id_image').click();
-        });
-
-        document.getElementById('id_image').addEventListener('change', function(e) {
-            var file = e.target.files[0];
-            var reader = new FileReader();
-
-            reader.onloadend = function() {
-                document.getElementById('profile_picture').src = reader.result;
-                document.getElementById('image_change_alert').style.display = 'block';  // Show the alert
-            }
-
-            if (file) {
-                reader.readAsDataURL(file);
-            } else {
-                document.getElementById('profile_picture').src = "/static/dogs_app/img/default.jpg";
-            }
-        });
-
-        $('#profile_picture').click(function() {
-            var imgSrc = $(this).attr('src');
-            $('#modal_image').attr('src', imgSrc);
-            $('#imageModal').modal('show');
-        });
-    </script>
+    <script src="{% static 'dogs_app/js/update_user.js' %}"></script>
 
 {% endblock %}

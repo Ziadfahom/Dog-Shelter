@@ -6,7 +6,7 @@
 .text-start-strong strong {
     justify-content: flex-start;
     white-space: nowrap;
-    width: 50px; /* adjust this value based on your layout */
+    width: 50px; /* adjust this value accordingly */
 }
 .text-start-strong span {
     justify-content: flex-start;

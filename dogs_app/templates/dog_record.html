@@ -4,118 +4,7 @@
 {% load static %}
 
 {% block content %}
-    <link href="{% static 'dogs_app/css/styles.css' %}" rel="stylesheet">
-
-    <style>
-        .hide {
-            display: none;
-        }
-
-        .center-container {
-            display: flex;
-            justify-content: center;
-            width: 100%;
-        }
-
-        .clickable-header {
-            border: 1px solid #ccc;
-            padding: 8px;
-            margin: 3px 0;
-            border-radius: 5px;
-            background-color: #f8f9fa;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-            display: inline-block;
-            text-align: center;
-        }
-
-        .clickable-header:hover {
-            background-color: #e9ecef;
-        }
-
-        .clickable-header h2 {
-            margin: 0;
-            font-size: 1.35rem;
-            display: inline;
-        }
-
-        .styled-table {
-            border-collapse: collapse;
-            margin: 20px 0;
-            font-size: 0.9em;
-            font-family: sans-serif;
-            min-width: 400px;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.15);
-            border-radius: 15px;   /* Rounded corners for table */
-        }
-
-        #owner-button {
-            background-color: dodgerblue;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 13px;
-            margin: 4px 2px;
-            cursor: pointer;
-            transition-duration: 0.4s;
-            border-radius: 4px;
-        }
-
-        #owner-button:hover {
-            background-color: white;
-            color: black;
-            border: 2px solid #007BFF;
-        }
-
-        h2 {
-            text-align: center;
-        }
-
-        .styled-table thead tr {
-            background-color: #009879;
-            color: #ffffff;
-            text-align: center;
-        }
-
-        .styled-table th,
-        .styled-table td {
-            padding: 12px 15px;
-            border: 1px solid #dddddd;  /* Border color */
-            line-height: 1.5; /* Table data line height */
-            text-align: center;
-
-        }
-
-        .styled-table tbody tr {
-            border-bottom: 1px solid #dddddd;
-                transition: all .3s;
-        }
-
-        .styled-table tbody tr:nth-of-type(even) {
-            background-color: #f3f3f3;
-        }
-
-        /* Hover effect */
-        .styled-table tbody tr:hover {
-            background-color: #f5f5f5;
-            -webkit-box-shadow: 0px 0px 13px 0px rgba(0,0,0,0.1);
-            -moz-box-shadow: 0px 0px 13px 0px rgba(0,0,0,0.1);
-            box-shadow: 0px 0px 13px 0px rgba(0,0,0,0.1);
-            transform: scale(1); /* slightly increase size of row to reveal shadow */
-        }
-
-        .card {
-            border-radius: 15px; /* Rounded corners for card */
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1); /* Card shadow */
-        }
-
-        .attr-name {
-            width: 40%;
-        }
-    </style>
+    <link href="{% static 'dogs_app/css/dog_record.css' %}" rel="stylesheet">
 
     <div class="container mt-5 ">
         <div class="col-md-10 mx-auto">
@@ -197,27 +86,25 @@
                             </tr>
 
 
-<tr>
-    <td class="attr-name"><strong>Owner</strong></td>
-    <td>
-        <div class="d-flex justify-content-between align-items-center">
-            <div style="width:50%"></div>
-            <div class="text-center" style="width:50%">
-                {{ dog_record.owner|handle_none }}
-            </div>
-            {% if dog_record.owner %}
-                <div style="width:50%">
-                    <button type="button" id="owner-button" class="btn btn-primary float-end" data-bs-toggle="modal" data-bs-target="#ownerModal">View</button>
-                </div>
-            {% endif %}
-        </div>
-    </td>
-</tr>
-
+                            <tr>
+                                <td class="attr-name"><strong>Owner</strong></td>
+                                <td>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div style="width:50%"></div>
+                                        <div class="text-center" style="width:50%">
+                                            {{ dog_record.owner|handle_none }}
+                                        </div>
+                                        {% if dog_record.owner %}
+                                            <div style="width:50%">
+                                                <button type="button" id="owner-button" class="btn btn-primary float-end" data-bs-toggle="modal" data-bs-target="#ownerModal">View</button>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
 
                         </tbody>
                     </table>
-
 
                     <!-- Expand/Collapse All Button -->
                     <div class="d-inline-block float-end">
@@ -374,7 +261,7 @@
 
                 <div class="card-footer bg-transparent">
                     {% if user.is_authenticated and user|has_group:"Vet" %}
-                        <div class="add-dog-button mt-1 action-buttons">
+                        <div class="mt-1 action-buttons">
                             <a href="{% url 'dogs_app:update_dog' dog_record.dogID %}" class="btn btn-warning me-2">Update</a>
                             <a href="{% url 'dogs_app:delete_dog' dog_record.dogID %}" class="btn btn-danger">Delete</a>
                         </div>
@@ -403,115 +290,51 @@
         </div>
     </div>
 
-<!-- Dog Owner Modal -->
-<div class="modal fade" id="ownerModal">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
+    <!-- Dog Owner Modal -->
+    <div class="modal fade" id="ownerModal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
 
-            <!-- Modal Header -->
-            <div class="modal-header">
-                <h3 class="modal-title center-container">{{ dog_record.owner.firstName }} {{ dog_record.owner.lastName }}</h3>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h3 class="modal-title center-container">{{ dog_record.owner.firstName }} {{ dog_record.owner.lastName }}</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
 
-            <!-- Modal Body -->
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <ul class="list-group list-group-flush">
-                                {% if dog_record.owner %}
-                                    <li class="list-group-item"><strong>Owner ID:</strong> {{ dog_record.owner.ownerID }}</li>
-                                    <li class="list-group-item"><strong>Address:</strong> {{ dog_record.owner.ownerAddress }}, {{ dog_record.owner.city }}</li>
-                                    <li class="list-group-item"><strong>Phone:</strong> {{ dog_record.owner.phoneNum }}</li>
-                                    <li class="list-group-item"><strong>Cellphone:</strong> {{ dog_record.owner.cellphoneNum }}</li>
-                                    <li class="list-group-item"><strong>Comments:</strong> {{ dog_record.owner.comments }}</li>
-                                {% else %}
-                                    <li class="list-group-item">No owner details available.</li>
-                                {% endif %}
-                            </ul>
+                <!-- Modal Body -->
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <ul class="list-group list-group-flush">
+                                    {% if dog_record.owner %}
+                                        <li class="list-group-item"><strong>Owner ID:</strong> {{ dog_record.owner.ownerID }}</li>
+                                        <li class="list-group-item"><strong>Address:</strong> {{ dog_record.owner.ownerAddress }}, {{ dog_record.owner.city }}</li>
+                                        <li class="list-group-item"><strong>Phone:</strong> {{ dog_record.owner.phoneNum }}</li>
+                                        <li class="list-group-item"><strong>Cellphone:</strong> {{ dog_record.owner.cellphoneNum }}</li>
+                                        <li class="list-group-item"><strong>Comments:</strong> {{ dog_record.owner.comments }}</li>
+                                    {% else %}
+                                        <li class="list-group-item">No owner details available.</li>
+                                    {% endif %}
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Modal Footer -->
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
 
+            </div>
         </div>
     </div>
-</div>
 
-
-
-<script>
-    $(document).ready(function(){
-        var allContainers = [
-            '#treatments_container',
-            '#examinations_container',
-            '#observations_container',
-            '#placements_container'
-        ];
-
-        // Function to check if all containers are visible or hidden
-        var checkAllContainersState = function() {
-            var allVisible = allContainers.every(function(container) {
-                return !$(container).next().hasClass('hide');
-            });
-
-            var allHidden = allContainers.every(function(container) {
-                return $(container).next().hasClass('hide');
-            });
-
-            if (allVisible) {
-                $('#toggleTables').text('Collapse All');
-            } else if (allHidden) {
-                $('#toggleTables').text('Expand All');
-            }
-        }
-
-        // Setting the click event for image modal
-        $('#imageModal').on('show.bs.modal', function (event) {
-            var imgElement = document.querySelector('#dog_picture');
-            var fullImageElement = document.querySelector('#fullImage');
-            var dogNameElement = document.querySelector('#dogName');
-            fullImageElement.setAttribute('src', imgElement.getAttribute('src'));
-            dogNameElement.textContent = '{{ dog_record.dogName }}';
-        });
-
-        // Setting the click event for all containers
-        allContainers.forEach(function(container) {
-            $(container).click(function() {
-                $(this).next().toggleClass('hide');
-                $(this).find('i').toggleClass('fa-angle-down fa-angle-up');
-                checkAllContainersState();
-            });
-        });
-
-        // Setting the click event for toggleTables
-        $('#toggleTables').click(function(){
-            var toggleState = $(this).text();
-
-            if (toggleState === 'Expand All') {
-                allContainers.forEach(function(container) {
-                    $(container).next().removeClass('hide');
-                    $(container).find('i').removeClass('fa-angle-down').addClass('fa-angle-up');
-                });
-                $(this).text('Collapse All');
-            } else {
-                allContainers.forEach(function(container) {
-                    $(container).next().addClass('hide');
-                    $(container).find('i').removeClass('fa-angle-up').addClass('fa-angle-down');
-                });
-                $(this).text('Expand All');
-            }
-        });
-    });
-</script>
-
-
-
+    <!-- Declare a variable for displaying the dog's image, to be used in the following external JavaScript file -->
+    <script type="text/javascript">
+        const dogImageLoad = '{{ dog_record.dogName }}';
+    </script>
+    <script src="{% static 'dogs_app/js/dog_record.js' %}"></script>
 
 {% endblock %}

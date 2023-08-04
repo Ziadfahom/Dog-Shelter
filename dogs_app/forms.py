@@ -127,7 +127,7 @@ class AddDogForm(forms.ModelForm):
                                                                           "placeholder": "Last Date Given a Kong",
                                                                           "class": "form-control"}),
                                     label="Last Date Given a Kong")
-    ownerSerialNum = forms.ModelChoiceField(queryset=Owner.objects.all(),
+    owner = forms.ModelChoiceField(queryset=Owner.objects.all(),
                                             required=False,
                                             widget=forms.widgets.Select(attrs={"placeholder": "Dog's Owner",
                                                                                "class": "form-control"}),
