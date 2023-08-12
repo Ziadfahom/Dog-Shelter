@@ -121,6 +121,10 @@ h2 {
     margin-bottom: 1rem;
 }
 
+.top-buttons {
+    margin-bottom: 0;
+}
+
 .back-button {
     display: flex;
     justify-content: flex-end;
@@ -207,4 +211,21 @@ th {
 
 .stylish-tbody {
     color: #495057;
+}
+
+.action-buttons a,
+.back-button a,
+.btn-danger {
+    font-size: 1.1rem; /* slightly increase font size */
+    transition: transform 0.2s;
+}
+
+.action-buttons a:hover,
+.back-button a:hover,
+.btn-danger:hover {
+    transform: scale(1.05); /* subtle grow effect on hover */
+}
+
+.update-button-wide {
+    width: 120px;
 }

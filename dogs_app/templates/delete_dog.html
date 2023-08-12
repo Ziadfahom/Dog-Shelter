@@ -4,7 +4,7 @@
 {% block content %}
     <link href="{% static 'dogs_app/css/delete_dog.css' %}" rel="stylesheet">
 
-    <div class="container mt-5 text-center">
+    <div class="container text-center">
         <div class="col-md-7 mx-auto">
             <div class="card border-danger shadow-lg">
                 <div class="card-header bg-danger text-white">
@@ -28,12 +28,12 @@
                            <strong>Chip Number: </strong><span class="centered-content">{{ dog.chipNum }}</span>
                        </li>
                    </ul>
-                   <form method="POST" class="delete-dog-button mt-4">
+                   <form method="POST" class="action-buttons">
                        {% csrf_token %}
                        <button type="submit" class="btn btn-danger">Delete</button>
                    </form>
-                   <div class="back-button mt-2">
-                       <a href="{% url 'dogs_app:home' %}" class="btn btn-secondary">Back</a>
+                   <div class="back-button">
+                       <a href="{% url 'dogs_app:dog_record' dog.dogID %}" class="btn btn-secondary">Back</a>
                    </div>
                </div>
             </div>

@@ -24,3 +24,8 @@ $('#profile_picture').click(function() {
     $('#modal_image').attr('src', imgSrc);
     $('#imageModal').modal('show');
 });
+
+function submitUserForm() {
+    const form = document.querySelector('.stylish-form');
+    form.submit();
+}

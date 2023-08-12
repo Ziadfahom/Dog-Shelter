@@ -206,7 +206,7 @@ def delete_dog_view(request, pk):
             dog_name = delete_dog.dogName
             delete_dog.delete()
             messages.success(request, f'{dog_name} Has Been Deleted Successfully...')
-            return redirect('dogs_app:home')
+            return redirect('dogs_app:view_dogs')
         # User clicked "Delete" button to confirm deletion
         return render(request, 'delete_dog.html', {'dog': delete_dog})
     # User not logged in, must login first
@@ -231,7 +231,7 @@ def add_dog_view(request):
                 # Save new dog details to database + display success message
                 form.save()
                 messages.success(request, f"{form.cleaned_data['dogName']} Has Been Added Successfully...")
-                return redirect('dogs_app:home')
+                return redirect('dogs_app:view_dogs')
             # If form is not valid, render errors
             else:
                 return render(request, 'add_dog.html', {"form": form})
@@ -586,3 +586,13 @@ def chart_data(request):
 
 def graphs(request):
     return render(request, 'graphs.html')
+
+
+def view_dogs(request):
+    all_dogs = Dog.objects.all().order_by('-dateOfArrival')
+
+    context = {
+        'dogs': all_dogs,
+    }
+
+    return render(request, 'view_dogs.html', context=context)

@@ -20,11 +20,11 @@
                         <strong>Content: </strong><span class="centered-content">{{ news.content }}</span>
                     </li>
                 </ul>
-                <form method="POST" class="delete-news-button mt-4">
+                <form method="POST" class="action-buttons">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-danger">Delete News</button>
                 </form>
-                <div class="back-button mt-2">
+                <div class="back-button">
                     <a href="{% url 'dogs_app:home' %}" class="btn btn-secondary">Back</a>
                 </div>
             </div>

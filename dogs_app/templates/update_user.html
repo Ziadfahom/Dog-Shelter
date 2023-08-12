@@ -9,12 +9,31 @@
     <link href="{% static 'dogs_app/css/update_user.css' %}" rel="stylesheet">
 
     <div class="container mt-5 col-md-9">
+        <div class="d-flex justify-content-between align-items-center p-2">
+            <div class="action-buttons top-buttons">
+                {% if user.is_authenticated and user.is_superuser and user.id != user_to_update.id %}
+                    <a href="{% url 'dogs_app:delete_user' user_to_update.id %}" class="btn btn-danger">Delete</a>
+                {% else %}
+                    <div class="spacer"></div> <!-- Empty div to maintain spacing for centered button -->
+                {% endif %}
+            </div>
+            <div class="action-buttons top-buttons">
+                <button type="submit" class="btn btn-success save-button-wide" onclick="submitUserForm()">Save</button>
+            </div>
+            <div class="back-button">
+                {% if user.is_superuser %}
+                    <a href="{% url 'dogs_app:view_users' %}" class="btn btn-secondary">Back</a>
+                {% else %}
+                    <a href="{% url 'dogs_app:home' %}" class="btn btn-secondary">Back</a>
+                {% endif %}
+            </div>
+        </div>
         <div class="card border-warning stylish-card shadow">
             <div class="card-header bg-warning text-black text-center">
                 <h1>Edit Account Details</h1>
             </div>
             <div class="card-body stylish-card-body">
-                <form id="update_form" method="POST" action="" enctype="multipart/form-data">
+                <form id="update_form" method="POST" class="form stylish-form" enctype="multipart/form-data">
                     {% csrf_token %}
 
                     <!-- Current profile picture and controls -->
@@ -41,7 +60,6 @@
                                 {{ profile_form.image|add_class:"form-control"|as_crispy_field }}
                             </div>
                         </div>
-
                     </div>
 
                     {% for field in user_form %}
@@ -75,15 +93,20 @@
                         {% endif %}
                     {% endfor %}
 
-                    <div class="action-buttons mt-4">
-                        <button type="submit" class="btn btn-success">Save</button>
-                    </div>
-                    <div class="back-button mt-2">
-                        {% if user.is_superuser %}
-                            <a href="{% url 'dogs_app:view_users' %}" class="btn btn-secondary">Back</a>
-                        {% else %}
-                            <a href="{% url 'dogs_app:home' %}" class="btn btn-secondary">Back</a>
-                        {% endif %}
+                    <div class="card-footer bg-transparent">
+                        <div class="action-buttons mt-1">
+                            <button type="submit" class="btn btn-success me-2">Save</button>
+                            {% if user.is_authenticated and user.is_superuser and user.id != user_to_update.id %}
+                                <a href="{% url 'dogs_app:delete_user' user_to_update.id %}" class="btn btn-danger">Delete</a>
+                            {% endif %}
+                        </div>
+                        <div class="back-button">
+                            {% if user.is_superuser %}
+                                <a href="{% url 'dogs_app:view_users' %}" class="btn btn-secondary">Back</a>
+                            {% else %}
+                                <a href="{% url 'dogs_app:home' %}" class="btn btn-secondary">Back</a>
+                            {% endif %}
+                        </div>
                     </div>
                 </form>
             </div>

@@ -76,3 +76,31 @@ input[type='date'] {
     height: calc(1.8em + .75rem + 2px); /* This is Bootstrap 4's default height for form inputs */
     line-height: 1.5; /* Bootstrap 4's default line-height for form inputs */
 }
+
+.stylish-form {
+    padding: 10px;
+}
+
+.spacer {
+    margin-right: 70px;
+}
+
+.save-button-wide {
+    width: 140px;
+}
+
+.action-buttons button,
+.action-buttons a,
+.back-button a,
+.add-dog-button {
+    font-size: 1.1rem; /* slightly increase font size */
+    transition: transform 0.2s;
+}
+
+.action-buttons button:hover,
+.action-buttons a:hover,
+.back-button a:hover,
+.add-dog-button:hover {
+    transform: scale(1.05); /* subtle grow effect on hover */
+}
+

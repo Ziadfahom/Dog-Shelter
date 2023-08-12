@@ -92,80 +92,6 @@
                 </div>
             </div>
 
-            <!-- Dogs table -->
-            <div class="row justify-content-center">
-                <div class="table-responsive mt-4 stylish-table">
-                    <table class="table table-striped table-hover">
-
-                        <caption style="caption-side: top; padding: 10px; color: #555; font-size: 20px; background-color: #fff;" class="text-center table-caption">Current dogs in our system</caption>
-
-                        <thead class="text-center small stylish-thead table-dark">
-                        <tr>
-                            <th scope="col" class="text-center" style="border-top-left-radius: 10px;">Dog Name</th>
-                            <th scope="col" class="text-center">Arrival Date</th>
-                            <th scope="col" class="text-center">Gender</th>
-                            <th scope="col" class="text-center">Breed</th>
-                            <th scope="col" class="text-center">Fur Color</th>
-                            <th scope="col" class="text-center">Age (Years)</th>
-                            <th scope="col" class="text-center">Vaccination Date</th>
-                            <th scope="col" class="text-center">Neutered?</th>
-                            <th scope="col" class="text-center">Dangerous?</th>
-                            <th scope="col" class="text-center">Kong Added</th>
-                            <th scope="col" class="text-center" style="border-top-right-radius: 10px;">Owner</th>
-                        </tr>
-                        </thead>
-                        <tbody class="small stylish-tbody">
-
-                        <!-- Check if there are any dogs -->
-                        {% if dogs %}
-
-                            <!-- Iterate over each dog -->
-                            {% for dog in dogs %}
-                                <!--For each dog, a table row is created.
-                                The row is clickable (redirects to the dog's record page), and hovering over it
-                                 shows a pointer cursor and displays a tooltip with the dog's thumbnail.-->
-                                <tr class="dog-row"
-                                    data-href="{% url 'dogs_app:dog_record' dog.dogID %}"
-                                    style="cursor: pointer;"
-                                    data-bs-toggle="tooltip" data-bs-html="true"
-                                    title="{% if dog.dogImage %}<img src='{{ dog.dogImage.url }}' alt='Thumbnail of {{ dog.dogName }}' style='max-width: 200px;'>{% else %}<img src='{% static 'dogs_app/img/default_dog.jpg' %}' alt='Default dog thumbnail'>{% endif %}">
-                                    <td class="text-center">{{ dog.dogName|handle_none }}</td>
-
-                                    <td class="text-center">{{ dog.dateOfArrival|handle_none }}</td>
-                                    <td class="text-center">
-                                        {% if dog.gender == "M" %}
-                                            Male(⚦)
-                                        {% elif dog.gender == "F" %}
-                                            Female(⚥)
-                                        {% else %}
-                                            -
-                                        {% endif %}
-                                    </td>
-                                    <td class="text-center">{{ dog.breed|handle_none }}</td>
-                                    <td class="text-center">{{ dog.furColor|handle_none }}</td>
-                                    <td class="text-center">{{ dog.dateOfBirthEst|calculate_age }}</td>
-                                    <td class="text-center">{{ dog.dateOfVaccination|handle_none }}</td>
-                                    <td class="text-center">
-                                        <div class="form-check d-flex justify-content-center">
-                                            <input class="form-check-input" type="checkbox" style="transform: scale(1.5);" {% if dog.isNeutered == "Y" %}checked{% endif %} disabled>
-                                        </div>
-                                    </td>
-                                    <td class="text-center">
-                                        <div class="form-check d-flex justify-content-center">
-                                            <input class="form-check-input" type="checkbox" style="transform: scale(1.5);" {% if dog.isDangerous == "Y" %}checked{% endif %} disabled>
-                                        </div>
-                                    </td>
-                                    <td class="text-center">{{ dog.kongDateAdded|handle_none }}</td>
-                                    <td class="text-center">{{ dog.owner|handle_none }}</td>
-                                </tr>
-
-                            {% endfor %}
-                        {% endif %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
         <!-- If the user is not authenticated, show a login form -->
         {% else %}
             <div class="container">
@@ -200,7 +126,5 @@
             </div>
         {% endif %}
     </div>
-
-    <script src="{% static 'dogs_app/js/home.js' %}"></script>
 
 {% endblock %}

@@ -93,3 +93,33 @@
     display: flex;
     justify-content: flex-end;
 }
+
+.top-buttons {
+    margin-bottom: 0;
+}
+
+.save-button-wide {
+    width: 140px;
+}
+
+.spacer {
+    margin-right: 70px;
+}
+
+.stylish-form {
+    /* styles for form */
+    padding: 10px;
+}
+
+.action-buttons button,
+.action-buttons a,
+.back-button a{
+    font-size: 1.1rem; /* slightly increase font size */
+    transition: transform 0.2s;
+}
+
+.action-buttons button:hover,
+.action-buttons a:hover,
+.back-button a:hover{
+    transform: scale(1.05); /* subtle grow effect on hover */
+}

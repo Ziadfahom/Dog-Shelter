@@ -21,7 +21,6 @@
     justify-content: flex-end;
 }
 
-
 .btn-primary {
     color: #fff;
     background-color: #0d6efd;
@@ -108,7 +107,31 @@
     border-color: #ffeeba;
 }
 
+.top-buttons {
+    margin-bottom: 0;
+}
+
+.save-button-wide {
+    width: 140px;
+}
+
+.spacer {
+    margin-right: 70px;
+}
+
+.action-buttons button,
+.back-button a {
+    font-size: 1.1rem; /* slightly increase font size */
+    transition: transform 0.2s;
+}
+
+.action-buttons button:hover,
+.back-button a:hover {
+    transform: scale(1.05); /* subtle grow effect on hover */
+}
+
 input[type='date'] {
     height: calc(1.8em + .75rem + 2px); /* This is Bootstrap 4's default height for form inputs */
     line-height: 1.5; /* Bootstrap 4's default line-height for form inputs */
 }
+

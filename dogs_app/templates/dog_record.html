@@ -6,13 +6,24 @@
 {% block content %}
     <link href="{% static 'dogs_app/css/dog_record.css' %}" rel="stylesheet">
 
-    <div class="container mt-5 ">
+    <div class="container mt-5">
         <div class="col-md-10 mx-auto">
+            <div class="d-flex align-items-center p-2">
+                {% if user.is_authenticated and user|has_group:"Vet" %}
+                    <a href="{% url 'dogs_app:delete_dog' dog_record.dogID %}" class="btn btn-danger flex-shrink-0">Delete</a>
+                    <div class="d-flex justify-content-center flex-grow-1 action-buttons top-buttons">
+                        <a href="{% url 'dogs_app:update_dog' dog_record.dogID %}" class="btn btn-warning update-button-wide">Update</a>
+                    </div>
+                {% endif %}
+                <div class="back-button flex-shrink-0">
+                    <a href="{% url 'dogs_app:view_dogs' %}" class="btn btn-secondary">Back</a>
+                </div>
+            </div>
             <div class="card border-secondary shadow-lg">
-
                 <div class="card-header bg-dark text-white">
                     <h2 class="card-title">{{ dog_record }}</h2>
                 </div>
+
                 <div class="card-header text-center">
                     {% if dog_record.dogImage and not dog_record.is_default_image %}
                         <img id="dog_picture" data-bs-toggle="modal" data-bs-target="#imageModal" src="{{ dog_record.dogImage.url }}" class="card-img-top" alt="Dog Image" style="width: 25rem; height: 20rem; object-fit: cover; cursor: pointer;">
@@ -260,15 +271,15 @@
                 </div>
 
                 <div class="card-footer bg-transparent">
-                    {% if user.is_authenticated and user|has_group:"Vet" %}
-                        <div class="mt-1 action-buttons">
-                            <a href="{% url 'dogs_app:update_dog' dog_record.dogID %}" class="btn btn-warning me-2">Update</a>
-                            <a href="{% url 'dogs_app:delete_dog' dog_record.dogID %}" class="btn btn-danger">Delete</a>
+                        {% if user.is_authenticated and user|has_group:"Vet" %}
+                            <div class="mt-1 action-buttons">
+                                <a href="{% url 'dogs_app:update_dog' dog_record.dogID %}" class="btn btn-warning me-2">Update</a>
+                                <a href="{% url 'dogs_app:delete_dog' dog_record.dogID %}" class="btn btn-danger">Delete</a>
+                            </div>
+                        {% endif %}
+                        <div class="back-button">
+                            <a href="{% url 'dogs_app:view_dogs' %}" class="btn btn-secondary">Back</a>
                         </div>
-                    {% endif %}
-                    <div class="back-button">
-                        <a href="{% url 'dogs_app:home' %}" class="btn btn-secondary">Back</a>
-                    </div>
                 </div>
 
             </div>

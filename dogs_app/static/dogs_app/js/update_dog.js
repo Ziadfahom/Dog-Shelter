@@ -42,3 +42,8 @@ resetLinks.forEach((link, index) => {
         dateFields[index].value = "";
     });
 });
+
+function submitDogForm() {
+    const form = document.querySelector('.stylish-form');
+    form.submit();
+}

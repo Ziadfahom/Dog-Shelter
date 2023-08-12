@@ -19,4 +19,6 @@ urlpatterns = [
     path('change_password/', views.change_password, name='change_password'),
     path('graphs/', views.graphs, name='graphs'),
     path('chart_data/', views.chart_data, name='chart_data'),
+    path('dogs/', views.view_dogs, name='view_dogs'),
+
 ]

@@ -30,11 +30,11 @@
                             <strong>Email: </strong><span class="centered-content">{{ delete_user.email }}</span>
                         </li>
                     </ul>
-                    <form method="POST" class="delete-dog-button mt-4">
+                    <form method="POST" class="action-buttons">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-danger">Delete</button>
                     </form>
-                    <div class="back-button mt-2">
+                    <div class="back-button">
                         <a href="{% url 'dogs_app:view_users' %}" class="btn btn-secondary">Back</a>
                     </div>
                 </div>

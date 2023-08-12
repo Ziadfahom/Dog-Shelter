@@ -7,6 +7,15 @@
     <link href="{% static 'dogs_app/css/update_dog.css' %}" rel="stylesheet">
 
     <div class="container mt-5 col-md-9">
+        <div class="d-flex justify-content-between align-items-center p-2">
+            <div class="spacer"></div> <!-- Empty div to maintain spacing for centered button -->
+            <div class="action-buttons top-buttons">
+                <button type="submit" class="btn btn-success save-button-wide" onclick="submitDogForm()">Save Changes</button>
+            </div>
+            <div class="back-button">
+                <a href="{% url 'dogs_app:dog_record' current_dogID %}" class="btn btn-secondary">Back</a>
+            </div>
+        </div>
         <div class="card border-warning stylish-card shadow">
             <div class="card-header bg-warning text-black text-center stylish-card-header">
                 <h1 class="">Update Dog Details</h1>

@@ -6,12 +6,21 @@
 
 <div class="container mt-5 text-center">
     <div class="col-md-8 mx-auto">
+        <div class="d-flex justify-content-between align-items-center p-2">
+            <div class="spacer"></div> <!-- Empty div to maintain spacing for centered button -->
+            <div class="action-buttons top-buttons">
+                <button type="submit" class="btn btn-success save-button-wide" onclick="submitDogForm()">Add Dog</button>
+            </div>
+            <div class="back-button">
+                <a href="{% url 'dogs_app:home' %}" class="btn btn-secondary">Home</a>
+            </div>
+        </div>
         <div class="card border-primary shadow-lg">
             <div class="card-header text-white bg-primary bg-gradient">
                 <h2 class="card-title">Add a New Dog</h2>
             </div>
             <div class="card-body">
-                <form method="POST" action="{% url 'dogs_app:add_dog' %}" enctype="multipart/form-data">
+                <form method="POST" class="form stylish-form" action="{% url 'dogs_app:add_dog' %}" enctype="multipart/form-data">
                     {% csrf_token %}
                     {% for field in form %}
                         <div class="form-floating mb-3">
@@ -28,7 +37,7 @@
                         <button type="submit" class="btn btn-success">Add Dog</button>
                     </div>
                     <div class="back-button mt-2">
-                        <a href="{% url 'dogs_app:home' %}" class="btn btn-secondary">Back</a>
+                        <a href="{% url 'dogs_app:home' %}" class="btn btn-secondary">Home</a>
                     </div>
                 </form>
             </div>
@@ -36,4 +45,5 @@
     </div>
 </div>
 
+    <script src="{% static 'dogs_app/js/add_dog.js' %}"></script>
 {% endblock %}
