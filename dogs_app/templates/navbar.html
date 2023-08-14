@@ -21,7 +21,7 @@
                 </li>
                 {% if user.is_authenticated and user|has_group:"Vet" %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'dogs_app:add_dog' %}"><i class="bi bi-plus-circle-fill"></i> Add New Dog</a>
+                        <a class="nav-link" href="{% url 'dogs_app:add_dog' %}"><i class="bi bi-plus-circle-fill"></i> New Dog</a>
                     </li>
                 {% endif %}
                 {% if user.is_authenticated %}

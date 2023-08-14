@@ -12,13 +12,9 @@ from django.conf import settings
 import os
 from django.core import serializers
 from django.db.models import Count, Sum
-from django.db.models.functions import TruncDate
-from django.template.defaultfilters import date
+from django.core.paginator import Paginator
 
 import logging
-from django.db.models import F
-from django.db.models.functions import Cast
-from django.db.models import CharField
 from pytz import timezone
 
 
@@ -588,11 +584,28 @@ def graphs(request):
     return render(request, 'graphs.html')
 
 
+# View for viewing all dogs in a table
 def view_dogs(request):
+    # Get all dogs from the database
     all_dogs = Dog.objects.all().order_by('-dateOfArrival')
 
+    # Create a Paginator object with the dogs and the number of dogs per page
+    paginator = Paginator(all_dogs, 5)
+
+    # Get the current page number from the request's GET parameters
+    page = request.GET.get('page')
+
+    # Get the Page object for the current page
+    dogs_page = paginator.get_page(page)
+
+    # Calculate pagination range
+    pagination_start = max(dogs_page.number - 3, 1)
+    pagination_end = min(dogs_page.number + 3, paginator.num_pages)
+
     context = {
-        'dogs': all_dogs,
+        'dogs': dogs_page,
+        'pagination_start': pagination_start,
+        'pagination_end': pagination_end,
     }
 
     return render(request, 'view_dogs.html', context=context)
