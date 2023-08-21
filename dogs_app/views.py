@@ -1,3 +1,5 @@
+from django.db.models import Value
+from django.db.models.functions import Concat
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout, get_user_model, update_session_auth_hash
 from django.contrib.auth.models import User, Group
@@ -11,8 +13,9 @@ from .models import *
 from django.conf import settings
 import os
 from django.core import serializers
-from django.db.models import Count, Sum
+from django.db.models import Count, Q
 from django.core.paginator import Paginator
+
 
 import logging
 from pytz import timezone
@@ -20,6 +23,9 @@ from pytz import timezone
 
 # Location of the default User profile picture if they don't have a picture
 DEFAULT_IMAGE_SOURCE = '/profile_pictures/default.jpg'
+
+# Number of Dogs/Users/Table Entries we want displayed in a single page across all Paginators
+ENTRIES_PER_PAGE = 10
 
 
 # Main Page view for displaying either dog records if  user is logged in,
@@ -284,13 +290,75 @@ def update_dog_view(request, pk):
 # Check user is Admin
 @user_passes_test(lambda u: u.is_superuser)
 def view_users(request):
+    # Retrieve sorting criteria from request
+    order_by = request.GET.get('order_by', 'username') # Default sort field
+    direction = request.GET.get('direction', 'asc') # Default sort direction
+
     # Retrieve all the users in the system, prefetch their groups, and select their profiles
     users = User.objects.all().prefetch_related('groups').select_related('profile')
+
+    # Use a Role Filter for filtering Users based on their Role
+    role_filter = request.GET.get('role', 'all')
+
+    page = request.GET.get('page')
+
+    # Apply role filter
+    if role_filter and role_filter != "all":
+        if role_filter == "Admin":
+            users = users.filter(is_superuser=True)
+        else:
+            users = users.filter(groups__name=role_filter)
+
+    # Search Query
+    search_query = request.GET.get('search', '')
+    if search_query:
+        users = users.filter(Q(username__icontains=search_query) | Q(email__icontains=search_query) | Q(
+            first_name__icontains=search_query) | Q(last_name__icontains=search_query))
+
+    # Apply sorting
+    if order_by == 'full_name':
+        users = users.annotate(full_name=Concat('first_name', Value(' '), 'last_name'))
+    elif order_by in ['phone_number', 'address']:
+        order_by = 'profile__' + order_by
+
+    if order_by == 'role':
+        users_page, paginator = sort_users_by_role(users, direction, page)
+    else:
+        if direction == 'desc':
+            sort_order = '-' + order_by
+        else:
+            sort_order = order_by
+        users = users.order_by(sort_order)
+
+        # Create a Paginator object with the users and the number of users per page
+        paginator = Paginator(users, ENTRIES_PER_PAGE, allow_empty_first_page=True)
+
+        # Get the current page number from the request's GET parameters
+        page = request.GET.get('page')
+
+        # Get the Page object for the current page
+        users_page = paginator.get_page(page)
+
+    # Calculate pagination range
+    pagination_start = max(users_page.number - 3, 1)
+    pagination_end = min(users_page.number + 3, paginator.num_pages)
+
     # Fetch each user's Status (E.g: "Admin", "Vet" or "Viewer")
-    for user in users:
+    for user in users_page:
         user.role = get_user_role(user)
+
+    context = {
+        'users': users_page,
+        'pagination_start': pagination_start,
+        'pagination_end': pagination_end,
+        'role_filter': role_filter,
+        'order_by': order_by,
+        'direction': direction,
+        'search_query': search_query,
+    }
+
     # pass all users on to viewers_users.html
-    return render(request, 'view_users.html', {'users': users})
+    return render(request, 'view_users.html', context=context)
 
 
 # Takes in a User, returns their ranking.
@@ -304,6 +372,33 @@ def get_user_role(user):
         return "Viewer"
     else:
         return ""
+
+
+# Custom sorting function for view_users
+# Custom sorting function for view_users
+def sort_users_by_role(users, direction='asc', page_number=1):
+    # Mapping roles to sort order
+    ROLE_SORT_ORDER = {'Admin': 0, 'Vet': 1, 'Viewer': 2}
+
+    # Use the existing get_user_role function to extract the role's sort order
+    def get_role_order(user):
+        role = get_user_role(user)
+        return ROLE_SORT_ORDER.get(role, -1)
+
+    # Sort users based on the role order and username
+    sorted_users = sorted(users, key=lambda user: (get_role_order(user), user.username))
+
+    # If the direction is descending, reverse the sorted list
+    if direction == 'desc':
+        sorted_users.reverse()
+
+    # Create a Paginator object with the sorted_users and the number of users per page
+    paginator = Paginator(sorted_users, ENTRIES_PER_PAGE, allow_empty_first_page=True)
+
+    # Get the Page object for the current page
+    users_page = paginator.get_page(page_number)
+
+    return users_page, paginator
 
 
 # Only logged-in users permitted
@@ -590,7 +685,7 @@ def view_dogs(request):
     all_dogs = Dog.objects.all().order_by('-dateOfArrival')
 
     # Create a Paginator object with the dogs and the number of dogs per page
-    paginator = Paginator(all_dogs, 5)
+    paginator = Paginator(all_dogs, 8)
 
     # Get the current page number from the request's GET parameters
     page = request.GET.get('page')
