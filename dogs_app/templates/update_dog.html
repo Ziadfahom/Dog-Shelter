@@ -13,7 +13,7 @@
                 <button type="submit" class="btn btn-success save-button-wide" onclick="submitDogForm()">Save Changes</button>
             </div>
             <div class="back-button">
-                <a href="{% url 'dogs_app:dog_record' current_dogID %}" class="btn btn-secondary">Back</a>
+                <button onclick="goBack()" class="btn btn-secondary">Back</button>
             </div>
         </div>
         <div class="card border-warning stylish-card shadow">
@@ -82,11 +82,11 @@
                     <div class="add-dog-button mt-4 action-buttons">
                         <button type="submit" class="btn btn-success">Save Changes</button>
                     </div>
-                    <div class="back-button mt-2">
-                        <a href="{% url 'dogs_app:dog_record' current_dogID %}" class="btn btn-secondary">Back</a>
-                    </div>
 
                 </form>
+                <div class="back-button mt-2">
+                    <button onclick="goBack()" class="btn btn-secondary">Back</button>
+                </div>
             </div>
         </div>
     </div>

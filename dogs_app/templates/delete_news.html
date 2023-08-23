@@ -2,34 +2,36 @@
 {% load static %}
 
 {% block content %}
-<link href="{% static 'dogs_app/css/delete_news.css' %}" rel="stylesheet">
+    <link href="{% static 'dogs_app/css/delete_news.css' %}" rel="stylesheet">
 
-<div class="container mt-5 text-center">
-    <div class="col-md-7 mx-auto">
-        <div class="card border-danger shadow-lg">
-            <div class="card-header bg-danger text-white">
-                <h2 class="card-title">Delete News</h2>
-            </div>
-           <div class="card-body">
-                <p class="lead prompt">Are you sure you want to delete this news story?</p>
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <strong>Title: </strong><span class="centered-content">{{ news.title }}</span>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <strong>Content: </strong><span class="centered-content">{{ news.content }}</span>
-                    </li>
-                </ul>
-                <form method="POST" class="action-buttons">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">Delete News</button>
-                </form>
-                <div class="back-button">
-                    <a href="{% url 'dogs_app:home' %}" class="btn btn-secondary">Back</a>
+    <div class="container mt-5 text-center">
+        <div class="col-md-7 mx-auto">
+            <div class="card border-danger shadow-lg">
+                <div class="card-header bg-danger text-white">
+                    <h2 class="card-title">Delete News</h2>
                 </div>
-            </div>
+               <div class="card-body">
+                    <p class="lead prompt">Are you sure you want to delete this news story?</p>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <strong>Title: </strong><span class="centered-content">{{ news.title }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <strong>Content: </strong><span class="centered-content">{{ news.content }}</span>
+                        </li>
+                    </ul>
+                    <form method="POST" class="action-buttons">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Delete News</button>
+                    </form>
+                    <div class="back-button">
+                        <button onclick="goBack()" class="btn btn-secondary">Back</button>
+                    </div>
+                </div>
 
+            </div>
         </div>
     </div>
-</div>
+
+    <script src="{% static 'dogs_app/js/delete_news.js' %}"></script>
 {% endblock %}

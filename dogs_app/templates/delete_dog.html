@@ -33,10 +33,12 @@
                        <button type="submit" class="btn btn-danger">Delete</button>
                    </form>
                    <div class="back-button">
-                       <a href="{% url 'dogs_app:dog_record' dog.dogID %}" class="btn btn-secondary">Back</a>
+                       <button onclick="goBack()" class="btn btn-secondary">Back</button>
                    </div>
                </div>
             </div>
         </div>
     </div>
+
+    <script src="{% static 'dogs_app/js/delete_dog.js' %}"></script>
 {% endblock %}

@@ -29,3 +29,7 @@ function submitUserForm() {
     const form = document.querySelector('.stylish-form');
     form.submit();
 }
+
+function goBack() {
+    window.history.back();
+}

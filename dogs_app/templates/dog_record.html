@@ -16,7 +16,7 @@
                     </div>
                 {% endif %}
                 <div class="back-button flex-shrink-0">
-                    <a href="{% url 'dogs_app:view_dogs' %}" class="btn btn-secondary">Back</a>
+                    <button onclick="goBack()" class="btn btn-secondary">Back</button>
                 </div>
             </div>
             <div class="card border-secondary shadow-lg">
@@ -278,7 +278,7 @@
                             </div>
                         {% endif %}
                         <div class="back-button">
-                            <a href="{% url 'dogs_app:view_dogs' %}" class="btn btn-secondary">Back</a>
+                            <button onclick="goBack()" class="btn btn-secondary">Back</button>
                         </div>
                 </div>
 

@@ -21,11 +21,7 @@
                 <button type="submit" class="btn btn-success save-button-wide" onclick="submitUserForm()">Save</button>
             </div>
             <div class="back-button">
-                {% if user.is_superuser %}
-                    <a href="{% url 'dogs_app:view_users' %}" class="btn btn-secondary">Back</a>
-                {% else %}
-                    <a href="{% url 'dogs_app:home' %}" class="btn btn-secondary">Back</a>
-                {% endif %}
+                <button onclick="goBack()" class="btn btn-secondary">Back</button>
             </div>
         </div>
         <div class="card border-warning stylish-card shadow">
@@ -100,15 +96,11 @@
                                 <a href="{% url 'dogs_app:delete_user' user_to_update.id %}" class="btn btn-danger">Delete</a>
                             {% endif %}
                         </div>
-                        <div class="back-button">
-                            {% if user.is_superuser %}
-                                <a href="{% url 'dogs_app:view_users' %}" class="btn btn-secondary">Back</a>
-                            {% else %}
-                                <a href="{% url 'dogs_app:home' %}" class="btn btn-secondary">Back</a>
-                            {% endif %}
-                        </div>
                     </div>
                 </form>
+                <div class="back-button">
+                    <button onclick="goBack()" class="btn btn-secondary">Back</button>
+                </div>
             </div>
         </div>
     </div>
