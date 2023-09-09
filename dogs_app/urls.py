@@ -20,5 +20,5 @@ urlpatterns = [
     path('graphs/', views.graphs, name='graphs'),
     path('chart_data/', views.chart_data, name='chart_data'),
     path('dogs/', views.view_dogs, name='view_dogs'),
-
+    path('filter/', views.filter_dogs, name='filter_dogs'),
 ]

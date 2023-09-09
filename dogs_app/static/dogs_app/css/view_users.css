@@ -101,7 +101,6 @@ body {
 }
 
 
-
 .search-input::placeholder {
   color: #888;
 }
@@ -149,7 +148,19 @@ body {
 }
 
 .container {
-    margin-left: 7.5rem;
+    margin-left: 9%;
 }
 
+h2 {
+    color: #00473e; /* Darker shade for better readability */
+    text-align: center;
+    font-family: 'Helvetica', sans-serif; /* Choose an elegant font-family */
+    font-weight: 400; /* Not too bold, maintaining elegance */
+    font-size: 1.5rem; /* Slightly larger font size */
+    letter-spacing: 1px; /* Adding some letter-spacing */
+}
+
+.page-item.active .page-link {
+    margin-right: 10px;  /* Add some margin to the right side of the active page */
+}
 

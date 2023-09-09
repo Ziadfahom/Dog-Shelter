@@ -5,23 +5,23 @@
 {% block content %}
 
     <link href="{% static 'dogs_app/css/view_dogs.css' %}" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.css" rel="stylesheet">
 
     <!-- Caption and Toolbar -->
     <div class="row justify-content-center caption-toolbar">
-        <div class="col-12">
+        <div class="{% block column_size %}col-md-10{% endblock %}">
             <h2>Current Dogs in Our System</h2>
         </div>
 
         <!-- Toolbar with Add New Dog Button -->
         <div class="col-12 toolbar">
+            <div class="filter-dogs-div">
+                <button type="button" class="btn btn-info" id="filterModal" data-bs-toggle="collapse" data-bs-target="#filterSection">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+            </div>
             <div class="search-filter">
                 <input type="text" id="searchInput" placeholder="Search by name..." class="search-input">
-                <select id="breedFilter" class="filter-select">
-                    <option value="">Filter by breed</option>
-                    <option value="Labrador">Labrador</option>
-                    <option value="Golden Retriever">Golden Retriever</option>
-                    <!-- Add other breeds here -->
-                </select>
             </div>
             {% if user.is_authenticated and user|has_group:"Vet" %}
                 <div class="add-dog-div">
@@ -30,6 +30,139 @@
                     </a>
                 </div>
             {% endif %}
+        </div>
+
+        <!-- Filter Section -->
+        <div id="filterSection" class="row justify-content-center filter-section collapse">
+            <div class="col-12">
+                <form id="filterForm">
+
+                    <!-- Date of Arrival -->
+                    <div class="mb-3 row">
+                        <div class="col-md-6">
+                            <label for="startDate" class="form-label">Start Date of Arrival</label>
+                            <input type="date" class="form-control" id="startDate" name="startDate">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="endDate" class="form-label">End Date of Arrival</label>
+                            <input type="date" class="form-control" id="endDate" name="endDate">
+                        </div>
+                    </div>
+
+                    <!-- Gender -->
+                    <div class="mb-3">
+                        <label for="gender" class="form-label">Gender</label>
+                        <select id="gender" name="gender" class="form-control">
+                            <option value="">Display All Genders</option>
+                            <option value="Unspecified">Unspecified Gender Only</option>
+                            <option value="M">Male</option>
+                            <option value="F">Female</option>
+                        </select>
+                    </div>
+
+                    <!-- Breed -->
+                    <div class="mb-3">
+                        <label for="breed" class="form-label">Breed</label>
+                        <div id="breedDropdownSection" style="display: block;">
+                            <select id="breed" name="breed" class="form-control">
+                                <option value="">All Breeds</option>
+                                <option value="Unspecified">Unspecified Breed</option>
+                                <option value="Mixed Breed">Mixed Breed</option>
+                                {% for breed in unique_breeds %}
+                                    <option value="{{ breed.breed }}">{{ breed.breed }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Fur Color -->
+                    <div class="mb-3">
+                        <label for="furColor" class="form-label">Fur Color</label>
+                        <select id="furColor" name="furColor" class="form-control">
+                            <option value="">All Fur Colors</option>
+                            <option value="Unspecified">Unspecified Fur Color</option>
+                            {% for color in unique_colors %}
+                                <option value="{{ color.furColor }}">{{ color.furColor }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Age Range -->
+                    <div class="mb-3">
+                        <label for="ageRange" class="form-label">Age Range (0 - 20 years):
+                            <span id="selectedAgeRange">0 - 20</span>
+                        </label>
+                        <div id="ageRange"></div>
+                        <!-- Hidden inputs to hold the slider values for form submission -->
+                        <input type="hidden" id="ageRangeStart" name="ageRangeStart">
+                        <input type="hidden" id="ageRangeEnd" name="ageRangeEnd">
+                    </div>
+
+                    <!-- Date of Vaccination -->
+                    <div class="mb-3 row">
+                        <div class="col-md-6">
+                            <label for="vacStartDate" class="form-label">Start Date of Vaccination</label>
+                            <input type="date" class="form-control" id="vacStartDate" name="vacStartDate">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="vacEndDate" class="form-label">End Date of Vaccination</label>
+                            <input type="date" class="form-control" id="vacEndDate" name="vacEndDate">
+                        </div>
+                    </div>
+
+                    <!-- isNeutered -->
+                    <div class="mb-3">
+                        <label for="isNeutered" class="form-label">Neutered</label>
+                        <select id="isNeutered" name="isNeutered" class="form-control">
+                            <option value="">Display All</option>
+                            <option value="Unspecified">Unspecified Only</option>
+                            <option value="Y">Yes</option>
+                            <option value="N">No</option>
+                        </select>
+                    </div>
+
+                    <!-- isDangerous -->
+                    <div class="mb-3">
+                        <label for="isDangerous" class="form-label">Dangerous</label>
+                        <select id="isDangerous" name="isDangerous" class="form-control">
+                            <option value="">Display All</option>
+                            <option value="Unspecified">Unspecified Only</option>
+                            <option value="Y">Yes</option>
+                            <option value="N">No</option>
+                        </select>
+                    </div>
+
+                    <!-- Date of Kong -->
+                    <div class="mb-3 row">
+                        <div class="col-md-6">
+                            <label for="kongStartDate" class="form-label">Start Date of Kong</label>
+                            <input type="date" class="form-control" id="kongStartDate" name="kongStartDate">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="kongEndDate" class="form-label">End Date of Kong</label>
+                            <input type="date" class="form-control" id="kongEndDate" name="kongEndDate">
+                        </div>
+                    </div>
+
+                    <!-- Owner -->
+                    <div class="mb-3">
+                        <label for="owner" class="form-label">Owner</label>
+                        <div id="ownerDropdownSection" style="display: block;">
+                            <select id="owner" name="owner" class="form-control">
+                                <option value="">All Owners</option>
+                                <option value="Unspecified">Unspecified Owner</option>
+                                {% for owner in unique_owners %}
+                                    <option value="{{ owner.owner }}">{{ owner.owner__firstName }} {{ owner.owner__lastName }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-primary" onclick="applyFilters()">Apply Filters</button>
+                    <button type="button" class="btn btn-secondary" onclick="resetFilters()">Reset All</button>
+                    <button type="button" class="btn btn-secondary" data-bs-toggle="collapse" data-bs-target="#filterSection">Close</button>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -41,103 +174,47 @@
 
                 <thead class="text-center small stylish-thead">
                 <tr>
-                    <th scope="col" class="text-center" style="border-top-left-radius: 10px;">Dog Name</th>
-                    <th scope="col" class="text-center">Arrival Date</th>
-                    <th scope="col" class="text-center">Gender</th>
-                    <th scope="col" class="text-center">Breed</th>
-                    <th scope="col" class="text-center">Fur Color</th>
-                    <th scope="col" class="text-center">Age (Years)</th>
-                    <th scope="col" class="text-center">Vaccination Date</th>
-                    <th scope="col" class="text-center">Neutered?</th>
-                    <th scope="col" class="text-center">Dangerous?</th>
-                    <th scope="col" class="text-center">Kong Added</th>
-                    <th scope="col" class="text-center" style="border-top-right-radius: 10px;">Owner</th>
+                    <th scope="col" class="text-center sortable-header" data-column="dogName" style="border-top-left-radius: 10px; cursor: pointer;">Name <i class="fas fa-sort"></i></th>
+                    <th scope="col" class="text-center sortable-header" data-column="dateOfArrival" style="cursor: pointer;">Arrival Date <i class="fas fa-sort"></i></th>
+                    <th scope="col" class="text-center sortable-header" data-column="gender" style="cursor: pointer;">Gender <i class="fas fa-sort"></i></th>
+                    <th scope="col" class="text-center sortable-header" data-column="breed" style="cursor: pointer;">Breed <i class="fas fa-sort"></i></th>
+                    <th scope="col" class="text-center sortable-header" data-column="furColor" style="cursor: pointer;">Fur Color <i class="fas fa-sort"></i></th>
+                    <th scope="col" class="text-center sortable-header" data-column="dateOfBirthEst" style="cursor: pointer;">Age (Years) <i class="fas fa-sort"></i></th>
+                    <th scope="col" class="text-center sortable-header" data-column="dateOfVaccination" style="cursor: pointer;">Vaccination Date <i class="fas fa-sort"></i></th>
+                    <th scope="col" class="text-center sortable-header" data-column="isNeutered" style="cursor: pointer;">Neutered? <i class="fas fa-sort"></i></th>
+                    <th scope="col" class="text-center sortable-header" data-column="isDangerous" style="cursor: pointer;">Dangerous? <i class="fas fa-sort"></i></th>
+                    <th scope="col" class="text-center sortable-header" data-column="kongDateAdded" style="cursor: pointer;">Kong Added <i class="fas fa-sort"></i></th>
+                    <th scope="col" class="text-center sortable-header" data-column="owner" style="border-top-right-radius: 10px; cursor: pointer;">Owner <i class="fas fa-sort"></i></th>
                 </tr>
                 </thead>
-                <tbody class="small stylish-tbody">
+                <tbody class="small stylish-tbody" id="dog-table">
 
                 <!-- Check if there are any dogs -->
                 {% if dogs %}
-
                     <!-- Iterate over each dog -->
                     {% for dog in dogs %}
-                        <!--For each dog, a table row is created.
+                        <!--For each dog, a table row is created from _dog_row.html.
                         The row is clickable (redirects to the dog's record page), and hovering over it
                          shows a pointer cursor and displays a tooltip with the dog's thumbnail.-->
-                        <tr class="dog-row"
-                            data-href="{% url 'dogs_app:dog_record' dog.dogID %}"
-                            style="cursor: pointer;"
-                            data-bs-toggle="tooltip" data-bs-html="true"
-                            title="{% if dog.dogImage %}<img src='{{ dog.dogImage.url }}' alt='Thumbnail of {{ dog.dogName }}' style='max-width: 200px;'>{% else %}<img src='{% static 'dogs_app/img/default_dog.jpg' %}' alt='Default dog thumbnail'>{% endif %}">
-                            <td class="text-center">{{ dog.dogName|handle_none }}</td>
-
-                            <td class="text-center">{{ dog.dateOfArrival|handle_none }}</td>
-                            <td class="text-center">
-                                {% if dog.gender == "M" %}
-                                    Male(⚦)
-                                {% elif dog.gender == "F" %}
-                                    Female(⚥)
-                                {% else %}
-                                    -
-                                {% endif %}
-                            </td>
-                            <td class="text-center">{{ dog.breed|handle_none }}</td>
-                            <td class="text-center">{{ dog.furColor|handle_none }}</td>
-                            <td class="text-center">{{ dog.dateOfBirthEst|calculate_age }}</td>
-                            <td class="text-center">{{ dog.dateOfVaccination|handle_none }}</td>
-                            <td class="text-center">
-                                <div class="form-check d-flex justify-content-center">
-                                    <input class="form-check-input" type="checkbox" style="transform: scale(1.5);" {% if dog.isNeutered == "Y" %}checked{% endif %} disabled>
-                                </div>
-                            </td>
-                            <td class="text-center">
-                                <div class="form-check d-flex justify-content-center">
-                                    <input class="form-check-input" type="checkbox" style="transform: scale(1.5);" {% if dog.isDangerous == "Y" %}checked{% endif %} disabled>
-                                </div>
-                            </td>
-                            <td class="text-center">{{ dog.kongDateAdded|handle_none }}</td>
-                            <td class="text-center">{{ dog.owner|handle_none }}</td>
-                        </tr>
-
+                        {% include '_dog_row.html' %}
                     {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="11" class="text-center">
+                            No dogs found. Please adjust your filters or check back later.
+                        </td>
+                    </tr>
                 {% endif %}
                 </tbody>
             </table>
 
             <!-- Paginator at the bottom of the table for pages -->
-            <div class="row justify-content-center pagination-container">
-                <div class="col-12">
-                    <div class="pagination-wrapper">
-                        <div class="pagination">
-                            <span class="step-links">
-                                {% if dogs.has_previous %}
-                                    <a href="?page=1"><i class="fas fa-step-backward"></i> first</a>
-                                    <a href="?page={{ dogs.previous_page_number }}"><i class="fas fa-arrow-left"></i> previous</a>
-                                {% endif %}
-
-                                {% for i in dogs.paginator.page_range %}
-                                     {% if pagination_start <= i <= pagination_end %}
-                                         {% if dogs.number == i %}
-                                             <span class="current">{{ i }}</span>
-                                         {% else %}
-                                             <a href="?page={{ i }}">{{ i }}</a>
-                                         {% endif %}
-                                     {% endif %}
-                                {% endfor %}
-
-                                {% if dogs.has_next %}
-                                    <a href="?page={{ dogs.next_page_number }}">next <i class="fas fa-arrow-right"></i></a>
-                                    <a href="?page={{ dogs.paginator.num_pages }}">last <i class="fas fa-step-forward"></i></a>
-                                {% endif %}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            {% include '_pagination.html' %}
 
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.js"></script>
     <script src="{% static 'dogs_app/js/view_dogs.js' %}"></script>
 
 {% endblock %}

@@ -99,6 +99,9 @@ pip install django-imagekit           #Handling image thumbnails for smaller-siz
 pip install sorl-thumbnail	          #Handling thumbnails
 
 pip install django-extensions 	      #Used for resetting DB
+
+pip install django-filter             #Used for advanced filtering
+
 ```
 
 

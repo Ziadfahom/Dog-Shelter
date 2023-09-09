@@ -62,5 +62,10 @@ $(document).ready(function(){
 });
 
 function goBack() {
-    window.history.back();
+    const referrer = document.referrer;
+    if (referrer.includes('update_dog')) {
+        window.location.href = '/dogs/';
+    } else {
+        window.history.back();
+    }
 }

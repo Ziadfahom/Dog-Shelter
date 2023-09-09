@@ -1,13 +1,14 @@
 from django.db.models import Value
-from django.db.models.functions import Concat
+from django.db.models.functions import Concat, Trim
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout, get_user_model, update_session_auth_hash
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect, JsonResponse
+from .filters import DogFilter
 from .forms import SignUpForm, AddDogForm, UpdateUserForm, ProfileUpdateForm
 from .models import *
 from django.conf import settings
@@ -15,7 +16,8 @@ import os
 from django.core import serializers
 from django.db.models import Count, Q
 from django.core.paginator import Paginator
-
+from django.template.loader import render_to_string
+from datetime import date, timedelta
 
 import logging
 from pytz import timezone
@@ -24,8 +26,9 @@ from pytz import timezone
 # Location of the default User profile picture if they don't have a picture
 DEFAULT_IMAGE_SOURCE = '/profile_pictures/default.jpg'
 
+# CONSTANTS
 # Number of Dogs/Users/Table Entries we want displayed in a single page across all Paginators
-ENTRIES_PER_PAGE = 10
+ENTRIES_PER_PAGE = 3
 
 
 # Main Page view for displaying either dog records if  user is logged in,
@@ -681,26 +684,155 @@ def graphs(request):
 
 # View for viewing all dogs in a table
 def view_dogs(request):
-    # Get all dogs from the database
-    all_dogs = Dog.objects.all().order_by('-dateOfArrival')
+    # Apply sorting by attributes
+    sort_by = request.GET.get('sort_by', '-dateOfArrival')
 
-    # Create a Paginator object with the dogs and the number of dogs per page
-    paginator = Paginator(all_dogs, 8)
+    # Fetch all filtered dogs
+    dog_filter = DogFilter(request.GET, queryset=Dog.objects.all().order_by(sort_by))
+    filtered_dogs = dog_filter.qs
 
-    # Get the current page number from the request's GET parameters
-    page = request.GET.get('page')
+    # Prepare a list of unique breeds, fur colors and owners, exclude redundant results
+    unique_breeds = Dog.objects.exclude(breed__isnull=True).exclude(breed="Unspecified").exclude(breed=" ").exclude(breed="-").exclude(breed="").values('breed').distinct().order_by('breed')
+    unique_colors = Dog.objects.exclude(furColor__isnull=True).exclude(furColor="Unspecified").exclude(furColor=" ").exclude(furColor="-").exclude(furColor="").values('furColor').distinct().order_by('furColor')
+    unique_owners = Dog.objects.exclude(owner__isnull=True).values('owner__firstName', 'owner__lastName',
+                                                                   'owner').distinct().order_by('owner__firstName',
+                                                                                                'owner__lastName')
 
-    # Get the Page object for the current page
+    # Pagination logic
+    paginator = Paginator(filtered_dogs, ENTRIES_PER_PAGE)
+    page = request.GET.get('page', 1)
     dogs_page = paginator.get_page(page)
-
-    # Calculate pagination range
     pagination_start = max(dogs_page.number - 3, 1)
     pagination_end = min(dogs_page.number + 3, paginator.num_pages)
 
     context = {
         'dogs': dogs_page,
+        'unique_breeds': unique_breeds,
+        'unique_colors': unique_colors,
+        'unique_owners': unique_owners,
         'pagination_start': pagination_start,
         'pagination_end': pagination_end,
     }
 
     return render(request, 'view_dogs.html', context=context)
+
+
+# Handling Dog Filtering in the view_dogs page
+def filter_dogs(request):
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        # Apply sorting by attributes
+        sort_by = request.GET.get('sort_by', '-dateOfArrival')
+
+        # Initialize queryset
+        dogs = Dog.objects.all().order_by(sort_by)
+
+        # Check if the Arrival date range is available
+        start_date = request.GET.get('startDate', None)
+        end_date = request.GET.get('endDate', None)
+
+        # If both start_date and end_date are provided
+        if start_date and end_date:
+            dogs = dogs.filter(dateOfArrival__range=[start_date, end_date])
+
+        # If only start_date is provided
+        elif start_date:
+            dogs = dogs.filter(dateOfArrival__gte=start_date)
+
+        # If only end_date is provided
+        elif end_date:
+            dogs = dogs.filter(dateOfArrival__lte=end_date)
+
+        # Check if the Vaccination date range is available
+        vac_start_date = request.GET.get('vacStartDate', None)
+        vac_end_date = request.GET.get('vacEndDate', None)
+
+        # If both vac_start_date and vac_end_date are provided
+        if vac_start_date and vac_end_date:
+            dogs = dogs.filter(dateOfVaccination__range=[vac_start_date, vac_end_date])
+
+        # If only vac_start_date is provided
+        elif vac_start_date:
+            dogs = dogs.filter(dateOfVaccination__gte=vac_start_date)
+
+        # If only vac_end_date is provided
+        elif vac_end_date:
+            dogs = dogs.filter(dateOfVaccination__lte=vac_end_date)
+
+        # Check if the Kong date range is available
+        kong_start_date = request.GET.get('kongStartDate', None)
+        kong_end_date = request.GET.get('kongEndDate', None)
+
+        # If both kong_start_date and kong_end_date are provided
+        if kong_start_date and kong_end_date:
+            dogs = dogs.filter(kongDateAdded__range=[kong_start_date, kong_end_date])
+
+        # If only kong_start_date is provided
+        elif kong_start_date:
+            dogs = dogs.filter(kongDateAdded__gte=kong_start_date)
+
+        # If only kong_end_date is provided
+        elif kong_end_date:
+            dogs = dogs.filter(kongDateAdded__lte=kong_end_date)
+
+        # Retrieve dog age range from the request, handle empty cases
+        age_from_str = request.GET.get('ageFrom', '0')
+        min_age = float(age_from_str) if age_from_str else 0.0
+
+        age_to_str = request.GET.get('ageTo', '20')
+        max_age = float(age_to_str) if age_to_str else 20.0
+
+        # Convert age to date range
+        end_date_birth = date.today() - timedelta(days=min_age * 365)
+        start_date_birth = date.today() - timedelta(days=max_age * 365)
+
+        # If the min and max age are default values, include dogs without age attribute as well.
+        if min_age == 0 and max_age == 20:
+            dogs = dogs.filter(
+                Q(dateOfBirthEst__range=[start_date_birth, end_date_birth]) | Q(dateOfBirthEst__isnull=True))
+        else:
+            # Filter by age range
+            dogs = dogs.filter(dateOfBirthEst__range=[start_date_birth, end_date_birth])
+
+        # Apply Django Filters
+        filtered_dogs = DogFilter(request.GET, queryset=dogs)
+        dogs = filtered_dogs.qs
+
+        # Check for "Unspecified" conditions and apply those filters
+        breed = request.GET.get('breed', None)
+        gender = request.GET.get('gender', None)
+        fur_color = request.GET.get('furColor', None)
+        isNeutered = request.GET.get('isNeutered', None)
+        isDangerous = request.GET.get('isDangerous', None)
+        owner = request.GET.get('owner', None)
+
+        if breed == "Unspecified":
+            dogs = dogs.filter(Q(breed__exact='') | Q(breed__isnull=True))
+        if gender == "Unspecified":
+            dogs = dogs.filter(Q(gender__exact='') | Q(gender__isnull=True))
+        if fur_color == "Unspecified":
+            dogs = dogs.filter(Q(furColor__exact='') | Q(furColor__isnull=True))
+        if isNeutered == "Unspecified":
+            dogs = dogs.filter(Q(isNeutered__exact='') | Q(isNeutered__isnull=True))
+        if isDangerous == "Unspecified":
+            dogs = dogs.filter(Q(isDangerous__exact='') | Q(isDangerous__isnull=True))
+        if owner == "Unspecified":
+            dogs = dogs.filter(Q(owner__isnull=True))
+
+        # Pagination
+        paginator = Paginator(dogs, ENTRIES_PER_PAGE)
+        page = request.GET.get('page')
+        dogs_page = paginator.get_page(page)
+        pagination_start = max(dogs_page.number - 3, 1)
+        pagination_end = min(dogs_page.number + 3, paginator.num_pages)
+
+        # Render table and pagination
+        table_rows = ''.join([render_to_string('_dog_row.html', {'dog': dog}) for dog in dogs_page])
+        pagination_html = render_to_string('_pagination.html', {
+            'dogs': dogs_page,
+            'pagination_start': pagination_start,
+            'pagination_end': pagination_end,
+        })
+
+        return JsonResponse({'table_rows': table_rows, 'pagination_html': pagination_html}, status=200)
+    else:
+        return JsonResponse({'error': 'Not an AJAX request'}, status=400)

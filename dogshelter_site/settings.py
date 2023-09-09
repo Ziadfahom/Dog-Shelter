@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'storages',                 # For the AWS S3 cloud for pictures/videos uploads
     'crispy_forms',             # Better looking forms
     'crispy_bootstrap5',
+    'django_filters',           # For advanced filtering of data
 ]
 
 MIDDLEWARE = [

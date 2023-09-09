@@ -15,16 +15,26 @@
 
 th {
     font-size: 0.9em;
+    border-bottom: 1px solid black;
+    border-right: 1px solid black;
+}
+
+th:last-child {
+    border-right: none; /* Removes the border from the last cell of each row */
+}
+td {
+    border: 1px solid black;
 }
 
 .stylish-table {
-    background: #b2dfdb;
-    border-radius: 15px;
+    background: #f4fcf9;
+    border-radius: 1px 1px 11px 11px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding-top: 12px;
 }
 
 .stylish-thead th {
-    background-color: #00b377;
+    background-color: #007a5e;
     color: #fff;
 }
 
@@ -33,21 +43,26 @@ th {
 }
 
 .toolbar {
-    background-color: #e0f2f1; /* Light background color */
+    background-color: #a8e5de; /* Light background color */
     padding: 8px;
     margin-bottom: 1px; /* Add some space between the toolbar and the table */
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
-    border-radius: 5px; /* Rounded corners */
+    box-shadow: 0px 0px 3px 3px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+    border-radius: 4px 4px 0px 0px; /* Rounded corners */
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-around;
     align-items: center;
+    transition: background-color 0.3s;
+}
+
+.toolbar:hover {
+    background-color: #92d5c3; /* Slightly darker shade on hover */
 }
 
 .add-dog-btn {
     background-color: #007bff; /* Primary blue color for the button */
     color: #ffffff; /* White text color */
     padding: 8px 15px;
-    border-radius: 3px; /* Rounded corners for the button */
+    border-radius: 5px; /* Rounded corners for the button */
     text-decoration: none; /* Remove underline from the link */
     transition: background-color 0.3s; /* Smooth hover transition */
 }
@@ -59,7 +74,6 @@ th {
 .search-filter {
     display: flex;
     align-items: center;
-    margin-right: auto; /* Aligns the search and filter to the left */
 }
 
 .search-input {
@@ -67,6 +81,7 @@ th {
     border: 1px solid #ccc;
     border-radius: 3px;
     margin-right: 10px; /* Space between search and filter */
+    width: 25rem;
 }
 
 .filter-select {
@@ -85,20 +100,17 @@ body {
 }
 
 .caption-toolbar {
-    background-color: #b2dfdb;
+    background-color: #a8e5de; /* Harmonizing with toolbar color */
     padding: 12px;
-    border-radius: 10px;
-}
-
-.caption-toolbar h2 {
-    color: #555;
-    text-align: center;
+    border-radius: 10px 10px 1px 1px;
+    box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .pagination-container {
     text-align: center; /* Center the text */
-    margin-top: 15px; /* Add some margin to space it from the table */
-    margin-bottom: 15px;
 }
 
 .step-links {
@@ -140,4 +152,123 @@ body {
 .pagination a {
   margin: 0 10px;
   text-decoration: none;
+}
+
+.filter-dogs-div {
+    display: flex;
+    align-items: center;
+}
+
+.btn-info {
+    background-color: #00b377;
+    color: #ffffff;
+    padding: 9px 15px;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.btn-info:hover {
+    background-color: #288740;
+}
+
+.search-input {
+    border: none;
+    border-radius: 5px;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Expanded Filter Section */
+.filter-section {
+    background: #e6faf5;
+    padding: 40px;
+    border-radius: 0px 0px 4px 4px;
+    box-shadow: 0px 0px 3px 3px rgba(0, 0, 0, 0.11); /* Soft shadow for depth */
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    text-align: center;
+}
+
+/* When Filter is Expanded */
+.filter-section.expanded {
+    max-height: 500px; /* Adjust as per content */
+    opacity: 1; /* Make it visible */
+}
+
+/* Style Form Controls */
+.filter-section .form-control {
+    border: none;
+    border-radius: 5px;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.form-control,
+.form-control:focus {
+    transition: border-color 0.3s; /* Smooth transition for border color changes */
+}
+
+.form-control:hover,
+.form-control:focus {
+    border-color: #2d645f; /* border color on hover or focus */
+}
+
+/* Style Primary Button */
+.filter-section .btn-primary {
+    background-color: #007bff;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+}
+
+/* Darker shade on hover */
+.filter-section .btn-primary:hover {
+    background-color: #0056b3;
+}
+
+
+.caption-toolbar h2 {
+    color: #00473e; /* Darker shade for better readability */
+    text-align: center;
+    font-family: 'Helvetica', sans-serif; /* Choose an elegant font-family */
+    font-weight: 400; /* Not too bold, maintaining elegance */
+    font-size: 1.5rem; /* Slightly larger font size */
+    letter-spacing: 1px; /* Adding some letter-spacing */
+    padding-top: 5px;
+    padding-bottom: 10px;
+}
+
+.btn-secondary {
+    background-color: #7bc4c0; /* Matching with the toolbar color */
+    border: none;
+    color: #fff;
+    padding: 8px 16px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease; /* Smooth transition effect */
+}
+
+.btn-secondary:hover {
+    background-color: #5aa8a0; /* Darker shade for hover effect */
+}
+
+.page-item.active .page-link {
+    margin-right: 10px;  /* Add some margin to the right side of the active page */
+}
+
+#selectedAgeRange {
+    font-weight: bold;
+    color: #333;
+}
+
+.form-label {
+    font-weight: 600; /* bolder labels */
+    color: #2d645f; /* color that complements the green theme */
+    margin-bottom: 10px; /* more spacing to distinguish label from input */
+}
+
+.btn {
+    border-radius: 5px; /* consistent border-radius */
+    transition: background-color 0.3s, transform 0.2s; /* smooth transition for background and transform */
 }
