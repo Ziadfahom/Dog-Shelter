@@ -28,7 +28,7 @@ DEFAULT_IMAGE_SOURCE = '/profile_pictures/default.jpg'
 
 # CONSTANTS
 # Number of Dogs/Users/Table Entries we want displayed in a single page across all Paginators
-ENTRIES_PER_PAGE = 3
+ENTRIES_PER_PAGE = 10
 
 
 # Main Page view for displaying either dog records if  user is logged in,
@@ -682,6 +682,25 @@ def graphs(request):
     return render(request, 'graphs.html')
 
 
+# Helper function to filter out unwanted attributes.
+def exclude_unwanted(attribute):
+    exclusions = ["Unspecified", " ", "-", ""]
+    return Q(**{f"{attribute}__isnull": True}) | Q(**{f"{attribute}__in": exclusions})
+
+
+# Fetch unique values for a given dog attribute.
+def get_unique_values(attribute):
+    return Dog.objects.exclude(exclude_unwanted(attribute)).values(attribute).distinct().order_by(attribute)
+
+
+# Fetch unique owner values.
+def get_unique_owners():
+    return Dog.objects.exclude(owner__isnull=True).values('owner__firstName',
+                                                          'owner__lastName',
+                                                          'owner').distinct().order_by('owner__firstName',
+                                                                                       'owner__lastName')
+
+
 # View for viewing all dogs in a table
 def view_dogs(request):
     # Apply sorting by attributes
@@ -692,11 +711,9 @@ def view_dogs(request):
     filtered_dogs = dog_filter.qs
 
     # Prepare a list of unique breeds, fur colors and owners, exclude redundant results
-    unique_breeds = Dog.objects.exclude(breed__isnull=True).exclude(breed="Unspecified").exclude(breed=" ").exclude(breed="-").exclude(breed="").values('breed').distinct().order_by('breed')
-    unique_colors = Dog.objects.exclude(furColor__isnull=True).exclude(furColor="Unspecified").exclude(furColor=" ").exclude(furColor="-").exclude(furColor="").values('furColor').distinct().order_by('furColor')
-    unique_owners = Dog.objects.exclude(owner__isnull=True).values('owner__firstName', 'owner__lastName',
-                                                                   'owner').distinct().order_by('owner__firstName',
-                                                                                                'owner__lastName')
+    unique_breeds = get_unique_values('breed')
+    unique_colors = get_unique_values('furColor')
+    unique_owners = get_unique_owners()
 
     # Pagination logic
     paginator = Paginator(filtered_dogs, ENTRIES_PER_PAGE)
@@ -717,6 +734,24 @@ def view_dogs(request):
     return render(request, 'view_dogs.html', context=context)
 
 
+# Helper function to filter dogs based on date range.
+def date_filter_logic(dogs, start_date, end_date, field_name):
+    if start_date and end_date:
+        dogs = dogs.filter(**{f'{field_name}__range': [start_date, end_date]})
+    elif start_date:
+        dogs = dogs.filter(**{f'{field_name}__gte': start_date})
+    elif end_date:
+        dogs = dogs.filter(**{f'{field_name}__lte': end_date})
+    return dogs
+
+
+# Helper function to filter dogs based on 'Unspecified' value.
+def unspecified_filter(dogs, field_name, value):
+    if value == "Unspecified":
+        dogs = dogs.filter(Q(**{f'{field_name}__exact': ''}) | Q(**{f'{field_name}__isnull': True}))
+    return dogs
+
+
 # Handling Dog Filtering in the view_dogs page
 def filter_dogs(request):
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -726,53 +761,12 @@ def filter_dogs(request):
         # Initialize queryset
         dogs = Dog.objects.all().order_by(sort_by)
 
-        # Check if the Arrival date range is available
-        start_date = request.GET.get('startDate', None)
-        end_date = request.GET.get('endDate', None)
-
-        # If both start_date and end_date are provided
-        if start_date and end_date:
-            dogs = dogs.filter(dateOfArrival__range=[start_date, end_date])
-
-        # If only start_date is provided
-        elif start_date:
-            dogs = dogs.filter(dateOfArrival__gte=start_date)
-
-        # If only end_date is provided
-        elif end_date:
-            dogs = dogs.filter(dateOfArrival__lte=end_date)
-
-        # Check if the Vaccination date range is available
-        vac_start_date = request.GET.get('vacStartDate', None)
-        vac_end_date = request.GET.get('vacEndDate', None)
-
-        # If both vac_start_date and vac_end_date are provided
-        if vac_start_date and vac_end_date:
-            dogs = dogs.filter(dateOfVaccination__range=[vac_start_date, vac_end_date])
-
-        # If only vac_start_date is provided
-        elif vac_start_date:
-            dogs = dogs.filter(dateOfVaccination__gte=vac_start_date)
-
-        # If only vac_end_date is provided
-        elif vac_end_date:
-            dogs = dogs.filter(dateOfVaccination__lte=vac_end_date)
-
-        # Check if the Kong date range is available
-        kong_start_date = request.GET.get('kongStartDate', None)
-        kong_end_date = request.GET.get('kongEndDate', None)
-
-        # If both kong_start_date and kong_end_date are provided
-        if kong_start_date and kong_end_date:
-            dogs = dogs.filter(kongDateAdded__range=[kong_start_date, kong_end_date])
-
-        # If only kong_start_date is provided
-        elif kong_start_date:
-            dogs = dogs.filter(kongDateAdded__gte=kong_start_date)
-
-        # If only kong_end_date is provided
-        elif kong_end_date:
-            dogs = dogs.filter(kongDateAdded__lte=kong_end_date)
+        # Date filtering
+        for field in ['dateOfArrival', 'dateOfVaccination', 'kongDateAdded']:
+            adjusted_field = field if "kong" not in field else field.replace('Date', 'date', 1)  # Handle "kongDateAdded" having a capital D
+            start = request.GET.get(adjusted_field.replace('date', 'startDate'), None)
+            end = request.GET.get(adjusted_field.replace('date', 'endDate'), None)
+            dogs = date_filter_logic(dogs, start, end, field)
 
         # Retrieve dog age range from the request, handle empty cases
         age_from_str = request.GET.get('ageFrom', '0')
@@ -797,24 +791,14 @@ def filter_dogs(request):
         filtered_dogs = DogFilter(request.GET, queryset=dogs)
         dogs = filtered_dogs.qs
 
-        # Check for "Unspecified" conditions and apply those filters
-        breed = request.GET.get('breed', None)
-        gender = request.GET.get('gender', None)
-        fur_color = request.GET.get('furColor', None)
-        isNeutered = request.GET.get('isNeutered', None)
-        isDangerous = request.GET.get('isDangerous', None)
-        owner = request.GET.get('owner', None)
+        # Check for "Unspecified" conditions and apply those filters.
+        unspecified_fields = ['breed', 'gender', 'furColor', 'isNeutered', 'isDangerous']
+        for field in unspecified_fields:
+            value = request.GET.get(field, None)
+            dogs = unspecified_filter(dogs, field, value)
 
-        if breed == "Unspecified":
-            dogs = dogs.filter(Q(breed__exact='') | Q(breed__isnull=True))
-        if gender == "Unspecified":
-            dogs = dogs.filter(Q(gender__exact='') | Q(gender__isnull=True))
-        if fur_color == "Unspecified":
-            dogs = dogs.filter(Q(furColor__exact='') | Q(furColor__isnull=True))
-        if isNeutered == "Unspecified":
-            dogs = dogs.filter(Q(isNeutered__exact='') | Q(isNeutered__isnull=True))
-        if isDangerous == "Unspecified":
-            dogs = dogs.filter(Q(isDangerous__exact='') | Q(isDangerous__isnull=True))
+        # Check for "Unspecified" in Owner separately, apply filters if needed.
+        owner = request.GET.get('owner', None)
         if owner == "Unspecified":
             dogs = dogs.filter(Q(owner__isnull=True))
 

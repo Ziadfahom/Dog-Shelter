@@ -37,130 +37,194 @@
             <div class="col-12">
                 <form id="filterForm">
 
-                    <!-- Date of Arrival -->
-                    <div class="mb-3 row">
-                        <div class="col-md-6">
-                            <label for="startDate" class="form-label">Start Date of Arrival</label>
-                            <input type="date" class="form-control" id="startDate" name="startDate">
+                    <!-- Main Flex Container -->
+                    <div class="d-flex flex-wrap">
+
+                        <!-- Left Side (Dates) Container -->
+                        <div class="date-container col-md-6">
+                            <div class="filter-header">Dates</div>
+                            <!-- Arrival Date Section -->
+                            <div class="card mb-2">
+                                <div class="card-header">Date of Arrival</div>
+                                <div class="card-body">
+                                    <div class="d-flex">
+                                        <div class="col-md-6 item-margin vertical-separator">
+                                            <label for="startDateOfArrival" class="form-label">Start Date</label>
+                                            <input type="date" class="form-control" id="startDateOfArrival" name="startDateOfArrival">
+                                        </div>
+                                        <div class="col-md-6 adjust-right">
+                                            <label for="endDateOfArrival" class="form-label">End Date</label>
+                                            <input type="date" class="form-control" id="endDateOfArrival" name="endDateOfArrival">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Vaccination Date Section -->
+                            <div class="card mb-2">
+                                <div class="card-header">Date of Vaccination</div>
+                                <div class="card-body">
+                                    <div class="d-flex">
+                                        <div class="col-md-6 item-margin vertical-separator">
+                                            <label for="startDateOfVaccination" class="form-label">Start Date</label>
+                                            <input type="date" class="form-control" id="startDateOfVaccination" name="startDateOfVaccination">
+                                        </div>
+                                        <div class="col-md-6 adjust-right">
+                                            <label for="endDateOfVaccination" class="form-label">End Date</label>
+                                            <input type="date" class="form-control" id="endDateOfVaccination" name="endDateOfVaccination">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Kong Date Section -->
+                            <div class="card mb-2">
+                                <div class="card-header">Date Given Kong</div>
+                                <div class="card-body">
+                                    <div class="d-flex">
+                                        <div class="col-md-6 item-margin vertical-separator">
+                                            <label for="kongstartDateAdded" class="form-label">Start Date</label>
+                                            <input type="date" class="form-control" id="kongstartDateAdded" name="kongstartDateAdded">
+                                        </div>
+                                        <div class="col-md-6 adjust-right">
+                                            <label for="kongendDateAdded" class="form-label">End Date</label>
+                                            <input type="date" class="form-control" id="kongendDateAdded" name="kongendDateAdded">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
-                        <div class="col-md-6">
-                            <label for="endDate" class="form-label">End Date of Arrival</label>
-                            <input type="date" class="form-control" id="endDate" name="endDate">
+
+                        <!-- Right Side (Dropdowns) Container -->
+                        <div class="dropdown-container col-md-6">
+                            <div class="filter-header">Attributes</div>
+                            <!-- Gender & Breed Section -->
+                            <div class="card mb-2">
+                                <div class="card-body">
+                                    <div class="d-flex">
+                                        <!-- Gender Dropdown -->
+                                        <div class="col-md-6 item-margin vertical-separator">
+                                            <label for="gender" class="form-label">Gender</label>
+                                            <select id="gender" name="gender" class="form-control">
+                                                <option value="">Display All Genders</option>
+                                                <option value="Unspecified">Unspecified Gender Only</option>
+                                                <option value="M">Male</option>
+                                                <option value="F">Female</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Breed Dropdown -->
+                                        <div class="col-md-6 adjust-right">
+                                            <label for="breed" class="form-label">Breed</label>
+                                            <div id="breedDropdownSection">
+                                                <select id="breed" name="breed" class="form-control">
+                                                    <option value="">All Breeds</option>
+                                                    <option value="Unspecified">Unspecified Breed</option>
+                                                    <option value="Mixed Breed">Mixed Breed</option>
+                                                    {% for breed in unique_breeds %}
+                                                        <option value="{{ breed.breed }}">{{ breed.breed }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Fur Color & Owner Section -->
+                            <div class="card mb-2">
+                                <div class="card-body">
+                                    <div class="d-flex">
+                                        <!-- Fur Color Dropdown -->
+                                        <div class="col-md-6 item-margin vertical-separator">
+                                            <label for="furColor" class="form-label">Fur Color</label>
+                                            <select id="furColor" name="furColor" class="form-control">
+                                                <option value="">All Fur Colors</option>
+                                                <option value="Unspecified">Unspecified Fur Color</option>
+                                                {% for color in unique_colors %}
+                                                    <option value="{{ color.furColor }}">{{ color.furColor }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+
+                                        <!-- Owner Dropdown -->
+                                        <div class="col-md-6 adjust-right">
+                                            <label for="owner" class="form-label">Owner</label>
+                                            <div id="ownerDropdownSection">
+                                                <select id="owner" name="owner" class="form-control">
+                                                    <option value="">All Owners</option>
+                                                    <option value="Unspecified">Unspecified Owner</option>
+                                                    {% for owner in unique_owners %}
+                                                        <option value="{{ owner.owner }}">{{ owner.owner__firstName }} {{ owner.owner__lastName }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- isNeutered & isDangerous Section -->
+                            <div class="card mb-2">
+                                <div class="card-body">
+                                    <div class="d-flex">
+                                        <!-- isNeutered Dropdown -->
+                                        <div class="col-md-6 item-margin vertical-separator">
+                                            <label for="isNeutered" class="form-label">Neutered</label>
+                                            <select id="isNeutered" name="isNeutered" class="form-control">
+                                                <option value="">Display All</option>
+                                                <option value="Unspecified">Unspecified Only</option>
+                                                <option value="Y">Yes</option>
+                                                <option value="N">No</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- isDangerous Dropdown -->
+                                        <div class="col-md-6 adjust-right">
+                                            <label for="isDangerous" class="form-label">Dangerous</label>
+                                            <select id="isDangerous" name="isDangerous" class="form-control">
+                                                <option value="">Display All</option>
+                                                <option value="Unspecified">Unspecified Only</option>
+                                                <option value="Y">Yes</option>
+                                                <option value="N">No</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Age Range (Slider) -->
+                            <div class="card mb-2">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <div class="col-md-10 mx-auto">
+                                            <label for="ageRange" class="form-label">
+                                                Age Range (Years)<br>
+                                                <span id="selectedAgeRange">0 - 20</span>
+                                            </label>
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <span>(0)</span> <!-- Min Value -->
+                                                <div id="ageRange" class="mx-4" style="flex: 1;"></div>
+                                                <span>(20)</span> <!-- Max Value -->
+                                            </div>
+                                            <!-- Hidden inputs to hold the slider values for form submission -->
+                                            <input type="hidden" id="ageRangeStart" name="ageRangeStart">
+                                            <input type="hidden" id="ageRangeEnd" name="ageRangeEnd">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+
                     </div>
 
-                    <!-- Gender -->
-                    <div class="mb-3">
-                        <label for="gender" class="form-label">Gender</label>
-                        <select id="gender" name="gender" class="form-control">
-                            <option value="">Display All Genders</option>
-                            <option value="Unspecified">Unspecified Gender Only</option>
-                            <option value="M">Male</option>
-                            <option value="F">Female</option>
-                        </select>
+                    <!-- Buttons -->
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <button type="button" class="btn btn-outline-secondary reset-btn" onclick="resetFilters()">Reset All</button>
+                        <button type="button" class="btn btn-primary apply-btn" onclick="applyFilters()">Apply Filters</button>
+                        <button type="button" class="btn btn-secondary" data-bs-toggle="collapse" data-bs-target="#filterSection">Close</button>
                     </div>
-
-                    <!-- Breed -->
-                    <div class="mb-3">
-                        <label for="breed" class="form-label">Breed</label>
-                        <div id="breedDropdownSection" style="display: block;">
-                            <select id="breed" name="breed" class="form-control">
-                                <option value="">All Breeds</option>
-                                <option value="Unspecified">Unspecified Breed</option>
-                                <option value="Mixed Breed">Mixed Breed</option>
-                                {% for breed in unique_breeds %}
-                                    <option value="{{ breed.breed }}">{{ breed.breed }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Fur Color -->
-                    <div class="mb-3">
-                        <label for="furColor" class="form-label">Fur Color</label>
-                        <select id="furColor" name="furColor" class="form-control">
-                            <option value="">All Fur Colors</option>
-                            <option value="Unspecified">Unspecified Fur Color</option>
-                            {% for color in unique_colors %}
-                                <option value="{{ color.furColor }}">{{ color.furColor }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <!-- Age Range -->
-                    <div class="mb-3">
-                        <label for="ageRange" class="form-label">Age Range (0 - 20 years):
-                            <span id="selectedAgeRange">0 - 20</span>
-                        </label>
-                        <div id="ageRange"></div>
-                        <!-- Hidden inputs to hold the slider values for form submission -->
-                        <input type="hidden" id="ageRangeStart" name="ageRangeStart">
-                        <input type="hidden" id="ageRangeEnd" name="ageRangeEnd">
-                    </div>
-
-                    <!-- Date of Vaccination -->
-                    <div class="mb-3 row">
-                        <div class="col-md-6">
-                            <label for="vacStartDate" class="form-label">Start Date of Vaccination</label>
-                            <input type="date" class="form-control" id="vacStartDate" name="vacStartDate">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="vacEndDate" class="form-label">End Date of Vaccination</label>
-                            <input type="date" class="form-control" id="vacEndDate" name="vacEndDate">
-                        </div>
-                    </div>
-
-                    <!-- isNeutered -->
-                    <div class="mb-3">
-                        <label for="isNeutered" class="form-label">Neutered</label>
-                        <select id="isNeutered" name="isNeutered" class="form-control">
-                            <option value="">Display All</option>
-                            <option value="Unspecified">Unspecified Only</option>
-                            <option value="Y">Yes</option>
-                            <option value="N">No</option>
-                        </select>
-                    </div>
-
-                    <!-- isDangerous -->
-                    <div class="mb-3">
-                        <label for="isDangerous" class="form-label">Dangerous</label>
-                        <select id="isDangerous" name="isDangerous" class="form-control">
-                            <option value="">Display All</option>
-                            <option value="Unspecified">Unspecified Only</option>
-                            <option value="Y">Yes</option>
-                            <option value="N">No</option>
-                        </select>
-                    </div>
-
-                    <!-- Date of Kong -->
-                    <div class="mb-3 row">
-                        <div class="col-md-6">
-                            <label for="kongStartDate" class="form-label">Start Date of Kong</label>
-                            <input type="date" class="form-control" id="kongStartDate" name="kongStartDate">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="kongEndDate" class="form-label">End Date of Kong</label>
-                            <input type="date" class="form-control" id="kongEndDate" name="kongEndDate">
-                        </div>
-                    </div>
-
-                    <!-- Owner -->
-                    <div class="mb-3">
-                        <label for="owner" class="form-label">Owner</label>
-                        <div id="ownerDropdownSection" style="display: block;">
-                            <select id="owner" name="owner" class="form-control">
-                                <option value="">All Owners</option>
-                                <option value="Unspecified">Unspecified Owner</option>
-                                {% for owner in unique_owners %}
-                                    <option value="{{ owner.owner }}">{{ owner.owner__firstName }} {{ owner.owner__lastName }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-
-                    <button type="button" class="btn btn-primary" onclick="applyFilters()">Apply Filters</button>
-                    <button type="button" class="btn btn-secondary" onclick="resetFilters()">Reset All</button>
-                    <button type="button" class="btn btn-secondary" data-bs-toggle="collapse" data-bs-target="#filterSection">Close</button>
                 </form>
             </div>
         </div>

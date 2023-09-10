@@ -66,7 +66,10 @@ td {
     text-decoration: none; /* Remove underline from the link */
     transition: background-color 0.3s; /* Smooth hover transition */
 }
-
+.apply-btn,
+.reset-btn {
+    padding: 8px 15px;
+}
 .add-dog-btn:hover {
     background-color: #0056b3; /* Darker blue on hover */
 }
@@ -272,3 +275,52 @@ body {
     border-radius: 5px; /* consistent border-radius */
     transition: background-color 0.3s, transform 0.2s; /* smooth transition for background and transform */
 }
+
+.filter-section {
+    padding: 1rem;
+}
+
+.date-container, .dropdown-container {
+    padding: 1rem;
+}
+
+.divider-vertical {
+    border-left: 1px solid #e0e0e0;
+    height: 100%;
+}
+
+.divider-horizontal {
+    border-top: 1px solid #e0e0e0;
+    width: 100%;
+    margin: 1rem 0;
+}
+
+.item-margin {
+    margin-right: 10px; /* Adjust value as needed */
+}
+
+.card{
+    background-color: #e8f5e9;  /* Slightly greenish color */
+}
+
+.form-control{
+    background-color: #f1faf5;  /* Slightly greenish color */
+}
+
+.filter-header {
+    font-weight: bold;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #ccc;
+    padding-bottom: 5px;
+}
+
+.vertical-separator {
+    border-right: 1px solid #ccc; /* Color of the vertical line */
+    padding-right: 10px; /* Space between the dropdown and the vertical line */
+    margin-right: 10px; /* Space between the vertical line and the adjacent dropdown */
+}
+
+.adjust-right {
+    padding-right: 10px;  /* Offset the left padding to align with the vertical separator's padding */
+}
+
