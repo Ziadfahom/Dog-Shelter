@@ -1,5 +1,5 @@
 from django.db.models import Value
-from django.db.models.functions import Concat, Trim
+from django.db.models.functions import Concat
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout, get_user_model, update_session_auth_hash
 from django.contrib.auth.models import Group
@@ -703,35 +703,41 @@ def get_unique_owners():
 
 # View for viewing all dogs in a table
 def view_dogs(request):
-    # Apply sorting by attributes
-    sort_by = request.GET.get('sort_by', '-dateOfArrival')
+    # Check if user is logged in
+    if request.user.is_authenticated:
+        # Apply sorting by attributes
+        sort_by = request.GET.get('sort_by', '-dateOfArrival')
 
-    # Fetch all filtered dogs
-    dog_filter = DogFilter(request.GET, queryset=Dog.objects.all().order_by(sort_by))
-    filtered_dogs = dog_filter.qs
+        # Fetch all filtered dogs
+        dog_filter = DogFilter(request.GET, queryset=Dog.objects.all().order_by(sort_by))
+        filtered_dogs = dog_filter.qs
 
-    # Prepare a list of unique breeds, fur colors and owners, exclude redundant results
-    unique_breeds = get_unique_values('breed')
-    unique_colors = get_unique_values('furColor')
-    unique_owners = get_unique_owners()
+        # Prepare a list of unique breeds, fur colors and owners, exclude redundant results
+        unique_breeds = get_unique_values('breed')
+        unique_colors = get_unique_values('furColor')
+        unique_owners = get_unique_owners()
 
-    # Pagination logic
-    paginator = Paginator(filtered_dogs, ENTRIES_PER_PAGE)
-    page = request.GET.get('page', 1)
-    dogs_page = paginator.get_page(page)
-    pagination_start = max(dogs_page.number - 3, 1)
-    pagination_end = min(dogs_page.number + 3, paginator.num_pages)
+        # Pagination logic
+        paginator = Paginator(filtered_dogs, ENTRIES_PER_PAGE)
+        page = request.GET.get('page', 1)
+        dogs_page = paginator.get_page(page)
+        pagination_start = max(dogs_page.number - 3, 1)
+        pagination_end = min(dogs_page.number + 3, paginator.num_pages)
 
-    context = {
-        'dogs': dogs_page,
-        'unique_breeds': unique_breeds,
-        'unique_colors': unique_colors,
-        'unique_owners': unique_owners,
-        'pagination_start': pagination_start,
-        'pagination_end': pagination_end,
-    }
+        context = {
+            'dogs': dogs_page,
+            'unique_breeds': unique_breeds,
+            'unique_colors': unique_colors,
+            'unique_owners': unique_owners,
+            'pagination_start': pagination_start,
+            'pagination_end': pagination_end,
+        }
 
-    return render(request, 'view_dogs.html', context=context)
+        return render(request, 'view_dogs.html', context=context)
+    # If user is not logged in/authenticated, show an error message and redirect to home.
+    else:
+        messages.error(request, "You Must Be Logged In To Add New Dogs...")
+        return redirect('dogs_app:home')
 
 
 # Helper function to filter dogs based on date range.
@@ -763,7 +769,9 @@ def filter_dogs(request):
 
         # Date filtering
         for field in ['dateOfArrival', 'dateOfVaccination', 'kongDateAdded']:
-            adjusted_field = field if "kong" not in field else field.replace('Date', 'date', 1)  # Handle "kongDateAdded" having a capital D
+            # Handle "kongDateAdded" having a capital D
+            adjusted_field = field if "kong" not in field else field.replace('Date', 'date', 1)
+
             start = request.GET.get(adjusted_field.replace('date', 'startDate'), None)
             end = request.GET.get(adjusted_field.replace('date', 'endDate'), None)
             dogs = date_filter_logic(dogs, start, end, field)

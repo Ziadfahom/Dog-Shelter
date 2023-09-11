@@ -13,6 +13,11 @@
     border-radius: 12px;
 }
 
+.back-button {
+    display: flex;
+    justify-content: flex-start;
+}
+
 .btn-primary {
     color: #fff;
     background-color: #0d6efd;

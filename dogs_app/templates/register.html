@@ -2,62 +2,66 @@
 {% load static %}
 {% block content %}
 
-<link href="{% static 'dogs_app/css/register.css' %}" rel="stylesheet">
+    <link href="{% static 'dogs_app/css/register.css' %}" rel="stylesheet">
 
-<div class="container mt-5 col-md-10">
-    <div class="card border-secondary shadow">
-        <div class="card-header bg-primary text-white text-center stylish-card-header">
-            <h1>New User Registration</h1>
-        </div>
-        <div class="card-body stylish-card-body">
-            <form method="POST" action="" enctype="multipart/form-data">
-                {% csrf_token %}
+    <div class="container mt-5 col-md-10">
+        <div class="card border-secondary shadow">
+            <div class="card-header bg-primary text-white text-center stylish-card-header">
+                <h1>New User Registration</h1>
+            </div>
+            <div class="card-body stylish-card-body">
+                <form method="POST" action="" enctype="multipart/form-data">
+                    {% csrf_token %}
 
-                {% if form.errors %}
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <strong>Please Fix the Following Errors:</strong>
-                        {% for field in form %}
-                            {% if field.errors %}
-                                <ul>
-                                    {% for error in field.errors %}
-                                        <li>{{ error }}</li>
-                                    {% endfor %}
-                                </ul>
-                            {% endif %}
-                        {% endfor %}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endif %}
-
-                {% for field in form %}
-                    <div class="form-floating mb-3 stylish-form-floating">
-                        {{ field }}
-                        <label for="{{ field.id_for_label }}" class="stylish-label">{{ field.label }}</label>
-                    </div>
-                {% endfor %}
-
-                {% for field in profile_form %}
-                    {% if field.name == 'image' %}
-                        <div class="form-floating mb-3 stylish-form-floating">
-
-                            <div class="container"><label for="{{ field.id_for_label }}" class="stylish-label">Profile Picture</label></div>
-                            <br><div class="container"> {{ field }}</div>
+                    {% if form.errors %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong>Please Fix the Following Errors:</strong>
+                            {% for field in form %}
+                                {% if field.errors %}
+                                    <ul>
+                                        {% for error in field.errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            {% endfor %}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
-                    {% else %}
+                    {% endif %}
+
+                    {% for field in form %}
                         <div class="form-floating mb-3 stylish-form-floating">
                             {{ field }}
                             <label for="{{ field.id_for_label }}" class="stylish-label">{{ field.label }}</label>
                         </div>
-                    {% endif %}
-               {% endfor %}
+                    {% endfor %}
+
+                    {% for field in profile_form %}
+                        {% if field.name == 'image' %}
+                            <div class="form-floating mb-3 stylish-form-floating">
+
+                                <div class="container"><label for="{{ field.id_for_label }}" class="stylish-label">Profile Picture</label></div>
+                                <br><div class="container"> {{ field }}</div>
+                            </div>
+                        {% else %}
+                            <div class="form-floating mb-3 stylish-form-floating">
+                                {{ field }}
+                                <label for="{{ field.id_for_label }}" class="stylish-label">{{ field.label }}</label>
+                            </div>
+                        {% endif %}
+                   {% endfor %}
 
 
-                <div class="d-flex justify-content-center stylish-button action-buttons">
-                    <button type="submit" class="btn btn-primary">Register</button>
-                </div>
-            </form>
+                    <div class="d-flex justify-content-center stylish-button action-buttons">
+                        <button type="submit" class="btn btn-primary">Register</button>
+                    </div>
+                    <div class="back-button">
+                        <button onclick="goBack()" class="btn btn-secondary">Back</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
-<br>
+    <br>
+    <script src="{% static 'dogs_app/js/register.js' %}"></script>
 {% endblock %}

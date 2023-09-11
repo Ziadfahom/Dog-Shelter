@@ -8,20 +8,21 @@
 
     <div class="container mt-5">
         <div class="col-md-10 mx-auto">
-            <div class="d-flex align-items-center p-2">
-                {% if user.is_authenticated and user|has_group:"Vet" %}
-                    <a href="{% url 'dogs_app:delete_dog' dog_record.dogID %}" class="btn btn-danger flex-shrink-0">Delete</a>
-                    <div class="d-flex justify-content-center flex-grow-1 action-buttons top-buttons">
-                        <a href="{% url 'dogs_app:update_dog' dog_record.dogID %}" class="btn btn-warning update-button-wide">Update</a>
-                    </div>
-                {% endif %}
-                <div class="back-button flex-shrink-0">
-                    <button onclick="goBack()" class="btn btn-secondary">Back</button>
-                </div>
-            </div>
             <div class="card border-secondary shadow-lg">
-                <div class="card-header bg-dark text-white">
-                    <h2 class="card-title">{{ dog_record }}</h2>
+                <div class="card-header bg-dark text-white d-flex align-items-center justify-content-between">
+                    <!-- Back button on the left -->
+                    <button onclick="goBack()" class="btn btn-secondary">Back</button>
+
+                    <!-- Dog's name centered -->
+                    <h2 class="card-title m-2 flex-grow-1 text-center">{{ dog_record.dogName }}</h2>
+
+                    <!-- Update and Delete on the right -->
+                    <div class="btn-group">
+                        {% if user.is_authenticated and user|has_group:"Vet" %}
+                            <a href="{% url 'dogs_app:update_dog' dog_record.dogID %}" class="btn btn-warning">Update</a>
+                            <a href="{% url 'dogs_app:delete_dog' dog_record.dogID %}" class="btn btn-danger">Delete</a>
+                        {% endif %}
+                    </div>
                 </div>
 
                 <div class="card-header text-center">
@@ -101,14 +102,21 @@
                                 <td class="attr-name"><strong>Owner</strong></td>
                                 <td>
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <div style="width:50%"></div>
-                                        <div class="text-center" style="width:50%">
-                                            {{ dog_record.owner|handle_none }}
-                                        </div>
+
                                         {% if dog_record.owner %}
-                                            <div style="width:50%">
-                                                <button type="button" id="owner-button" class="btn btn-primary float-end" data-bs-toggle="modal" data-bs-target="#ownerModal">View</button>
+                                            <div style="width:50%"></div>
+                                            <div class="text-center" style="width:50%">
+                                                {{ dog_record.owner|handle_none }}
                                             </div>
+                                            <div style="width:50%">
+                                                <button type="button" id="owner-button" class="btn btn-primary float-end" data-bs-toggle="modal" data-bs-target="#ownerModal">Details</button>
+                                            </div>
+                                        {% else %}
+                                            <div style="width:50%"></div>
+                                            <div class="text-center" style="width:50%">
+                                                {{ dog_record.owner|handle_none }}
+                                            </div>
+                                            <div style="width:50%"></div>
                                         {% endif %}
                                     </div>
                                 </td>
@@ -271,15 +279,15 @@
                 </div>
 
                 <div class="card-footer bg-transparent">
-                        {% if user.is_authenticated and user|has_group:"Vet" %}
-                            <div class="mt-1 action-buttons">
-                                <a href="{% url 'dogs_app:update_dog' dog_record.dogID %}" class="btn btn-warning me-2">Update</a>
-                                <a href="{% url 'dogs_app:delete_dog' dog_record.dogID %}" class="btn btn-danger">Delete</a>
-                            </div>
-                        {% endif %}
-                        <div class="back-button">
-                            <button onclick="goBack()" class="btn btn-secondary">Back</button>
+                    {% if user.is_authenticated and user|has_group:"Vet" %}
+                        <div class="mt-1 action-buttons">
+                            <a href="{% url 'dogs_app:update_dog' dog_record.dogID %}" class="btn btn-warning me-2">Update</a>
+                            <a href="{% url 'dogs_app:delete_dog' dog_record.dogID %}" class="btn btn-danger">Delete</a>
                         </div>
+                    {% endif %}
+                    <div class="back-button">
+                        <button onclick="goBack()" class="btn btn-secondary">Back</button>
+                    </div>
                 </div>
 
             </div>
