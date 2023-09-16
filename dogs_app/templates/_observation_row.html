@@ -1,0 +1,7 @@
+{% load dog_filters %}
+
+<tr>
+    <td>{{ observation.obsDateTime }}</td>
+    <td>{{ observation.sessionDurationInMins }}</td>
+    <td>{{ observation.get_isKong_display|handle_none }}</td>
+</tr>

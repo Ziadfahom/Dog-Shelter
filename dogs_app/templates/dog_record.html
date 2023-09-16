@@ -14,7 +14,7 @@
                     <button onclick="goBack()" class="btn btn-secondary">Back</button>
 
                     <!-- Dog's name centered -->
-                    <h2 class="card-title m-2 flex-grow-1 text-center">{{ dog_record.dogName }}</h2>
+                    <h2 class="card-title m-2 flex-grow-1 text-center" style="padding-left: 3rem;">{{ dog_record.dogName }}</h2>
 
                     <!-- Update and Delete on the right -->
                     <div class="btn-group">
@@ -99,7 +99,7 @@
 
 
                             <tr>
-                                <td class="attr-name"><strong>Owner</strong></td>
+                                <td class="attr-name" style="{% if dog_record.owner %}padding-top: 1.4rem;{% endif %}"><strong>Owner</strong></td>
                                 <td>
                                     <div class="d-flex justify-content-between align-items-center">
 
@@ -124,7 +124,7 @@
 
                         </tbody>
                     </table>
-
+                    <hr>
                     <!-- Expand/Collapse All Button -->
                     <div class="d-inline-block float-end">
                         <button id="toggleTables" class="btn btn-outline-dark btn-sm">Expand All</button>
@@ -138,7 +138,17 @@
                             </div>
                         </div>
                         <div id="treatments_table" class="hide">
-                            <table class="table styled-table table-bordered">
+                            <div class="action-bar">
+                                <!-- Display success messages here upon submission -->
+                                <div id="treatments-success-alert" class="alert alert-success alert-dismissible fade show" role="alert" style="display:none;">
+                                    <strong>Success!</strong> Treatment has been successfully added.
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                                <a class="btn btn-add-new new-treatment" href="#">
+                                    <i class="fas fa-plus"></i> Add Treatment
+                                </a>
+                            </div>
+                            <table id="treatments-table" class="table styled-table table-bordered">
                                 <thead>
                                     <tr>
                                         <th>Treatment Date</th>
@@ -149,12 +159,7 @@
                                 </thead>
                                 <tbody>
                                 {% for treatment in treatments %}
-                                    <tr>
-                                        <td>{{ treatment.treatmentDate }}</td>
-                                        <td>{{ treatment.treatmentName }}</td>
-                                        <td>{{ treatment.treatedBy }}</td>
-                                        <td>{{ treatment.comments }}</td>
-                                    </tr>
+                                    {% include "_treatment_row.html" with treatment=treatment %}
                                 {% empty %}
                                     <tr>
                                         <td colspan="4">No treatments found.</td>
@@ -162,8 +167,13 @@
                                 {% endfor %}
                                 </tbody>
                             </table>
+
+                            <!-- Treatments Pagination -->
+                           {% include "_dog_record_pagination.html" with paginated_data=treatments param_name="treatments_page" %}
+                            <hr>
                         </div>
                     </div>
+
 
                     <!-- Entrance Examinations Table -->
                     <div class="scrollable-table">
@@ -173,29 +183,31 @@
                             </div>
                         </div>
                         <div id="examinations_table" class="hide">
-                            <table class="table styled-table table-bordered">
+                            <div class="action-bar">
+                                <!-- Display success messages here upon submission -->
+                                <div id="examinations-success-alert" class="alert alert-success alert-dismissible fade show" role="alert" style="display:none;">
+                                    <strong>Success!</strong> Examination has been successfully added.
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                                <a class="btn btn-add-new new-examination" href="#">
+                                    <i class="fas fa-plus"></i> Add Examination
+                                </a>
+                            </div>
+                            <table id="examinations-table" class="table styled-table table-bordered">
                                 <thead class=" stylish-thead">
                                     <tr>
                                         <th>Date</th>
                                         <th>Examined By</th>
                                         <th>Results</th>
-                                        <th>Weight (kg)</th>
-                                        <th>Temperature (c)</th>
-                                        <th>Pulse (bpm)</th>
+                                        <th>Weight (Kg)</th>
+                                        <th>Temperature (C)</th>
+                                        <th>Pulse (BPM)</th>
                                         <th>Comments</th>
                                     </tr>
                                 </thead>
                                 <tbody class="small stylish-tbody">
                                 {% for examination in examinations %}
-                                    <tr>
-                                        <td>{{ examination.examinationDate }}</td>
-                                        <td>{{ examination.examinedBy }}</td>
-                                        <td>{{ examination.results }}</td>
-                                        <td>{{ examination.dogWeight }}</td>
-                                        <td>{{ examination.dogTemperature }}</td>
-                                        <td>{{ examination.dogPulse }}</td>
-                                        <td>{{ examination.comments }}</td>
-                                    </tr>
+                                    {% include "_examination_row.html" with examination=examination %}
                                 {% empty %}
                                     <tr>
                                         <td colspan="7">No examinations found.</td>
@@ -203,39 +215,10 @@
                                 {% endfor %}
                                 </tbody>
                             </table>
-                        </div>
-                    </div>
 
-                    <!-- Observations Table -->
-                    <div class="scrollable-table">
-                        <div id="observations_container" class="center-container clickable-container">
-                            <div class="clickable-header mt-3">
-                                <h2>Observations <i class="fas fa-angle-down"></i></h2>
-                            </div>
-                        </div>
-                        <div id="observations_table" class="hide">
-                            <table class="table styled-table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>Observation Date</th>
-                                        <th>Session Duration (mins)</th>
-                                        <th>With a Kong Toy?</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                {% for observation in observations %}
-                                    <tr>
-                                        <td>{{ observation.obsDateTime }}</td>
-                                        <td>{{ observation.sessionDurationInMins }}</td>
-                                        <td>{{ observation.get_isKong_display }}</td>
-                                    </tr>
-                                {% empty %}
-                                    <tr>
-                                        <td colspan="3">No observations found.</td>
-                                    </tr>
-                                {% endfor %}
-                                </tbody>
-                            </table>
+                            <!-- Examinations Pagination -->
+                           {% include "_dog_record_pagination.html" with paginated_data=examinations param_name="examinations_page" %}
+                            <hr>
                         </div>
                     </div>
 
@@ -243,11 +226,21 @@
                     <div class="scrollable-table">
                         <div id="placements_container" class="center-container clickable-container">
                             <div class="clickable-header mt-3">
-                                <h2>Placements in Kennels <i class="fas fa-angle-down"></i></h2>
+                                <h2>Kennel Placements <i class="fas fa-angle-down"></i></h2>
                             </div>
                         </div>
                         <div id="placements_table" class="hide">
-                            <table class="table styled-table table-bordered">
+                            <div class="action-bar">
+                                <!-- Display success messages here upon submission -->
+                                <div id="placements-success-alert" class="alert alert-success alert-dismissible fade show" role="alert" style="display:none;">
+                                    <strong>Success!</strong> Placement has been successfully added.
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                                <a class="btn btn-add-new new-placement" href="#">
+                                    <i class="fas fa-plus"></i> Add Placement
+                                </a>
+                            </div>
+                            <table id="placements-table" class="table styled-table table-bordered">
                                 <thead>
                                     <tr>
                                         <th>Entrance Date</th>
@@ -259,13 +252,7 @@
                                 </thead>
                                 <tbody>
                                 {% for placement in placements %}
-                                    <tr>
-                                        <td>{{ placement.entranceDate }}</td>
-                                        <td>{{ placement.expirationDate }}</td>
-                                        <td>{{ placement.duration }}</td>
-                                        <td>{{ placement.kennel }}</td>
-                                        <td>{{ placement.placementReason }}</td>
-                                    </tr>
+                                    {% include "_placement_row.html" with placement=placement %}
                                 {% empty %}
                                     <tr>
                                         <td colspan="5">No placements found.</td>
@@ -273,6 +260,52 @@
                                 {% endfor %}
                                 </tbody>
                             </table>
+
+                            <!-- Placements Pagination -->
+                           {% include "_dog_record_pagination.html" with paginated_data=placements param_name="placements_page" %}
+                        </div>
+                    </div>
+
+                    <!-- Observations Table -->
+                    <div class="scrollable-table">
+                        <div id="observations_container" class="center-container clickable-container">
+                            <div class="clickable-header mt-3">
+                                <h2>Observations <i class="fas fa-angle-down"></i></h2>
+                            </div>
+                        </div>
+                        <div id="observations_table" class="hide">
+                            <div class="action-bar">
+                                <!-- Display success messages here upon submission -->
+                                <div id="observations-success-alert" class="alert alert-success alert-dismissible fade show" role="alert" style="display:none;">
+                                    <strong>Success!</strong> Observation has been successfully added.
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                                <a class="btn btn-add-new new-observation" href="#">
+                                    <i class="fas fa-plus"></i> Add Observation
+                                </a>
+                            </div>
+                            <table id="observations-table" class="table styled-table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Observation Date</th>
+                                        <th>Session Duration (mins)</th>
+                                        <th>With a Kong Toy?</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                {% for observation in observations %}
+                                    {% include "_observation_row.html" with observation=observation %}
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="3">No observations found.</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+
+                            <!-- Observations Pagination -->
+                           {% include "_dog_record_pagination.html" with paginated_data=observations param_name="observations_page" %}
+                            <hr>
                         </div>
                     </div>
 
@@ -346,6 +379,207 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
 
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Treatment Modal -->
+    <div class="modal fade" id="addTreatmentModal" tabindex="-1" aria-labelledby="addTreatmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header text-center bg-primary">
+                    <h3 class="modal-title w-100" id="addTreatmentModalLabel">Add New Treatment</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" action="{% url 'dogs_app:dog_record' dog_record.dogID %}">
+                        {% csrf_token %}
+
+                        <div class="row mb-3">
+                            <div class="col-4 text-end">
+                                <label for="{{ treatment_form.treatmentName.id_for_label }}" class="col-form-label">Treatment Name:</label>
+                            </div>
+                            <div class="col-8">
+                                {{ treatment_form.treatmentName }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-4 text-end">
+                                <label for="{{ treatment_form.treatmentDate.id_for_label }}" class="col-form-label">Treatment Date:</label>
+                            </div>
+                            <div class="col-8">
+                                {{ treatment_form.treatmentDate }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-4 text-end">
+                                <label for="{{ treatment_form.treatedBy.id_for_label }}" class="col-form-label">Treated By:</label>
+                            </div>
+                            <div class="col-8">
+                                {{ treatment_form.treatedBy }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-4 text-end">
+                                <label for="{{ treatment_form.comments.id_for_label }}" class="col-form-label">Comments:</label>
+                            </div>
+                            <div class="col-8">
+                                {{ treatment_form.comments }}
+                            </div>
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-modal">Save Treatment</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Examination Modal -->
+    <div class="modal fade" id="addExaminationModal" tabindex="-1" aria-labelledby="addExaminationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header text-center bg-primary">
+                    <h3 class="modal-title w-100" id="addExaminationtModalLabel">Add New Examination</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" action="{% url 'dogs_app:dog_record' dog_record.dogID %}">
+                        {% csrf_token %}
+
+                        <div class="row mb-3">
+                            <div class="col-4 text-end">
+                                <label for="{{ examination_form.examinationDate.id_for_label }}" class="col-form-label">Examination Date:</label>
+                            </div>
+                            <div class="col-8">
+                                {{ examination_form.examinationDate }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-4 text-end">
+                                <label for="{{ examination_form.examinedBy.id_for_label }}" class="col-form-label">Examined By:</label>
+                            </div>
+                            <div class="col-8">
+                                {{ examination_form.examinedBy }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-4 text-end">
+                                <label for="{{ examination_form.results.id_for_label }}" class="col-form-label">Results:</label>
+                            </div>
+                            <div class="col-8">
+                                {{ examination_form.results }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-4 text-end">
+                                <label for="{{ examination_form.dogWeight.id_for_label }}" class="col-form-label">Weight (Kg):</label>
+                            </div>
+                            <div class="col-8">
+                                {{ examination_form.dogWeight }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-4 text-end">
+                                <label for="{{ examination_form.dogTemperature.id_for_label }}" class="col-form-label">Temperature (C):</label>
+                            </div>
+                            <div class="col-8">
+                                {{ examination_form.dogTemperature }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-4 text-end">
+                                <label for="{{ examination_form.dogPulse.id_for_label }}" class="col-form-label">Heart Pulse (BPM):</label>
+                            </div>
+                            <div class="col-8">
+                                {{ examination_form.dogPulse }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-4 text-end">
+                                <label for="{{ examination_form.comments.id_for_label }}" class="col-form-label">Comments:</label>
+                            </div>
+                            <div class="col-8">
+                                {{ examination_form.comments }}
+                            </div>
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-modal">Save Examination</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Kennel Placement Modal -->
+    <div class="modal fade" id="addPlacementModal" tabindex="-1" aria-labelledby="addPlacementModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header text-center bg-primary">
+                    <h3 class="modal-title w-100" id="addPlacementModalLabel">Add New Kennel Placement</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" action="{% url 'dogs_app:dog_record' dog_record.dogID %}">
+                        {% csrf_token %}
+
+                        <div class="row mb-3">
+                            <div class="col-4 text-end">
+                                <label for="{{ placement_form.kennel.id_for_label }}" class="col-form-label">Kennel:</label>
+                            </div>
+                            <div class="col-8">
+                                {{ placement_form.kennel }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-4 text-end">
+                                <label for="{{ placement_form.entranceDate.id_for_label }}" class="col-form-label">Entrance Date:</label>
+                            </div>
+                            <div class="col-8">
+                                {{ placement_form.entranceDate }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-4 text-end">
+                                <label for="{{ placement_form.expirationDate.id_for_label }}" class="col-form-label">Expiration Date:</label>
+                            </div>
+                            <div class="col-6">
+                                {{ placement_form.expirationDate }}
+                            </div>
+                            <div class="col-2">
+                                <button type="button" class="btn btn-secondary" id="clearExpirationDate">Clear</button>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-4 text-end">
+                                <label for="{{ placement_form.placementReason.id_for_label }}" class="col-form-label">Reason for Placement:</label>
+                            </div>
+                            <div class="col-8">
+                                {{ placement_form.placementReason }}
+                            </div>
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-modal">Save Placement</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

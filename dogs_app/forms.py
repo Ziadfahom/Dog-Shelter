@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from django.core.validators import RegexValidator
 from django import forms
-from .models import Dog, Owner, Profile
+from .models import Dog, Owner, Profile, Treatment, EntranceExamination, Observation, DogPlacement, Kennel
 from django.core.exceptions import ValidationError
 from datetime import date
 
@@ -219,4 +219,58 @@ class ProfileUpdateForm(forms.ModelForm):
             'address': forms.TextInput(attrs={'class': 'form-control',
                                               'placeholder': 'Address'}),
             'image': forms.FileInput()
+        }
+
+
+# Form for adding new Treatments
+class TreatmentForm(forms.ModelForm):
+    class Meta:
+        model = Treatment
+        fields = ['treatmentName', 'treatmentDate', 'treatedBy', 'comments']
+        widgets = {
+            'treatmentName': forms.TextInput(attrs={'class': 'form-control'}),
+            'treatmentDate': forms.DateInput(attrs={'class': 'form-control',
+                                                    'type': 'text',
+                                                    'data-provide': 'datepicker',
+                                                    'readonly': 'readonly'}),
+            'treatedBy': forms.TextInput(attrs={'class': 'form-control'}),
+            'comments': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+
+# Form for adding new Examinations
+class EntranceExaminationForm(forms.ModelForm):
+    class Meta:
+        model = EntranceExamination
+        fields = ['examinationDate', 'examinedBy', 'results', 'dogWeight', 'dogTemperature', 'dogPulse', 'comments']
+        widgets = {
+            'examinationDate': forms.DateInput(attrs={'class': 'form-control',
+                                                      'type': 'text',
+                                                      'data-provide': 'datepicker',
+                                                      'readonly': 'readonly'}),
+            'examinedBy': forms.TextInput(attrs={'class': 'form-control'}),
+            'results': forms.TextInput(attrs={'class': 'form-control'}),
+            'dogWeight': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0-99'}),
+            'dogTemperature': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0-99'}),
+            'dogPulse': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0-200'}),
+            'comments': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+        }
+
+
+# Form for adding new Dog Placements (in Kennels)
+class DogPlacementForm(forms.ModelForm):
+    class Meta:
+        model = DogPlacement
+        fields = ['kennel', 'entranceDate', 'expirationDate', 'placementReason']
+        widgets = {
+            'kennel': forms.Select(attrs={'class': 'form-control'}),
+            'entranceDate': forms.DateInput(attrs={'class': 'form-control',
+                                                   'type': 'text',
+                                                   'data-provide': 'datepicker',
+                                                   'readonly': 'readonly'}),
+            'expirationDate': forms.DateInput(attrs={'class': 'form-control',
+                                                     'type': 'text',
+                                                     'data-provide': 'datepicker',
+                                                     'readonly': 'readonly'}),
+            'placementReason': forms.TextInput(attrs={'class': 'form-control'}),
         }

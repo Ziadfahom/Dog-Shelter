@@ -10,8 +10,9 @@
 
 .clickable-header {
     border: 1px solid #ccc;
-    padding: 8px;
-    margin: 3px 0;
+    padding: 0.5rem;
+    width: 50%;
+    margin: 2px 0 1rem 0;
     border-radius: 5px;
     background-color: #f8f9fa;
     cursor: pointer;
@@ -32,7 +33,7 @@
 
 .styled-table {
     border-collapse: collapse;
-    margin: 20px 0;
+    margin: 10px 0 20px 0;
     font-size: 0.9em;
     font-family: sans-serif;
     min-width: 400px;
@@ -229,4 +230,151 @@ th {
 
 .update-button-wide {
     width: 120px;
+}
+
+
+.form-control[data-provide="datepicker"] {
+    cursor: pointer;
+}
+
+.form-control {
+    border-radius: 5px;
+    border: 1px solid #ced4da; /* a subtle gray border color */
+    padding: 10px 15px;
+    font-size: 16px;
+}
+
+.form-control:focus {
+    border-color: #6c757d;  /* a darker gray for focus */
+    box-shadow: none;  /* Remove Bootstrap's default blue shadow */
+}
+
+label {
+    flex: 1;
+    text-align: right;
+    margin-right: 10px;
+    font-weight: 600;  /* bold font weight */
+    width: 150px;
+}
+
+input[type="text"],
+input[type="date"],
+textarea {
+    flex: 2;
+}
+
+.btn-modal {
+    border-radius: 5px;
+    display: block;
+    margin: 0 auto;
+    padding: 8px 15px;
+    font-size: 16px;
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.form-group {
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.modal-content {
+    font-family: 'Arial', sans-serif;
+    border-radius: 10px;
+    overflow: hidden;  /* Clip the child elements to match rounded corners */
+}
+
+.modal-header {
+    justify-content: center;
+    background: linear-gradient(120deg, #0072b5, #005a91); /* Gradient from primary to a slightly darker shade */
+    padding: 15px 20px; /* Enhanced padding */
+    font-family: 'Lato', sans-serif; /* Elegant font */
+}
+
+.modal-title {
+    position: relative;
+    z-index: 1;
+    font-weight: 700;
+    font-family: 'Arial', sans-serif;
+    color: #ffffff; /* White color for better contrast */
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.2); /* Subtle shadow for depth */
+}
+
+.btn-close {
+    position: absolute;
+    right: 15px;
+    z-index: 2;
+}
+
+.col-form-label {
+    padding-right: 10px;
+    width: 10rem;
+}
+
+.pagination-wrapper {
+    display: flex;
+    justify-content: center; /* Center the content horizontally */
+    align-items: center; /* Center the content vertically */
+    width: 100%; /* Full width */
+}
+
+.pagination-container {
+    text-align: center; /* Center the text */
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pagination a {
+  margin: 0 5px;
+  text-decoration: none;
+}
+
+.page-item-current .page-link {
+    margin-right: 5px;  /* Add some margin to the right side of the active page */
+}
+
+.action-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative; /* so the child absolute positioning is relative to this container */
+}
+
+#treatments-success-alert,
+#examinations-success-alert,
+#observations-success-alert,
+#placements-success-alert {
+    position: absolute;
+    left: 0;
+    top: 40%;
+    right: -40%;
+    transform: translateY(-50%); /* vertically center the alert */
+    max-width: calc(100% - 150px); /* give some space for the button */
+    white-space: nowrap; /* prevent wrapping */
+    overflow: hidden; /* hide excess text */
+    text-overflow: ellipsis; /* add ellipsis for overflow text */
+}
+
+.btn-add-new {
+    background-color: #007BFF; /* green */
+    color: white; /* text color */
+    border-radius: 5px; /* rounded corners */
+    padding: 8px 12px; /* padding */
+    font-size: 14px; /* font size */
+    transition: background-color 0.3s; /* smooth transition for hover effects */
+    margin-left: auto; /* push the button to the far right */
+}
+
+.btn-add-new:hover {
+    background-color: #0056b3; /* slightly darker green on hover */
+}
+
+.btn-add-new i {
+    margin-right: 3px; /* space between the icon and the text */
 }

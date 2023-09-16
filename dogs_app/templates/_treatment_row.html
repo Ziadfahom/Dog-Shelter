@@ -1,0 +1,8 @@
+{% load dog_filters %}
+
+<tr>
+    <td>{{ treatment.treatmentDate|handle_none }}</td>
+    <td>{{ treatment.treatmentName }}</td>
+    <td>{{ treatment.treatedBy }}</td>
+    <td>{{ treatment.comments|handle_none }}</td>
+</tr>

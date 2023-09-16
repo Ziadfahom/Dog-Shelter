@@ -1,0 +1,11 @@
+{% load dog_filters %}
+
+<tr>
+    <td>{{ examination.examinationDate }}</td>
+    <td>{{ examination.examinedBy }}</td>
+    <td>{{ examination.results|handle_none }}</td>
+    <td>{{ examination.dogWeight|handle_none }}</td>
+    <td>{{ examination.dogTemperature|handle_none }}</td>
+    <td>{{ examination.dogPulse|handle_none }}</td>
+    <td>{{ examination.comments|handle_none }}</td>
+</tr>

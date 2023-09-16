@@ -1,0 +1,9 @@
+{% load dog_filters %}
+
+<tr>
+    <td>{{ placement.entranceDate }}</td>
+    <td>{{ placement.expirationDate|handle_none }}</td>
+    <td>{{ placement.duration|handle_none }}</td>
+    <td>{{ placement.kennel }}</td>
+    <td>{{ placement.placementReason|handle_none }}</td>
+</tr>

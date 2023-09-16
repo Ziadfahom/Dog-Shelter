@@ -6,7 +6,7 @@ register = template.Library()
 
 @register.filter
 def handle_none(value):
-    if value is None or value == "":
+    if value is None or value == "" or value == "N/A":
         return "-"
     else:
         return value
