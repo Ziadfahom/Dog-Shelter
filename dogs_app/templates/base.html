@@ -7,6 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="{% static 'dogs_app/img/favicon.ico' %}">
     <title>Dogs Shelter - Lod</title>
+    <!-- Custom Breadcrumbs CSS -->
+    <link href="{% static 'dogs_app/css/base.css' %}" rel="stylesheet">
     <!-- Fontawesome CSS -->
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
     <!-- Bootstrap CSS -->
@@ -56,6 +58,19 @@
                 </div>
             {% endfor %}
         {% endif %}
+
+        <nav aria-label="breadcrumb" >
+            <ol class="breadcrumb">
+                {% for crumb in breadcrumbs %}
+                    <li class="breadcrumb-item">
+                        <a href="{{ crumb.url }}">{{ crumb.name }}</a>
+                        {% if not forloop.last %}
+                            <i class="fas fa-angle-right"></i>  <!-- Font Awesome right-angle arrow icon -->
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ol>
+        </nav>
 
         {%  block content %}
 

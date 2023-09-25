@@ -2,11 +2,12 @@
 {% load dog_filters %}
 {% load static %}
 
-{% block content %}
-    <link href="{% static 'dogs_app/css/home.css' %}" rel="stylesheet">
+<!-- Container for all content -->
+<div class="container">
 
-    <!-- Container for all content -->
-    <div class="container">
+    {% block content %}
+
+        <link href="{% static 'dogs_app/css/home.css' %}" rel="stylesheet">
 
         <!-- Check if the user is authenticated -->
         {% if user.is_authenticated %}
@@ -125,6 +126,5 @@
                 </div>
             </div>
         {% endif %}
-    </div>
-
-{% endblock %}
+    {% endblock %}
+</div>

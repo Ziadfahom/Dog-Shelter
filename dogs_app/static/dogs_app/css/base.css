@@ -1,0 +1,50 @@
+/* Add a distinguished background */
+.breadcrumb {
+    padding: 10px 0;
+
+}
+
+/* Change Font and Text Styles */
+.breadcrumb-item a {
+    font-size: 16px;
+    font-weight: 700;
+    color: #000;
+    transition: color 0.3s ease;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 5px;
+    padding: 1px;
+}
+
+/* Add hover effects */
+.breadcrumb-item a:hover {
+    text-decoration: underline;
+    color: #007bff;
+    transition: color 0.3s ease;
+}
+
+/* Highlight the current page */
+.breadcrumb-item.active {
+    font-weight: 600;
+    color: #007bff;
+}
+
+
+
+.breadcrumb-item i {
+    margin: 0 10px;
+    color: #aaa;
+    font-size: 16px;
+    vertical-align: middle;
+}
+
+.breadcrumb-item+.breadcrumb-item::before {
+    content: "" !important;
+    padding-right: 0;
+}
+
+@media (max-width: 768px) {
+    .breadcrumb {
+        display: none;
+    }
+}
+
