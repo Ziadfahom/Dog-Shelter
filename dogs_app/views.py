@@ -1,3 +1,6 @@
+import json
+
+from django.db.models import Prefetch
 from django.db.models import Value
 from django.db.models.functions import Concat
 from django.shortcuts import render, redirect, get_object_or_404
@@ -10,7 +13,7 @@ from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect, JsonResponse
 from .filters import DogFilter
 from .forms import SignUpForm, AddDogForm, UpdateUserForm, ProfileUpdateForm, TreatmentForm, EntranceExaminationForm, \
-    DogPlacementForm
+    DogPlacementForm, ObservesForm, ObservationForm, DogStanceForm
 from .models import *
 from django.conf import settings
 import os
@@ -19,9 +22,10 @@ from django.db.models import Count, Q
 from django.core.paginator import Paginator
 from django.template.loader import render_to_string
 from datetime import date, timedelta
-
 import logging
 from pytz import timezone
+from django.db import IntegrityError
+from django.core.exceptions import ValidationError
 
 
 # Location of the default User profile picture if they don't have a picture
@@ -29,7 +33,7 @@ DEFAULT_IMAGE_SOURCE = '/profile_pictures/default.jpg'
 
 # CONSTANTS
 # Number of Dogs/Users/Table Entries we want displayed in a single page across all Paginators
-ENTRIES_PER_PAGE = 10
+ENTRIES_PER_PAGE = 8
 
 
 # Main Page view for displaying either dog records if  user is logged in,
@@ -183,35 +187,36 @@ def dog_record_view(request, pk):
             'observers__observation_set__dogstance_set',  # For DogStances related to Observations
         ).get(dogID=pk)
 
-        # Initialize Treatment/Examination/Placement form when adding new entries
+        # Initialize Treatment/Examination/Placement/Session(Observes) form when adding new entries
         treatment_form = TreatmentForm(request.POST or None)
         examination_form = EntranceExaminationForm(request.POST or None)
         placement_form = DogPlacementForm(request.POST or None)
+        session_form = ObservesForm(request.POST or None)
 
         # Get page numbers for each table from request
         treatments_page_number = request.GET.get('treatments_page', 1)
         examinations_page_number = request.GET.get('examinations_page', 1)
         placements_page_number = request.GET.get('placements_page', 1)
-        observations_page_number = request.GET.get('observations_page', 1)
+        sessions_page_number = request.GET.get('sessions_page', 1)
         MAX_PER_PAGE = 6  # Limit entries per page
 
-        # Create paginators for four tables
+        # Create paginators for all tables
         treatments_paginator = Paginator(
             Treatment.objects.filter(dog=dog_record).order_by('-treatmentDate'), MAX_PER_PAGE)
         examinations_paginator = Paginator(
             EntranceExamination.objects.filter(dog=dog_record).order_by('-examinationDate'), MAX_PER_PAGE)
         placements_paginator = Paginator(
             DogPlacement.objects.filter(dog=dog_record).order_by('-entranceDate'), MAX_PER_PAGE)
-        observations_paginator = Paginator(
-            Observation.objects.filter(observes__dog=dog_record).order_by('-obsDateTime'), MAX_PER_PAGE)
+        sessions_paginator = Paginator(
+            Observes.objects.filter(dog=dog_record).prefetch_related('observation_set').order_by('-sessionDate'), MAX_PER_PAGE)
 
         # Get the relevant page
         treatments = treatments_paginator.get_page(treatments_page_number)
         examinations = examinations_paginator.get_page(examinations_page_number)
         placements = placements_paginator.get_page(placements_page_number)
-        observations = observations_paginator.get_page(observations_page_number)
+        sessions = sessions_paginator.get_page(sessions_page_number)
 
-        # Handle user submitting a new Treatment/Examination/Placement form
+        # Handle user submitting a new Treatment/Examination/Placement/Session form
         if request.method == "POST":
 
             # Ensure only one form is submitted
@@ -278,6 +283,27 @@ def dog_record_view(request, pk):
                     # Redirect back to the dog_record_view to see the new placement.
                     return redirect('dogs_app:dog_record', pk=dog_record.pk)
 
+            # Check if it's a Session (Observes) form
+            elif session_form.is_valid():
+                new_session = session_form.save(commit=False)
+                new_session.dog = dog_record
+                new_session.save()
+
+                # If this is an AJAX request, send back the new Session data
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    sessions_data = Observes.objects.filter(dog=dog_record).order_by('-sessionDate')[:MAX_PER_PAGE]
+                    data = {
+                        'data': [render_to_string('_session_row.html',
+                                                  {'session': session}) for session in sessions_data],
+                        'pagination': render_to_string('_dog_record_pagination.html',
+                                                       {'paginated_data': sessions,
+                                                        'param_name': 'sessions_page'})
+                    }
+                    return JsonResponse(data)
+                else:
+                    # Redirect back to the dog_record_view to see the new placement.
+                    return redirect('dogs_app:dog_record', pk=dog_record.pk)
+
         # Check if request is AJAX call for switching pages
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             data = {
@@ -289,11 +315,6 @@ def dog_record_view(request, pk):
                                 treatments]
                 data['pagination'] = render_to_string('_dog_record_pagination.html',
                                                       {'paginated_data': treatments, 'param_name': 'treatments_page'})
-            elif 'observations_page' in request.GET:
-                data['data'] = [render_to_string('_observation_row.html', {'observation': observation}) for observation
-                                in observations]
-                data['pagination'] = render_to_string('_dog_record_pagination.html',
-                                                      {'paginated_data': observations, 'param_name': 'observations_page'})
             elif 'examinations_page' in request.GET:
                 data['data'] = [render_to_string('_examination_row.html', {'examination': examination}) for examination
                                 in examinations]
@@ -304,22 +325,94 @@ def dog_record_view(request, pk):
                                 in placements]
                 data['pagination'] = render_to_string('_dog_record_pagination.html',
                                                       {'paginated_data': placements, 'param_name': 'placements_page'})
+            elif 'sessions_page' in request.GET:
+                data['data'] = [render_to_string('_session_row.html', {'session': session}) for session
+                                in sessions]
+                data['pagination'] = render_to_string('_dog_record_pagination.html',
+                                                      {'paginated_data': sessions, 'param_name': 'sessions_page'})
             return JsonResponse(data)
 
         context = {
             'dog_record': dog_record,
             'treatments': treatments,
             'examinations': examinations,
-            'observations': observations,
             'placements': placements,
+            'sessions': sessions,
             'treatment_form': treatment_form,
             'examination_form': examination_form,
             'placement_form': placement_form,
+            'session_form': session_form,
         }
 
         return render(request, 'dog_record.html', context=context)
 
     # User is NOT logged in --> send them to login page
+    else:
+        messages.error(request, message='You Must Be Logged In To View That Page...')
+        return redirect('dogs_app:home')
+
+
+# Handle Observations display
+def view_observations(request, session_id):
+    if request.user.is_authenticated:
+        dog_stances = DogStance.objects.all().order_by('stanceStartTime')
+        observations = Observation.objects.filter(observes_id=session_id).prefetch_related(
+            Prefetch('dogstance_set', queryset=dog_stances, to_attr='related_dog_stances')
+        ).order_by('-obsDateTime')
+        session_instance = Observes.objects.get(pk=session_id)
+
+        if request.method == 'POST':
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                # Handle DogStance form submission via AJAX
+                stance_form = DogStanceForm(request.POST or None)
+                if stance_form.is_valid():
+                    try:
+                        new_stance = stance_form.save(commit=False)
+                        new_stance.observation_id = request.POST.get('observation_id')
+                        new_stance.save()
+                        return JsonResponse({
+                            "status": "success",
+                            "new_stance": {
+                                'id': new_stance.id,
+                                'stanceStartTime': new_stance.stanceStartTime,
+                                'dogStance': new_stance.get_dogStance_display(),
+                                'dogLocation': new_stance.get_dogLocation_display() if new_stance.dogLocation else "-",
+                                'observation': new_stance.observation_id,
+                            }
+                        }, status=201)
+                    except IntegrityError:
+                        return JsonResponse({"status": "error", "errors": "Duplicate Stance Start Time"}, status=400)
+                else:
+                    return JsonResponse({"status": "error", "errors": stance_form.errors}, status=400)
+
+            else:
+                stance_form = DogStanceForm()
+
+            observation_form = ObservationForm(request.POST or None, request.FILES or None)
+            if observation_form.is_valid():
+                new_observation = observation_form.save(commit=False)
+                new_observation.observes = session_instance
+                new_observation.save()
+                messages.success(request, 'Success! Observation has been successfully added.')
+                return redirect('dogs_app:view_observations', session_id=session_id)
+        else:
+            observation_form = ObservationForm()
+            stance_form = DogStanceForm()
+
+        # Pagination
+        paginator = Paginator(observations, ENTRIES_PER_PAGE)
+        page_number = request.GET.get('page')
+        paginated_observations = paginator.get_page(page_number)
+
+        context = {
+            'observations': observations,
+            'paginated_observations': paginated_observations,
+            'session_instance': session_instance,
+            'observation_form': observation_form,
+            'stance_form': stance_form,
+        }
+
+        return render(request, 'view_observations.html', context=context)
     else:
         messages.error(request, message='You Must Be Logged In To View That Page...')
         return redirect('dogs_app:home')
@@ -726,8 +819,6 @@ def delete_news(request, news_id):
 def chart_data(request):
     #DELETE#
     logger = logging.getLogger(__name__)
-
-    from datetime import datetime, timedelta
 
     # Debugging code
     obs_with_kong = Observation.objects.filter(isKong='Y', obsDateTime__isnull=False)

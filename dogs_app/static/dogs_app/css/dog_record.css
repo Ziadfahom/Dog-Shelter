@@ -162,7 +162,7 @@ h2 {
     border-color: #dc3545;
 }
 
-.btn-danger:hover {
+.btn-danger:hover  {
     color: #fff;
     background-color: #c82333;
     border-color: #bd2130;
@@ -224,7 +224,9 @@ th {
 
 .action-buttons a:hover,
 .back-button a:hover,
-.btn-danger:hover {
+.btn-danger:hover,
+.btn-success:hover,
+.custom-button:hover {
     transform: scale(1.05); /* subtle grow effect on hover */
 }
 
@@ -249,9 +251,13 @@ th {
     box-shadow: none;  /* Remove Bootstrap's default blue shadow */
 }
 
+#clearExpirationDate {
+    padding: 10px 12px;
+    margin-left: -6px;}
+
 label {
     flex: 1;
-    text-align: right;
+    text-align: left;
     margin-right: 10px;
     font-weight: 600;  /* bold font weight */
     width: 150px;
@@ -349,7 +355,8 @@ textarea {
 #treatments-success-alert,
 #examinations-success-alert,
 #observations-success-alert,
-#placements-success-alert {
+#placements-success-alert,
+#sessions-success-alert{
     position: absolute;
     left: 0;
     top: 40%;
@@ -377,4 +384,16 @@ textarea {
 
 .btn-add-new i {
     margin-right: 3px; /* space between the icon and the text */
+}
+
+.custom-input input,
+.custom-input textarea,
+.custom-input select {
+    font-size: 15px;
+    padding: 9px;
+    border: 2px solid #6C757D;
+    border-radius: 10px;
+    background-color: #E8ECEF;
+    color: #333;
+    text-align: center;
 }

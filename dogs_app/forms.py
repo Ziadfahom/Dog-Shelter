@@ -1,9 +1,11 @@
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth.models import User
+from django.forms import DateTimeInput
 from django.utils import timezone
 from django.core.validators import RegexValidator
 from django import forms
-from .models import Dog, Owner, Profile, Treatment, EntranceExamination, Observation, DogPlacement, Kennel
+from .models import Dog, Owner, Profile, Treatment, EntranceExamination,\
+    Observation, DogPlacement, Kennel, Observes, DogStance
 from django.core.exceptions import ValidationError
 from datetime import date
 
@@ -273,4 +275,45 @@ class DogPlacementForm(forms.ModelForm):
                                                      'data-provide': 'datepicker',
                                                      'readonly': 'readonly'}),
             'placementReason': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+
+# Form for adding new Camera Session (Observes)
+class ObservesForm(forms.ModelForm):
+    class Meta:
+        model = Observes
+        fields = ['sessionDate', 'camera', 'comments']
+        widgets = {
+            'sessionDate': forms.DateInput(attrs={'class': 'form-control',
+                                                  'type': 'text',
+                                                  'data-provide': 'datepicker',
+                                                  'readonly': 'readonly'}),
+            'camera': forms.Select(attrs={'class': 'form-control'}),
+            'comments': forms.Textarea(attrs={'class': 'form-control', 'rows': 2})
+        }
+
+
+# Form for adding new Observation
+class ObservationForm(forms.ModelForm):
+    class Meta:
+        model = Observation
+        fields = ['obsDateTime', 'sessionDurationInMins', 'isKong', 'jsonFile', 'rawVideo']
+        widgets = {
+            'sessionDurationInMins': forms.NumberInput(attrs={'class': 'form-control'}),
+            'isKong': forms.Select(choices=Observation.IS_KONG_CHOICES, attrs={'class': 'form-control'}),
+            'jsonFile': forms.FileInput(attrs={'class': 'form-control-file'}),
+            'rawVideo': forms.FileInput(attrs={'class': 'form-control-file'})
+        }
+
+
+# Form for adding new Dog Stance
+class DogStanceForm(forms.ModelForm):
+    class Meta:
+        model = DogStance
+        fields = ['stanceStartTime', 'dogStance', 'dogLocation']
+
+        widgets = {
+            'stanceStartTime': forms.TimeInput(attrs={'class': 'form-control'}),
+            'dogStance': forms.Select(attrs={'class': 'form-control'}),
+            'dogLocation': forms.Select(attrs={'class': 'form-control'})
         }

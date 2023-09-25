@@ -1,7 +1,151 @@
 {% load dog_filters %}
 
+<!-- Observation Row -->
 <tr>
-    <td>{{ observation.obsDateTime }}</td>
-    <td>{{ observation.sessionDurationInMins }}</td>
-    <td>{{ observation.get_isKong_display|handle_none }}</td>
+    <!-- Cell with Flexbox -->
+    <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Stances for this Observation">
+        <div class="d-flex justify-content-between align-items-center">
+            <!-- Icon at the very left -->
+            <i class="fas fa-angle-down expand-icon"></i>
+            <!-- Date Time centered -->
+            <div>
+                {{ observation.obsDateTime|format_european_datetime }}
+            </div>
+            <!-- Spacer for symmetry -->
+            <div></div>
+        </div>
+    </td>
+
+    <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Stances for this Observation">
+        {{ observation.sessionDurationInMins|format_duration }}
+    </td>
+    <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Stances for this Observation">
+        {% if observation.isKong == "Y" %}
+            <input class="form-check-input" type="checkbox" style="transform: scale(1.5);" checked disabled>
+        {% elif observation.isKong == "N" %}
+            <input class="form-check-input" type="checkbox" style="transform: scale(1.5);" disabled>
+        {% else %}
+            -
+        {% endif %}
+    </td>
+    <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Stances for this Observation">
+        {{ observation.jsonFile|handle_none }}
+    </td>
+    <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Stances for this Observation">
+        {{ observation.rawVideo|handle_none }}
+    </td>
+    <td>
+        <div class="btn-group" role="group">
+            <!-- Edit and Delete buttons -->
+            <button type="button" class="btn btn-outline-info btn-sm" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Edit this Observation">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Delete this Observation">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    </td>
 </tr>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+
+<!-- New Expandable Row -->
+<tr class="collapse collapse-row" id="stances-{{ observation.id }}">
+    <td colspan="6">
+        <!-- Dog Stances table -->
+        <table class="table table-striped table-hover inner-table styled-table  border-secondary caption-top dog-stance-table">
+            <caption class="stances-caption">
+                <div class="caption-wrapper">
+                    <div class="text-center">
+                        Dog Stances for Observation: {{ observation.obsDateTime|format_european_datetime }}
+                    </div>
+                    <button data-observation-id="{{ observation.id }}" style="padding: 6px 14px;" type="button"
+                            class="btn btn-primary " data-bs-toggle="tooltip" data-bs-placement="bottom" title="Add a new Dog Stance">
+                        <i class="fas fa-plus" style="margin-right: 8px;"></i>
+                        <i class="fas fa-paw"></i>
+                    </button>
+                </div>
+            </caption>
+            <thead class="table-group-divider">
+                <tr class="table-primary border-primary">
+                    <th>Dog Stance Start Time</th>
+                    <th>Stance</th>
+                    <th>Location</th>
+                    <th>Edit/Delete</th>
+                </tr>
+            </thead>
+            <tbody class="table-group-divider">
+                {% for stance in observation.related_dog_stances %}
+                    <tr>
+                        <td>{{ stance.stanceStartTime|format_time_24hr }}</td>
+                        <td>{{ stance.get_dogStance_display }}</td>
+                        <td>{{ stance.get_dogLocation_display }}</td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <!-- Edit and Delete buttons -->
+                                <button type="button" class="btn btn-outline-info btn-sm" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Edit this Stance">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Delete this Stance">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </td>
+</tr>
+
+<!-- Bootstrap Modal for Adding Dog Stance -->
+<div class="modal fade" id="addDogStanceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add a New Dog Stance</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="dogStanceForm">
+                    <!-- CSRF Token -->
+                    {% csrf_token %}
+
+                    <!-- Hidden input to hold the Observation ID Field -->
+                    <input type="hidden" id="observation_id" name="observation_id">
+
+                    <!-- Time Field -->
+                    {{ stance_form.stanceStartTime.label_tag }}
+                    <input class="form-control" type="text" id="timepicker" name="stanceStartTime" placeholder="Select Time">
+
+
+                    <!-- Dog Stance Field -->
+                    {{ stance_form.dogStance.label_tag }}
+                    {{ stance_form.dogStance }}
+
+                    <!-- Dog Location Field -->
+                    {{ stance_form.dogLocation.label_tag }}
+                    {{ stance_form.dogLocation }}
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="saveDogStanceBtn">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for displaying errors -->
+<div class="modal fade" tabindex="-1" id="errorModal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <button type="button" class="btn-close float-end" data-bs-dismiss="modal" aria-label="Close"></button>
+                <p id="errorText" class="text-danger font-weight-bold"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+

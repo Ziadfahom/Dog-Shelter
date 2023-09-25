@@ -1,0 +1,11 @@
+{% load dog_filters %}
+
+<tr>
+    <td>{{ session.sessionDate }}</td>
+    <td>{{ session.camera }}</td>
+    <td>{{ session.comments|handle_none }}</td>
+    <td>
+        <!-- "View Observations" button to send User to the corresponding Observations page -->
+        <a href="{% url 'dogs_app:view_observations' session.id %}" class="btn btn-outline-dark">Observations</a>
+    </td>
+</tr>

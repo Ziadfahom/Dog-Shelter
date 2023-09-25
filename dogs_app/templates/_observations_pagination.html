@@ -1,20 +1,19 @@
-<!-- Pagination logic for dog_record.html tables -->
+<!-- Pagination logic for observations table -->
 <div class="row justify-content-center pagination-container" id="pagination-container">
     <div class="pagination-wrapper">
-        <div class="pagination" id="pagination" >
+        <div class="pagination" id="pagination">
             <span class="step-links">
                 <nav aria-label="Table pagination" class="my-1">
                     <ul class="pagination justify-content-center">
-
                         <!-- Previous Page -->
-                        {% if paginated_data.has_previous %}
+                        {% if paginated_observations.has_previous %}
                             <li class="page-item">
-                                <a class="page-link pagination-link" href="#" onclick="fetchTablePage('{{ param_name }}', '1'); return false;">
+                                <a class="page-link pagination-link" href="?page=1">
                                     <i class="fas fa-step-backward"></i>
                                 </a>
                             </li>
                             <li class="page-item">
-                                <a class="page-link pagination-link" href="#" onclick="fetchTablePage('{{ param_name }}', '{{ paginated_data.previous_page_number }}'); return false;">
+                                <a class="page-link pagination-link" href="?page={{ paginated_observations.previous_page_number }}">
                                     <i class="fas fa-arrow-left"></i>
                                 </a>
                             </li>
@@ -34,29 +33,29 @@
                         <!-- Paginator Center -->
                         <li class="page-item page-item-current">
                             <span class="current page-link">
-                                {{ paginated_data.number }}/{{ paginated_data.paginator.num_pages }}
+                                {{ paginated_observations.number }}/{{ paginated_observations.paginator.num_pages }}
                             </span>
                         </li>
 
                         <!-- Next Page -->
-                        {% if paginated_data.has_next %}
+                        {% if paginated_observations.has_next %}
                             <li class="page-item">
-                                <a class="page-link pagination-link" href="#" onclick="fetchTablePage('{{ param_name }}', '{{ paginated_data.next_page_number }}'); return false;">
+                                <a class="page-link pagination-link" href="?page={{ paginated_observations.next_page_number }}">
                                     <i class="fas fa-arrow-right"></i>
                                 </a>
                             </li>
                             <li class="page-item">
-                                <a class="page-link pagination-link" href="#" onclick="fetchTablePage('{{ param_name }}', '{{ paginated_data.paginator.num_pages }}'); return false;">
+                                <a class="page-link pagination-link" href="?page={{ paginated_observations.paginator.num_pages }}">
                                     <i class="fas fa-step-forward"></i>
                                 </a>
                             </li>
-                            {% else %}
-                                <li class="page-item disabled">
-                                    <a class="page-link"><i class="fas fa-arrow-right"></i></a>
-                                </li>
-                                <li class="page-item disabled">
-                                    <a class="page-link"><i class="fas fa-step-forward"></i></a>
-                                </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <a class="page-link"><i class="fas fa-arrow-right"></i></a>
+                            </li>
+                            <li class="page-item disabled">
+                                <a class="page-link"><i class="fas fa-step-forward"></i></a>
+                            </li>
                         {% endif %}
                     </ul>
                 </nav>

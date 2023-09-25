@@ -1,4 +1,6 @@
 import os
+
+import pytz
 from django.db import models
 from django.utils import timezone
 from django.core.exceptions import ValidationError
@@ -119,10 +121,7 @@ class Dog(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        if self.breed is None or self.breed == "":
-            return f"{self.dogName}"
-        else:
-            return f"{self.dogName} the {self.breed}"
+        return f"{self.dogName}"
 
     def clean(self):
         if self.dateOfBirthEst and self.dateOfBirthEst > timezone.now().date():
@@ -142,13 +141,15 @@ class Camera(models.Model):
 class Observes(models.Model):
     dog = models.ForeignKey('Dog', on_delete=models.SET_NULL, null=True, related_name='observers')
     camera = models.ForeignKey('Camera', on_delete=models.SET_NULL, null=True, related_name='observes')
+    sessionDate = models.DateField(default=timezone.now)
     comments = models.CharField(max_length=200, blank=True, null=True)
 
     # Handling cases where a dog or camera entities were deleted and are empty
     def __str__(self):
         dog_str = str(self.dog) if self.dog else "Unknown dog"
         camera_str = str(self.camera) if self.camera else "Unknown camera"
-        return f"{camera_str} on {dog_str}"
+        formatted_date = self.sessionDate.strftime("%d-%m-%Y")
+        return f"{camera_str} on {dog_str} on {formatted_date}"
 
     # To ensure both values are always given by a user before changes.
     # They can only be blank because of deletion of Dog or Camera entities
@@ -159,7 +160,7 @@ class Observes(models.Model):
 
     class Meta:
         verbose_name_plural = "Observes"
-        unique_together = (('dog', 'camera'),)
+        unique_together = (('dog', 'camera', 'sessionDate'),)
 
 
 class Treatment(models.Model):
@@ -294,8 +295,8 @@ class Observation(models.Model):
     # References the Observes instance
     observes = models.ForeignKey('Observes', on_delete=models.SET_NULL, null=True)
     obsDateTime = models.DateTimeField(default=timezone.now)
-    sessionDurationInMins = models.PositiveSmallIntegerField(default=2,
-                                                             validators=[MinValueValidator(0), MaxValueValidator(255)])
+    sessionDurationInMins = models.PositiveIntegerField(default=2,
+                                                        validators=[MinValueValidator(0)])
     isKong = models.CharField(max_length=1, choices=IS_KONG_CHOICES, blank=True, null=True, default='N')
     jsonFile = models.FileField(upload_to='json_files',
                                 validators=[validate_json_file_extension],
@@ -313,7 +314,7 @@ class Observation(models.Model):
 
         # Ensuring that the Observes instance exists
         if self.observes is None:
-            raise ValidationError("An Observation must be associated with an Observes instance.")
+            raise ValidationError("An Observation must be associated with an Observes (Session) instance.")
 
         self.full_clean()
 
@@ -333,7 +334,9 @@ class Observation(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        formatted_date = self.obsDateTime.strftime("%d-%m-%Y at %H:%M")
+        local_tz = pytz.timezone('Asia/Jerusalem')
+        local_time = timezone.localtime(self.obsDateTime, local_tz)
+        formatted_date = local_time.strftime("%d-%m-%Y at %H:%M")
         observes_str = str(self.observes) if self.observes else "Unknown dog or camera"
         return f"{observes_str}, on {formatted_date}"
 

@@ -1,0 +1,434 @@
+/* Header Styles */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #2c2c2c ;
+    padding: 10px;
+    margin-bottom: 0;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    background-color: #bacdb7;
+    border: 2px solid #7a7a7a ;  /* Adds a bottom border */
+}
+
+.header-title h4.session-instance {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #2c2c2c;
+    text-shadow: 1px 1px 2px #556B2F;
+    background-color: rgba(255, 255, 240, 0.3);
+    display: inline-block;  /* Required for padding */
+    padding: 0.5rem 1.3rem;  /* Add padding around text */
+    text-transform: uppercase;  /* Makes text uppercase */
+    border: 2px solid #2F4F4F;  /* Adds a bottom border */
+    letter-spacing: 1px;  /* Increases spacing between letters */
+    border-radius: 4px;
+}
+
+
+/* Observations Table Container */
+.observations-table-container {
+    border: 2px solid #7a7a7a ;
+    border-top: none;
+    padding: 20px;
+    background-color: #f9f9f9;
+}
+
+
+.pagination {
+    margin-top: 5px;
+    text-align: center;
+    font-size: 1rem;
+    color: #333;
+}
+
+.header-title {
+    text-align: center;
+    margin-left: 1rem;
+}
+/* Modified header title styles */
+
+
+.styled-table {
+    border-collapse: collapse;
+    margin: 10px 0 20px 0;
+    font-family: sans-serif;
+    min-width: 400px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.15);
+    border-radius: 15px;   /* Rounded corners for table */
+}
+
+h4 {
+    text-align: center;
+}
+
+.styled-table thead tr {
+    background-color: #009879;
+    color: #ffffff;
+    text-align: center;
+}
+
+.styled-table th,
+.styled-table td {
+    padding: 12px 15px;
+    line-height: 1.5; /* Table data line height */
+    text-align: center;
+}
+
+.styled-table tbody tr {
+        transition: all .3s;
+}
+
+.styled-table tbody tr:nth-of-type(even) {
+    background-color: #f3f3f3;
+}
+
+/* Hover effect */
+.styled-table tbody tr:hover {
+    background-color: #f5f5f5;
+    -webkit-box-shadow: 0 0 13px 0 rgba(0,0,0,0.1);
+    -moz-box-shadow: 0 0 13px 0 rgba(0,0,0,0.1);
+    box-shadow: 0 0 13px 0 rgba(0,0,0,0.1);
+    transform: scale(1); /* slightly increase size of row to reveal shadow */
+}
+
+.back-button {
+    margin-left: 1rem;
+}
+
+.btn-secondary {
+    color: #fff;
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+.btn-secondary:hover {
+    color: #fff;
+    background-color: #5a6268;
+    border-color: #545b62;
+}
+
+.back-button a {
+    font-size: 1.1rem; /* slightly increase font size */
+    transition: transform 0.2s;
+}
+
+.back-button a:hover {
+    transform: scale(1.05); /* subtle grow effect on hover */
+}
+
+.btn-add-new {
+    color: white;
+    border-radius: 5px; /* rounded corners */
+    padding: 11px 15px; /* padding */
+    font-size: 16px; /* font size */
+    transition: background-color 0.3s; /* smooth transition for hover effects */
+    margin-right: 1rem;
+}
+
+
+.btn-add-new i,
+.back-button i {
+    margin-right: 3px; /* space between the icon and the text */
+}
+
+.top-buttons {
+    margin-top: 1.8rem;
+}
+
+.modal-header {
+    justify-content: center;
+    background: linear-gradient(120deg, #0072b5, #005a91); /* Gradient from primary to a slightly darker shade */
+    padding: 15px 20px; /* Enhanced padding */
+    font-family: 'Lato', sans-serif; /* Elegant font */
+}
+
+.modal-title {
+    position: relative;
+    z-index: 1;
+    font-weight: 700;
+    font-family: 'Arial', sans-serif;
+    color: #ffffff; /* White color for better contrast */
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.2); /* Subtle shadow for depth */
+}
+
+.modal-content {
+    margin-top: 5rem;
+    font-family: 'Arial', sans-serif;
+    border-radius: 10px;
+    overflow: hidden;  /* Clip the child elements to match rounded corners */
+}
+
+
+.col-form-label {
+    padding-right: 10px;
+    width: 10rem;
+}
+
+.table>thead {
+    vertical-align: middle;
+}
+
+
+
+/* Modal Body */
+.modal-body {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.modal-body p {
+    font-size: 16px;
+    font-weight: bold;
+    color: #343a40; /* Dark Grey */
+    margin-bottom: 8px;
+}
+
+.form-control, .form-control-file {
+    margin-bottom: 1rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+/* Input File */
+.form-control-file {
+    padding-top: 8px;
+}
+
+/* Modal Footer */
+.modal-footer {
+    background-color: #f8f9fa; /* Light Grey Background */
+    border-top: 1px solid #e9ecef;
+    padding: 15px;
+    justify-content: space-between;
+}
+
+/* Footer Buttons */
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 11px 15px;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+    border: none;
+}
+
+/* Form Row */
+.form-row {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+.form-row label {
+    flex: 1.6;
+    font-size: 16px;
+    font-weight: bold;
+    color: #343a40;
+    margin-right: 10px;
+    margin-bottom: 1.5rem;
+}
+
+.form-control, .form-control-file {
+    flex: 1.6;
+    font-size: 15px;
+    padding: 9px;
+    border: 2px solid #6C757D;
+    border-radius: 10px;
+    background-color: #E8ECEF;
+    color: #333;
+    text-align: center;
+}
+
+
+.form-control-file {
+    padding-top: 8px;
+}
+
+
+.pagination-wrapper {
+    display: flex;
+    justify-content: center; /* Center the content horizontally */
+    align-items: center; /* Center the content vertically */
+    width: 100%; /* Full width */
+}
+
+.pagination-container {
+    text-align: center; /* Center the text */
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pagination a {
+  margin: 0 5px;
+  text-decoration: none;
+}
+
+.page-item-current .page-link {
+    margin-right: 5px;  /* Add some margin to the right side of the active page */
+}
+
+/* For Expandable Rows (Dog Stances) */
+.collapse-row {
+    background-color: #e6f7ff;
+    color: #333;
+}
+
+/* Action buttons */
+.btn-group {
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Styling for the Stances button */
+.expand-btn {
+    font-size: 16px;
+    color: #007bff;
+}
+
+/* Added styling for checkbox */
+.form-check-input {
+    border: 1px solid #ccc;
+}
+
+
+/* Inner table specific styles */
+.inner-table {
+    background-color: #f8f8f8;  /* lighter shade */
+    border-radius: 0;  /* slightly rounded corners */
+    margin: 10px auto;
+    border: 2px solid;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);  /* subtle shadow for lifting */
+}
+
+.stances-caption {
+    text-align: center;
+    margin-left: 4rem;
+    margin-right: 4rem;
+    margin-top: 1rem;
+    font-size: 1.3rem;
+    font-weight: 600;
+    background-color: #adcce3;
+    padding: 0.5rem;
+    border-radius: 8px 8px 0 0;
+    color: black;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+    border: 2px solid black;
+    border-bottom: 5rem;
+}
+
+.table-group-divider {
+    border-right: calc(var(--bs-border-width) * 2) solid currentcolor;
+    border-left: calc(var(--bs-border-width) * 2) solid currentcolor;
+    border-bottom: calc(var(--bs-border-width) * 2) solid currentcolor;
+    border-radius: 8px 8px 0 0;
+}
+
+/* Inner table header */
+.inner-table thead tr {
+    background-color: #007BFF;
+    color: white;
+    text-align: center;
+}
+
+/* Inner table body */
+.inner-table tbody tr {
+    background-color: #f2f2f2;  /* very light gray */
+}
+
+/* Inner table rows on hover */
+.inner-table tbody tr:hover {
+    background-color: #e6e6e6;  /* slight change in color on hover */
+}
+
+.clickable-row {
+    cursor: pointer; /* Adds the pointer cursor */
+}
+
+#observations-table tbody tr td {
+    vertical-align: middle; /* Centers the content vertically */
+}
+
+
+.expand-icon {
+  font-size: 1.6rem;       /* Increase the size */
+  color: #708090;         /* Blue color */
+  margin-right: 15px;     /* Right margin to separate it from the date */
+  transition: transform 0.3s ease;  /* Smooth transition for rotate */
+}
+
+#edit-delete-title {
+    margin-right: -0.7rem;
+}
+
+
+.caption-wrapper {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.text-center {
+    flex-grow: 1;
+    text-align: center;
+}
+
+
+.dog-stance-table tbody td,
+.dog-stance-table thead th {
+    border: 1px solid #ccc;
+}
+
+.dog-stance-table {
+    width: 100%;
+}
+
+.dog-stance-table th:nth-child(1) { width: 30%; }
+.dog-stance-table th:nth-child(2) { width: 30%; }
+.dog-stance-table th:nth-child(3) { width: 30%; }
+.dog-stance-table th:nth-child(4) { width: 10%; }
+
+
+/* Custom styles for error modal */
+#errorModal .modal-body {
+    background-color: #f8d7da;  /* Light red background */
+}
+
+#errorModal .modal-body .btn-close {
+    margin-top: -10px;  /* Adjust as needed */
+    margin-right: -10px;  /* Adjust as needed */
+}
+
+#errorModal .modal-body .text-danger {
+    font-size: 1.1em;
+    margin-left: 3rem;
+    margin-right: 3rem;}
+
+#errorModal .modal-footer {
+    border-top: 0;  /* Remove the border */
+}
+
+#errorModal {
+    position: fixed;
+    top: 8%;  /* Adjust as needed */
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+

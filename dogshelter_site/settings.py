@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'crispy_forms',             # Better looking forms
     'crispy_bootstrap5',
     'django_filters',           # For advanced filtering of data
+    'datetimewidget',           # For selecting DateTime in forms
 ]
 
 MIDDLEWARE = [
@@ -123,6 +124,8 @@ LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Asia/Jerusalem'
 
 USE_I18N = True
+
+USE_L10N = True
 
 USE_TZ = True
 

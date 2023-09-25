@@ -263,49 +263,50 @@
 
                             <!-- Placements Pagination -->
                            {% include "_dog_record_pagination.html" with paginated_data=placements param_name="placements_page" %}
+                        <hr>
                         </div>
                     </div>
 
-                    <!-- Observations Table -->
+                    <!-- Observes (Camera Session) Table -->
                     <div class="scrollable-table">
-                        <div id="observations_container" class="center-container clickable-container">
+                        <div id="sessions_container" class="center-container clickable-container">
                             <div class="clickable-header mt-3">
-                                <h2>Observations <i class="fas fa-angle-down"></i></h2>
+                                <h2>Camera Sessions <i class="fas fa-angle-down"></i></h2>
                             </div>
                         </div>
-                        <div id="observations_table" class="hide">
+                        <div id="sessions_table" class="hide">
                             <div class="action-bar">
                                 <!-- Display success messages here upon submission -->
-                                <div id="observations-success-alert" class="alert alert-success alert-dismissible fade show" role="alert" style="display:none;">
-                                    <strong>Success!</strong> Observation has been successfully added.
+                                <div id="sessions-success-alert" class="alert alert-success alert-dismissible fade show" role="alert" style="display:none;">
+                                    <strong>Success!</strong> Camera Session has been successfully added.
                                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                 </div>
-                                <a class="btn btn-add-new new-observation" href="#">
-                                    <i class="fas fa-plus"></i> Add Observation
+                                <a class="btn btn-add-new new-session" href="#">
+                                    <i class="fas fa-plus"></i> Add Session
                                 </a>
                             </div>
-                            <table id="observations-table" class="table styled-table table-bordered">
+                            <table id="sessions-table" class="table styled-table table-bordered">
                                 <thead>
                                     <tr>
-                                        <th>Observation Date</th>
-                                        <th>Session Duration (mins)</th>
-                                        <th>With a Kong Toy?</th>
+                                        <th>Session Date</th>
+                                        <th>Camera</th>
+                                        <th>Comments</th>
+                                        <th>Observations</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                {% for observation in observations %}
-                                    {% include "_observation_row.html" with observation=observation %}
+                                {% for session in sessions %}
+                                    {% include "_session_row.html" with session=session %}
                                 {% empty %}
                                     <tr>
-                                        <td colspan="3">No observations found.</td>
+                                        <td colspan="4">No sessions found.</td>
                                     </tr>
                                 {% endfor %}
                                 </tbody>
                             </table>
 
-                            <!-- Observations Pagination -->
-                           {% include "_dog_record_pagination.html" with paginated_data=observations param_name="observations_page" %}
-                            <hr>
+                            <!-- Sessions Pagination -->
+                           {% include "_dog_record_pagination.html" with paginated_data=sessions param_name="sessions_page" %}
                         </div>
                     </div>
 
@@ -396,37 +397,37 @@
                         {% csrf_token %}
 
                         <div class="row mb-3">
-                            <div class="col-4 text-end">
+                            <div class="col-5 text-end">
                                 <label for="{{ treatment_form.treatmentName.id_for_label }}" class="col-form-label">Treatment Name:</label>
                             </div>
-                            <div class="col-8">
+                            <div class="col-7 custom-input">
                                 {{ treatment_form.treatmentName }}
                             </div>
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-4 text-end">
+                            <div class="col-5 text-end">
                                 <label for="{{ treatment_form.treatmentDate.id_for_label }}" class="col-form-label">Treatment Date:</label>
                             </div>
-                            <div class="col-8">
+                            <div class="col-7 custom-input">
                                 {{ treatment_form.treatmentDate }}
                             </div>
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-4 text-end">
+                            <div class="col-5 text-end">
                                 <label for="{{ treatment_form.treatedBy.id_for_label }}" class="col-form-label">Treated By:</label>
                             </div>
-                            <div class="col-8">
+                            <div class="col-7 custom-input">
                                 {{ treatment_form.treatedBy }}
                             </div>
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-4 text-end">
+                            <div class="col-5 text-end">
                                 <label for="{{ treatment_form.comments.id_for_label }}" class="col-form-label">Comments:</label>
                             </div>
-                            <div class="col-8">
+                            <div class="col-7 custom-input">
                                 {{ treatment_form.comments }}
                             </div>
                         </div>
@@ -453,64 +454,64 @@
                         {% csrf_token %}
 
                         <div class="row mb-3">
-                            <div class="col-4 text-end">
+                            <div class="col-5 text-end">
                                 <label for="{{ examination_form.examinationDate.id_for_label }}" class="col-form-label">Examination Date:</label>
                             </div>
-                            <div class="col-8">
+                            <div class="col-7 custom-input">
                                 {{ examination_form.examinationDate }}
                             </div>
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-4 text-end">
+                            <div class="col-5 text-end">
                                 <label for="{{ examination_form.examinedBy.id_for_label }}" class="col-form-label">Examined By:</label>
                             </div>
-                            <div class="col-8">
+                            <div class="col-7 custom-input">
                                 {{ examination_form.examinedBy }}
                             </div>
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-4 text-end">
+                            <div class="col-5 text-end">
                                 <label for="{{ examination_form.results.id_for_label }}" class="col-form-label">Results:</label>
                             </div>
-                            <div class="col-8">
+                            <div class="col-7 custom-input">
                                 {{ examination_form.results }}
                             </div>
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-4 text-end">
+                            <div class="col-5 text-end">
                                 <label for="{{ examination_form.dogWeight.id_for_label }}" class="col-form-label">Weight (Kg):</label>
                             </div>
-                            <div class="col-8">
+                            <div class="col-7 custom-input">
                                 {{ examination_form.dogWeight }}
                             </div>
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-4 text-end">
+                            <div class="col-5 text-end">
                                 <label for="{{ examination_form.dogTemperature.id_for_label }}" class="col-form-label">Temperature (C):</label>
                             </div>
-                            <div class="col-8">
+                            <div class="col-7 custom-input">
                                 {{ examination_form.dogTemperature }}
                             </div>
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-4 text-end">
+                            <div class="col-5 text-end">
                                 <label for="{{ examination_form.dogPulse.id_for_label }}" class="col-form-label">Heart Pulse (BPM):</label>
                             </div>
-                            <div class="col-8">
+                            <div class="col-7 custom-input">
                                 {{ examination_form.dogPulse }}
                             </div>
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-4 text-end">
+                            <div class="col-5 text-end">
                                 <label for="{{ examination_form.comments.id_for_label }}" class="col-form-label">Comments:</label>
                             </div>
-                            <div class="col-8">
+                            <div class="col-7 custom-input">
                                 {{ examination_form.comments }}
                             </div>
                         </div>
@@ -537,28 +538,28 @@
                         {% csrf_token %}
 
                         <div class="row mb-3">
-                            <div class="col-4 text-end">
+                            <div class="col-5 text-end">
                                 <label for="{{ placement_form.kennel.id_for_label }}" class="col-form-label">Kennel:</label>
                             </div>
-                            <div class="col-8">
+                            <div class="col-7 custom-input">
                                 {{ placement_form.kennel }}
                             </div>
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-4 text-end">
+                            <div class="col-5 text-end">
                                 <label for="{{ placement_form.entranceDate.id_for_label }}" class="col-form-label">Entrance Date:</label>
                             </div>
-                            <div class="col-8">
+                            <div class="col-7 custom-input">
                                 {{ placement_form.entranceDate }}
                             </div>
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-4 text-end">
+                            <div class="col-5 text-end">
                                 <label for="{{ placement_form.expirationDate.id_for_label }}" class="col-form-label">Expiration Date:</label>
                             </div>
-                            <div class="col-6">
+                            <div class="col-5 custom-input">
                                 {{ placement_form.expirationDate }}
                             </div>
                             <div class="col-2">
@@ -567,16 +568,64 @@
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-4 text-end">
-                                <label for="{{ placement_form.placementReason.id_for_label }}" class="col-form-label">Reason for Placement:</label>
+                            <div class="col-5 text-end">
+                                <label for="{{ placement_form.placementReason.id_for_label }}" class="col-form-label">Placement Reason:</label>
                             </div>
-                            <div class="col-8">
+                            <div class="col-7 custom-input">
                                 {{ placement_form.placementReason }}
                             </div>
                         </div>
 
                         <div class="text-center">
                             <button type="submit" class="btn btn-primary btn-modal">Save Placement</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Session (Observes)  Modal -->
+    <div class="modal fade" id="addSessionModal" tabindex="-1" aria-labelledby="addSessionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header text-center bg-primary">
+                    <h3 class="modal-title w-100" id="addSessionModalLabel">Add New Camera Session</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" action="{% url 'dogs_app:dog_record' dog_record.dogID %}">
+                        {% csrf_token %}
+
+                        <div class="row mb-3">
+                            <div class="col-5 text-end">
+                                <label for="{{ session_form.sessionDate.id_for_label }}" class="col-form-label">Session Start Date:</label>
+                            </div>
+                            <div class="col-7 custom-input">
+                                {{ session_form.sessionDate }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-5 text-end">
+                                <label for="{{ session_form.camera.id_for_label }}" class="col-form-label">Camera:</label>
+                            </div>
+                            <div class="col-7 custom-input">
+                                {{ session_form.camera }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-5 text-end">
+                                <label for="{{ session_form.comments.id_for_label }}" class="col-form-label">Comments:</label>
+                            </div>
+                            <div class="col-7 custom-input">
+                                {{ session_form.comments }}
+                            </div>
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-modal">Save Session</button>
                         </div>
                     </form>
                 </div>

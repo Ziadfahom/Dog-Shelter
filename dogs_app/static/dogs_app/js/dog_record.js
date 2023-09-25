@@ -1,9 +1,35 @@
+// Handle "Back" button for returning to previous page
+function goBack() {
+    const referrer = document.referrer;
+    if (referrer.includes('update_dog')) {
+        window.location.href = '/dogs/';
+    } else {
+        window.history.back();
+    }
+}
+
+
+// Handle opening containers for the four tables below
 $(document).ready(function(){
+    // Check if user is returning from Observations page, make sure Sessions table is opened then scroll towards it
+    const urlParams = new URLSearchParams(window.location.search);
+    const fromObservations = urlParams.get('from');
+
+    if (fromObservations === 'observations') {
+        const sessionsContainer = $('#sessions_container');
+        sessionsContainer.next().removeClass('hide');
+        sessionsContainer.find('i').removeClass('fa-angle-down').addClass('fa-angle-up');
+
+        // Scroll the page to bring the opened collapsible into view
+        smoothScrollWithOffset("#sessions_container", 60);
+    }
+
+
     var allContainers = [
         '#treatments_container',
         '#examinations_container',
         '#placements_container',
-        '#observations_container'
+        '#sessions_container',
     ];
 
     // Function to check if all containers are visible or hidden
@@ -67,37 +93,22 @@ $(document).ready(function(){
     });
 });
 
-function goBack() {
-    const referrer = document.referrer;
-    if (referrer.includes('update_dog')) {
-        window.location.href = '/dogs/';
-    } else {
-        window.history.back();
-    }
+// Open the New Treatment/Examination/Placement/Session modal when the button for adding new entity is clicked
+function showModalOnClick(buttonSelector, modalId) {
+    document.querySelector(buttonSelector).addEventListener('click', function(event) {
+        event.preventDefault();
+        var modal = new bootstrap.Modal(document.getElementById(modalId));
+        modal.show();
+    });
 }
 
-// Open the New Treatment modal when the "Add Treatment" button is clicked
-document.querySelector('.new-treatment').addEventListener('click', function(event) {
-    event.preventDefault();
-    var treatmentModal = new bootstrap.Modal(document.getElementById('addTreatmentModal'));
-    treatmentModal.show();
-});
+showModalOnClick('.new-treatment', 'addTreatmentModal');
+showModalOnClick('.new-examination', 'addExaminationModal');
+showModalOnClick('.new-placement', 'addPlacementModal');
+showModalOnClick('.new-session', 'addSessionModal');
 
-// Open the New Examination modal when the "Add Examination" button is clicked
-document.querySelector('.new-examination').addEventListener('click', function(event) {
-    event.preventDefault();
-    var examinationModal = new bootstrap.Modal(document.getElementById('addExaminationModal'));
-    examinationModal.show();
-});
 
-// Open the New Placement modal when the "Add Placement" button is clicked
-document.querySelector('.new-placement').addEventListener('click', function(event) {
-    event.preventDefault();
-    var placementModal = new bootstrap.Modal(document.getElementById('addPlacementModal'));
-    placementModal.show();
-});
-
-// Activate Bootstrap Datepicker script
+// Activate Bootstrap Datepicker script for Date attributes, and handle new form submissions for the 4 tables
 $(document).ready(function() {
     var date_input = $('[data-provide="datepicker"]');
 
@@ -112,105 +123,55 @@ $(document).ready(function() {
         $(this).datepicker('show');
     });
 
-    // Handle form submission for new Treatment
-    $('#addTreatmentModal form').submit(function(e) {
-        e.preventDefault();
+    // Handle form submission for new Treatment/Examination/Placement/Session
+    function handleFormSubmission(modalId, alertId, tableId, paginationId) {
+        $(`${modalId} form`).submit(function(e) {
+            e.preventDefault();
 
-        $.ajax({
-            type: $(this).attr('method'),
-            url: $(this).attr('action'),
-            data: $(this).serialize(),
-            success: function(data) {
-                // Close the modal after successful addition
-                $('#addTreatmentModal').modal('hide');
+            $.ajax({
+                type: $(this).attr('method'),
+                url: $(this).attr('action'),
+                data: $(this).serialize(),
+                success: function(data) {
+                    // Close the modal after successful addition
+                    $(modalId).modal('hide');
 
-                // Show success alert
-                $('#treatments-success-alert').show();
+                    // Show success alert
+                    $(alertId).show();
 
-                // Set a timer to hide the success alert after 5 seconds
-                setTimeout(function() {
-                    $('#treatments-success-alert').hide();
-                }, 4000);
+                    // Set a timer to hide the success alert after 5 seconds
+                    setTimeout(function() {
+                        $(alertId).hide();
+                    }, 4000);
 
-                // Update the treatments table with new data
-                updateTableContent("#treatments_table tbody", data.data);
+                    // Update the table with new data
+                    updateTableContent(`${tableId} tbody`, data.data);
 
-                // Update pagination controls
-                updatePagination("#treatments_table #pagination", data.pagination);
-
-            }
+                    // Update pagination controls
+                    updatePagination(`${paginationId}`, data.pagination);
+                }
+            });
         });
-    });
+    }
 
-    // Handle form submission for new Examination
-    $('#addExaminationModal form').submit(function(e) {
-        e.preventDefault();
-
-        $.ajax({
-            type: $(this).attr('method'),
-            url: $(this).attr('action'),
-            data: $(this).serialize(),
-            success: function(data) {
-                // Close the modal after successful addition
-                $('#addExaminationModal').modal('hide');
-
-                // Show success alert
-                $('#examinations-success-alert').show();
-
-                // Set a timer to hide the success alert after 5 seconds
-                setTimeout(function() {
-                    $('#examinations-success-alert').hide();
-                }, 4000);
-
-                // Update the examinations table with new data
-                updateTableContent("#examinations_table tbody", data.data);
-
-                // Update pagination controls
-                updatePagination("#examinations_table #pagination", data.pagination);
-
-            }
-        });
-    });
-
-    // Handle form submission for new Placement
-    $('#addPlacementModal form').submit(function(e) {
-        e.preventDefault();
-
-        $.ajax({
-            type: $(this).attr('method'),
-            url: $(this).attr('action'),
-            data: $(this).serialize(),
-            success: function(data) {
-                // Close the modal after successful addition
-                $('#addPlacementModal').modal('hide');
-
-                // Show success alert
-                $('#placements-success-alert').show();
-
-                // Set a timer to hide the success alert after 5 seconds
-                setTimeout(function() {
-                    $('#placements-success-alert').hide();
-                }, 4000);
-
-                // Update the treatments table with new data
-                updateTableContent("#placements_table tbody", data.data);
-
-                // Update pagination controls
-                updatePagination("#placements_table #pagination", data.pagination);
-
-            }
-        });
-    });
+    handleFormSubmission('#addTreatmentModal', '#treatments-success-alert', '#treatments_table', '#treatments_table #pagination');
+    handleFormSubmission('#addExaminationModal', '#examinations-success-alert', '#examinations_table', '#examinations_table #pagination');
+    handleFormSubmission('#addPlacementModal', '#placements-success-alert', '#placements_table', '#placements_table #pagination');
+    handleFormSubmission('#addSessionModal', '#sessions-success-alert', '#sessions_table', '#sessions_table #pagination');
 });
 
 
-// Updates the current pagination
-function updatePagination(paginationSelector, html) {
-    $(paginationSelector).replaceWith(html);
+// Function for smooth scrolling to the top of a table with offset to account for Navbar
+function smoothScrollWithOffset(containerID, offset = 60) {
+    const elementPosition = $(containerID).offset().top;
+    const offsetPosition = elementPosition - offset;
+
+    $('html, body').animate({
+        scrollTop: offsetPosition
+    }, 100);
 }
 
-
-// AJAX call for updating pagination for a table
+// AJAX call for updating pagination for one of the 4 tables
 function fetchTablePage(paramName, pageNumber) {
     $.ajax({
         url: window.location.pathname,
@@ -221,29 +182,42 @@ function fetchTablePage(paramName, pageNumber) {
         type: "GET",
         dataType: "json",
         success: function(response) {
+            const navbarHeight = 50; // To account for Navbar when scrolling to top of the table
             if (paramName === "treatments_page") {
                 updateTableContent("#treatments_table tbody", response.data);
                 updatePagination("#treatments_table #pagination", response.pagination);
+                smoothScrollWithOffset("#treatments_container", navbarHeight+15);
             } else if (paramName === "examinations_page") {
                 updateTableContent("#examinations_table tbody", response.data);
                 updatePagination("#examinations_table #pagination", response.pagination);
+                smoothScrollWithOffset("#examinations_container", navbarHeight);
             } else if (paramName === "placements_page") {
                 updateTableContent("#placements_table tbody", response.data);
                 updatePagination("#placements_table #pagination", response.pagination);
-            } else if (paramName === "observations_page") {
-                updateTableContent("#observations_table tbody", response.data);
-                updatePagination("#observations_table #pagination", response.pagination);
+                smoothScrollWithOffset("#placements_container", navbarHeight);
+            } else if (paramName === "sessions_page") {
+                updateTableContent("#sessions_table tbody", response.data);
+                updatePagination("#sessions_table #pagination", response.pagination);
+                smoothScrollWithOffset("#sessions_container", navbarHeight);
             }
         }
     });
 }
 
+// Handle updating the content of a table with the new page's data
 function updateTableContent(tableSelector, data) {
     const $tableBody = $(tableSelector);
     $tableBody.empty();
     data.forEach(row => {
-        $tableBody.append(row);  // Assumes each row is formatted HTML
+        $tableBody.append(row);
     });
 }
 
+// Updates the current pagination for one of the 4 tables
+function updatePagination(paginationSelector, html) {
+    const paginationElement = document.querySelector(paginationSelector);
+    if (paginationElement) {
+        paginationElement.innerHTML = html;
+    }
+}
 
