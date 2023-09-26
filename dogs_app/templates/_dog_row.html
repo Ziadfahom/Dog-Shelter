@@ -9,6 +9,7 @@ over each dog and display them in a separate row-->
  shows a pointer cursor and displays a tooltip with the dog's thumbnail.-->
 <tr class="dog-row"
     data-href="{% url 'dogs_app:dog_record' dog.dogID %}"
+    data-dogid="{{ dog.dogID }}"
     style="cursor: pointer;"
     data-bs-toggle="tooltip" data-bs-html="true"
     title="{% if dog.dogImage %}<img src='{{ dog.dogImage.url }}' alt='Thumbnail of {{ dog.dogName }}' style='max-width: 200px;'>{% else %}<img src='{% static 'dogs_app/img/default_dog.jpg' %}' alt='Default dog thumbnail'>{% endif %}">

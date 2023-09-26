@@ -7,14 +7,12 @@
 
     <div class="title-container col-md-10 mx-auto">
         <h1>Dog Shelter Statistics</h1>
+        <div id="loading">
+            <img src="{% static 'dogs_app/img/spinner.gif' %}" alt="Loading..." />
+        </div>
     </div>
 
-    <div id="loading">
-        <img src="{% static 'dogs_app/img/spinner.gif' %}" alt="Loading..." />
-    </div>
-
-    <div style="display: flex; flex-direction: column; justify-content: space-around; align-items: center; margin: 2em 0;">
-        <!-- Remove inline styles where possible and use classes instead -->
+    <div id="outer-wrapper-div">
         <div class="card chart-container">
             <div class="card-body">
                 <h2 class="card-title">Stances with Kong Toy</h2>
@@ -34,12 +32,7 @@
             <canvas id="chart_dogBreeds"></canvas>
         </div>
     </div>
-    <div class="card chart-container">
-        <div class="card-body">
-            <h2 class="card-title">Duration of Engagement</h2>
-            <canvas id="chart_duration_of_engagement"></canvas>
-        </div>
-    </div>
+
 
     <!-- Declare a variable for chart data URL to be used in the following external JavaScript file -->
     <script type="text/javascript">

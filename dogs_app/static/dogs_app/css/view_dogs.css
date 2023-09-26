@@ -104,7 +104,7 @@ body {
 
 .caption-toolbar {
     background-color: #a8e5de; /* Harmonizing with toolbar color */
-    padding: 12px;
+    padding: 0 12px 12px;
     border-radius: 10px 10px 1px 1px;
     box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
     display: flex;
@@ -240,6 +240,7 @@ body {
     letter-spacing: 1px; /* Adding some letter-spacing */
     padding-top: 5px;
     padding-bottom: 10px;
+    margin-bottom: 1rem;
 }
 
 .btn-secondary {
@@ -324,3 +325,76 @@ body {
     padding-right: 10px;  /* Offset the left padding to align with the vertical separator's padding */
 }
 
+
+/* Button Styles */
+#dropdownMenuButton {
+    margin-bottom: -2rem;
+    margin-left: -1rem;
+    background-color: #36454F;
+    border: none;
+    padding: 6px 8px;
+    border-radius: 4px;
+    color: #FFFFFF;
+    font-size: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#dropdownMenuButton:hover {
+    background-color: #2C393F;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+#dropdownMenuButton:focus {
+    box-shadow: #4D636E;
+}
+
+/* Dropdown Menu Styles */
+#dropdownMenuButton + .dropdown-menu {
+    background-color: #F9F9F9; /* off-white */
+    border: none;
+    border-radius: 3px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+#dropdownMenuButton + .dropdown-menu .dropdown-header {
+    color: #333333; /* dark text */
+    font-size: 12px;
+    font-weight: 600;
+}
+
+#dropdownMenuButton + .dropdown-menu .dropdown-item {
+    color: #333333; /* dark text */
+    font-size: 14px;
+}
+
+#dropdownMenuButton + .dropdown-menu .dropdown-item:hover {
+    background-color: #DDDDDD; /* light gray */
+    color: #222222; /* very dark gray */
+}
+
+#dropdownMenuButton + .dropdown-menu .dropdown-divider {
+    margin: 8px 0;
+}
+/* For dropdown headers */
+.dropdown-header i {
+    margin-right: 8px;
+    color: #555555;
+}
+
+/* For dropdown items */
+.dropdown-item i {
+    margin-right: 8px;
+    color: #777777;
+}
+
+/* For better separation */
+.padded-divider {
+    margin: 12px 0;
+}
+
+/* Add a slight scaling effect on hover */
+.dropdown-item:hover {
+    transform: scale(1.03);
+    transition: all 0.2s ease-in-out;
+}

@@ -16,7 +16,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(to right, #5b86e5, #36d1dc); /* Subtle gradient background */
+    background-color: darkslategrey; /* Subtle gradient background */
     color: #fff;
     padding: 1em 0;
     margin: 2em auto;
@@ -37,6 +37,7 @@ h1 {
     display: flex;
     justify-content: center;
     padding: 2em;
+    height: 6rem;
 }
 
 /* Improve card titles */
@@ -52,4 +53,13 @@ h1 {
 .chart-container:hover {
     transform: scale(1.02);
     transition: transform 0.2s;
+}
+
+
+#outer-wrapper-div {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    margin: 2em 0;
 }

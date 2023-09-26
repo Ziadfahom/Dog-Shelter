@@ -297,3 +297,84 @@ function getURLParameters() {
   });
   return params;
 }
+
+
+// Handle logic for exporting Dog table as JSON/Excel file.
+$(document).ready(function() {
+  $('#exportJsonButton').click(function() {
+      // First, fetch the filtered dog IDs
+      $.ajax({
+          url: '/get_filtered_dog_ids/',
+          type: 'GET',
+          success: function(response) {
+              // Use the filtered dog IDs for exporting
+              let filteredDogIDs = response.filtered_dogs_ids;
+
+              // Initiate the export process
+              $.ajax({
+                  url: '/export_dogs_json/',
+                  type: 'POST',
+                  data: {'dog_ids': JSON.stringify(filteredDogIDs)},
+                  headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                  success: function(data) {
+                      downloadJSON(data, 'Shelter_dogs_data.json');
+                  }
+              });
+          }
+      });
+  });
+
+
+  $('#exportExcelButton').click(function() {
+    $.ajax({
+      url: '/get_filtered_dog_ids/',
+      type: 'GET',
+      success: function(response) {
+        let filteredDogIDs = response.filtered_dogs_ids;
+
+        $.ajax({
+            url: '/export_dogs_excel/',
+            type: 'POST',
+            data: JSON.stringify({'dog_ids': filteredDogIDs}),
+            contentType: 'application/json; charset=utf-8',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            success: function(data) {
+                let blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8' });
+                let link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = 'Shelter_dogs_data.xlsx';
+                link.click();
+            },
+        });
+      },
+    });
+  });
+});
+
+
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+          }
+      }
+  }
+  return cookieValue;
+}
+
+
+function downloadJSON(data, filename) {
+let blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+  let url = window.URL.createObjectURL(blob);
+  let a = document.createElement('a');
+  a.setAttribute('href', url);
+  a.setAttribute('download', filename);
+  a.click();
+  window.URL.revokeObjectURL(url);
+}

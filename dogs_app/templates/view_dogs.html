@@ -9,6 +9,38 @@
 
     <!-- Caption and Toolbar -->
     <div class="row justify-content-center caption-toolbar">
+        <div class="dropdown">
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="fas fa-file-import"></i>
+            </button>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                <h6 class="dropdown-header">
+                    <i class="fas fa-upload"></i> Export
+                </h6>
+                <a class="dropdown-item" href="#" id="exportJsonButton">
+                    <i class="fas fa-file-code"></i> Export as JSON
+                </a>
+
+                <!-- TO-DO: Fix the exportation file not working -->
+                <a class="dropdown-item" href="#" id="exportExcelButton">
+                    <i class="fas fa-file-excel"></i> Export as Excel
+                </a>
+
+                <div class="dropdown-divider padded-divider"></div>
+
+                <!-- TO-DO: make them functional. -->
+                <h6 class="dropdown-header">
+                    <i class="fas fa-download"></i> Import
+                </h6>
+                <a class="dropdown-item" href="#" id="importJsonButton">
+                    <i class="fas fa-file-code"></i> Import from JSON
+                </a>
+                <a class="dropdown-item" href="#" id="importExcelButton">
+                    <i class="fas fa-file-excel"></i> Import from Excel
+                </a>
+            </div>
+        </div>
+
         <div class="{% block column_size %}col-md-10{% endblock %}">
             <h2>Current Dogs in Our System</h2>
         </div>
@@ -235,7 +267,7 @@
     <!-- Dogs table -->
     <div class="row justify-content-center">
         <div class="table-responsive stylish-table">
-            <table class="table table-striped table-hover">
+            <table id="dogTable" class="table table-striped table-hover">
 
 
                 <thead class="text-center small stylish-thead">

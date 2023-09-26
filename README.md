@@ -102,6 +102,12 @@ pip install django-extensions 	      #Used for resetting DB
 
 pip install django-filter             #Used for advanced filtering
 
+pip install django-filter             # Used for advanced filtering
+
+pip install django-datetime-widget    # Used for picking datetime in forms
+
+pip install openpyxl		      # Used for exporting and importing Excel files
+
 ```
 
 

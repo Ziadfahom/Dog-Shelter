@@ -1,5 +1,6 @@
 import json
-
+from openpyxl import Workbook
+from openpyxl.utils import get_column_letter
 from django.db.models import Prefetch
 from django.db.models import Value
 from django.db.models.functions import Concat
@@ -10,7 +11,7 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse, HttpResponse
 from .filters import DogFilter
 from .forms import SignUpForm, AddDogForm, UpdateUserForm, ProfileUpdateForm, TreatmentForm, EntranceExaminationForm, \
     DogPlacementForm, ObservesForm, ObservationForm, DogStanceForm
@@ -33,7 +34,7 @@ DEFAULT_IMAGE_SOURCE = '/profile_pictures/default.jpg'
 
 # CONSTANTS
 # Number of Dogs/Users/Table Entries we want displayed in a single page across all Paginators
-ENTRIES_PER_PAGE = 8
+ENTRIES_PER_PAGE = 10
 
 
 # Main Page view for displaying either dog records if  user is logged in,
@@ -815,39 +816,13 @@ def delete_news(request, news_id):
     return render(request, 'delete_news.html', {'news': news})
 
 
+# Render Graphs page
+def graphs(request):
+    return render(request, 'graphs.html')
+
+
 # View for the Dynamic Graphs page
 def chart_data(request):
-    #DELETE#
-    logger = logging.getLogger(__name__)
-
-    # Debugging code
-    obs_with_kong = Observation.objects.filter(isKong='Y', obsDateTime__isnull=False)
-    obs_with_kong_dates = [{'date': obs.obsDateTime.date()} for obs in obs_with_kong]
-    logger.info(f"1) obs_with_kong_dates: {obs_with_kong_dates[:10]}")
-
-    obs_without_kong = Observation.objects.filter(isKong='N', obsDateTime__isnull=False)
-    obs_without_kong_dates = [{'date': obs.obsDateTime.date()} for obs in obs_without_kong]
-    logger.info(f"2) obs_without_kong_dates: {obs_without_kong_dates[:10]}")
-
-    # Now we manually aggregate and sum the session duration in Python
-    obs_with_kong_grouped = {}
-    for obs in obs_with_kong:
-        date = obs.obsDateTime.date()
-        if date not in obs_with_kong_grouped:
-            obs_with_kong_grouped[date] = 0
-        obs_with_kong_grouped[date] += obs.sessionDurationInMins
-
-    obs_without_kong_grouped = {}
-    for obs in obs_without_kong:
-        date = obs.obsDateTime.date()
-
-        if date not in obs_without_kong_grouped:
-            obs_without_kong_grouped[date] = 0
-        obs_without_kong_grouped[date] += obs.sessionDurationInMins
-
-    logger.info(f"3) With kong data: {obs_with_kong_grouped}")
-    logger.info(f"4) Without kong data: {obs_without_kong_grouped}")
-
     # Get all the Dogs that have received a Kong Toy
     dogs_with_kong = Dog.objects.filter(kongDateAdded__isnull=False)
 
@@ -864,41 +839,16 @@ def chart_data(request):
     stances_without_kong = DogStance.objects.filter(observation__in=obs_without_kong).values('dogStance').annotate(
         total=models.Count('observation'))
 
-    # Make obsDateTime timezone-aware
-    filtered_obs_with_kong = [{'date': k, 'total': v} for k, v in obs_with_kong_grouped.items()]
-    filtered_obs_without_kong = [{'date': k, 'total': v} for k, v in obs_without_kong_grouped.items()]
-
-    # Format dates for JavaScript
-    jsl_tz = timezone('Asia/Jerusalem')
-
-    for obs in filtered_obs_with_kong:
-        if obs['date']:
-            obs['date'] = obs['date'].strftime("%m/%d/%Y")
-
-    for obs in filtered_obs_without_kong:
-        if obs['date']:
-            obs['date'] = obs['date'].strftime("%m/%d/%Y")
-
-    #DELETE#
-    # Log the data
-    logger.info(f"5) With kong data: {list(filtered_obs_with_kong)}")
-    logger.info(f"6) Without kong data: {list(filtered_obs_without_kong)}")
-
     # Preparing data to be used in the frontend
     data = {
         'dogs_with_kong': serializers.serialize('json', dogs_with_kong),
         'stances_with_kong': list(stances_with_kong),
         'stances_without_kong': list(stances_without_kong),
         'dog_breeds': list(dog_breeds),
-        'durations_with_kong': list(filtered_obs_with_kong),
-        'durations_without_kong': list(filtered_obs_without_kong),
+
     }
 
     return JsonResponse(data)
-
-
-def graphs(request):
-    return render(request, 'graphs.html')
 
 
 # Helper function to filter out unwanted attributes.
@@ -1029,6 +979,10 @@ def filter_dogs(request):
         if owner == "Unspecified":
             dogs = dogs.filter(Q(owner__isnull=True))
 
+        # Store all dog IDs being displayed in case user wants to export the data using get_filtered_dogs_id()
+        filtered_dogs_ids = list(dogs.values_list('dogID', flat=True))
+        request.session['filtered_dogs_ids'] = filtered_dogs_ids
+
         # Pagination
         paginator = Paginator(dogs, ENTRIES_PER_PAGE)
         page = request.GET.get('page')
@@ -1047,3 +1001,82 @@ def filter_dogs(request):
         return JsonResponse({'table_rows': table_rows, 'pagination_html': pagination_html}, status=200)
     else:
         return JsonResponse({'error': 'Not an AJAX request'}, status=400)
+
+
+# Helper function for getting all dog IDs for dogs being filtered on the page (for exporting data)
+def get_filtered_dog_ids(request):
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        filtered_dogs_ids = request.session.get('filtered_dogs_ids', [])
+        return JsonResponse({'filtered_dogs_ids': filtered_dogs_ids}, status=200)
+    else:
+        return JsonResponse({'error': 'Not an AJAX request'}, status=400)
+
+
+# View for handling JSON file exports in view_dogs page
+def export_dogs_json(request):
+    if request.method == 'POST':
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            dog_ids = json.loads(request.POST.get('dog_ids'))
+            dogs = Dog.objects.filter(dogID__in=dog_ids)
+            dog_data = list(dogs.values())  # Converts QuerySet to list of dictionaries
+            return JsonResponse(dog_data, safe=False)
+
+
+# View for handling Excel file exports in view_dogs page
+def export_dogs_excel(request):
+    if request.method == 'POST':
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+
+            data = json.loads(request.body.decode('utf-8'))
+            dog_ids = data.get('dog_ids', [])
+            dogs = Dog.objects.filter(dogID__in=dog_ids)
+
+            print(dogs)
+
+            # Create workbook and worksheet
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "Dogsheler Dogs Data"
+
+            # Define headers and write them to the first row
+            headers = ['ID', 'Chip Number', 'Name', 'Date of Birth', 'Date of Arrival',
+                       'Date of Vaccination', 'Breed', 'Gender', 'Fur Color', 'Neutered',
+                       'Dangerous', 'Image', 'Last Kong Date Given', 'Owner']
+            for col_num, header in enumerate(headers, 1):
+                col_letter = get_column_letter(col_num)
+                ws['{}1'.format(col_letter)] = header
+
+            # Populate Excel file with dog data
+            for row_num, dog in enumerate(dogs, 2):  # Start from row 2 to not overwrite headers
+                ws.cell(row=row_num, column=1, value=dog.dogID if dog.dogID else "N/A")
+                ws.cell(row=row_num, column=2, value=dog.chipNum if dog.chipNum else "N/A")
+                ws.cell(row=row_num, column=3, value=dog.dogName if dog.dogName else "N/A")
+                ws.cell(row=row_num, column=4, value=dog.dateOfBirthEst if dog.dateOfBirthEst else "N/A")
+                ws.cell(row=row_num, column=5, value=dog.dateOfArrival if dog.dateOfArrival else "N/A")
+                ws.cell(row=row_num, column=6, value=dog.dateOfVaccination if dog.dateOfVaccination else "N/A")
+                ws.cell(row=row_num, column=7, value=dog.breed if dog.breed else "N/A")
+                ws.cell(row=row_num, column=8, value=dog.gender if dog.gender else "N/A")
+                ws.cell(row=row_num, column=9, value=dog.furColor if dog.furColor else "N/A")
+                ws.cell(row=row_num, column=10, value=dog.isNeutered if dog.isNeutered else "N/A")
+                ws.cell(row=row_num, column=11, value=dog.isDangerous if dog.isDangerous else "N/A")
+                ws.cell(row=row_num, column=12, value=str(dog.dogImage) if dog.dogImage else "N/A")
+                ws.cell(row=row_num, column=13, value=dog.kongDateAdded if dog.kongDateAdded else "N/A")
+                ws.cell(row=row_num, column=14, value=str(dog.owner) if dog.owner else "N/A")
+                from io import BytesIO
+
+                # Initialize BytesIO and save workbook to it
+                excel_file = BytesIO()
+                wb.save(excel_file)
+
+                # Prepare the HttpResponse
+                response = HttpResponse(
+                    excel_file.getvalue(),
+                    content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                )
+                response['Content-Disposition'] = 'attachment; filename=dogs_data.xlsx'
+
+                return response
+        else:
+            return JsonResponse({'error': 'Not an AJAX request'}, status=400)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
