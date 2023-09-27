@@ -5,40 +5,74 @@
 
     <link href="{% static 'dogs_app/css/graphs.css' %}" rel="stylesheet">
 
-    <div class="title-container col-md-10 mx-auto">
-        <h1>Dog Shelter Statistics</h1>
+    <div class="title-container mx-auto">
+        <h2>Dog Shelter Statistics</h2>
         <div id="loading">
             <img src="{% static 'dogs_app/img/spinner.gif' %}" alt="Loading..." />
         </div>
     </div>
 
-    <div id="outer-wrapper-div">
-        <div class="card chart-container">
-            <div class="card-body">
-                <h2 class="card-title">Stances with Kong Toy</h2>
-                <canvas id="chart_dogStances_with_kong"></canvas>
+        <div id="carouselExampleIndicators" class="carousel carousel-dark slide">
+            <div class="carousel-indicators">
+                <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2" aria-label="Slide 3"></button>
+                <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="3" aria-label="Slide 4"></button>
             </div>
-        </div>
-        <div class="card chart-container">
-            <div class="card-body">
-                <h2 class="card-title">Stances without Kong Toy</h2>
-                <canvas id="chart_dogStances_without_kong"></canvas>
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <div class="card chart-container chart-container-day d-block w-100">
+                        <div class="card-body">
+                            <h2 class="card-title">Dog Stances by Day (Across The Week)</h2>
+                            <canvas id="chart_dogStances_by_day"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="card chart-container chart-container-with-kong d-block w-100">
+                        <div class="card-body">
+                            <h2 class="card-title">Dog Stances with Kong</h2>
+                            <canvas id="chart_dogStances_with_kong"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="card chart-container chart-container-without-kong d-block w-100">
+                        <div class="card-body">
+                            <h2 class="card-title">Dog Stances without Kong</h2>
+                            <canvas id="chart_dogStances_without_kong"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="card chart-container chart-container-breeds d-block w-100 ">
+                        <div class="card-body breed-distribution-container">
+                            <h2 class="card-title">Distribution of Dog Breeds</h2>
+                            <canvas id="chart_dogBreeds"></canvas>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
         </div>
-    </div>
-    <div class="card chart-container">
-        <div class="card-body">
-            <h2 class="card-title">Distribution of Dog Breeds</h2>
-            <canvas id="chart_dogBreeds"></canvas>
-        </div>
-    </div>
+
 
 
     <!-- Declare a variable for chart data URL to be used in the following external JavaScript file -->
     <script type="text/javascript">
         const chartDataUrl = '{% url 'dogs_app:chart_data' %}';
     </script>
-    
+
+    <!-- ChartJS Plugin for Data Labels -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0-rc.1"></script>
     <!-- Include external JS file for charts -->
     <script src="{% static 'dogs_app/js/graphs.js' %}"></script>
 

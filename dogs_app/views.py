@@ -23,10 +23,8 @@ from django.db.models import Count, Q
 from django.core.paginator import Paginator
 from django.template.loader import render_to_string
 from datetime import date, timedelta
-import logging
-from pytz import timezone
 from django.db import IntegrityError
-from django.core.exceptions import ValidationError
+from django.db.models.functions import ExtractWeekDay
 
 
 # Location of the default User profile picture if they don't have a picture
@@ -50,7 +48,7 @@ def home_view(request):
     toy_treatment_dogs = Dog.objects.filter(observers__observation__isKong='Y').distinct().count()
 
     # Get all the website News to display them in descending order
-    news_items = News.objects.all().order_by('-created_at')
+    news_items = News.objects.all().order_by('-created_at')[:3]
 
     # Checking if user is logged in
     if request.method == 'POST':
@@ -831,7 +829,7 @@ def chart_data(request):
     obs_without_kong = Observation.objects.filter(isKong='N', obsDateTime__isnull=False)
 
     # Getting breeds and their counts
-    dog_breeds = Dog.objects.values('breed').annotate(total=Count('breed')).order_by('-total')
+    dog_breeds = Dog.objects.values('breed').annotate(total=Count('breed')).exclude(breed='').exclude(breed__isnull=True).order_by('-total')
 
     # Count of DogStances with and without kong toy
     stances_with_kong = DogStance.objects.filter(observation__in=obs_with_kong).values('dogStance').annotate(
@@ -839,16 +837,99 @@ def chart_data(request):
     stances_without_kong = DogStance.objects.filter(observation__in=obs_without_kong).values('dogStance').annotate(
         total=models.Count('observation'))
 
+    # Define the limit for the required top dog stances then fetch
+    # those values for "Dog Stances Across The Week" Graph
+    TOP_STANCES_LIMIT = 5
+    top_dog_stances = get_top_dog_stances(TOP_STANCES_LIMIT)
+
+    stance_count_by_day = get_stance_count_by_day(top_dog_stances)
+
     # Preparing data to be used in the frontend
     data = {
         'dogs_with_kong': serializers.serialize('json', dogs_with_kong),
         'stances_with_kong': list(stances_with_kong),
         'stances_without_kong': list(stances_without_kong),
         'dog_breeds': list(dog_breeds),
-
+        'stance_count_by_day': stance_count_by_day,
     }
 
+    print(list(dog_breeds))
     return JsonResponse(data)
+
+
+# Returns the top dog stances, parameter to set limit
+def get_top_dog_stances(limit=5):
+
+    # Fetch and count the occurrences of each dogStance from the database for Dog Stances Across The Week
+    dog_stance_counts = DogStance.objects.values('dogStance').annotate(total_count=Count('dogStance')).order_by(
+        '-total_count')
+
+    # Create a list to store the top X dogStances
+    top_dog_stances = []
+
+    # Collect the top X dogStances
+    for i, entry in enumerate(dog_stance_counts):
+        if i >= limit:
+            break
+        top_dog_stances.append(entry['dogStance'])
+
+    return top_dog_stances
+
+
+# Get a dictionary of each Dog Stance's occurrences in every day of the week, for a selected list of Stances
+def get_stance_count_by_day(top_dog_stances):
+    days_of_week = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday']
+
+    # Initialize a dictionary to hold the stance count for each day of the week
+    stance_count_by_day = {}
+    for day in days_of_week:
+        stance_count_by_day[day] = {}
+        for stance in top_dog_stances:
+            stance_count_by_day[day][stance] = 0
+
+    # Query the database to get the stances and their observation dates
+    stances_with_datetime = DogStance.objects.select_related('observation').values('observation__obsDateTime',
+                                                                                   'dogStance')
+    # Mapping of Python's datetime.weekday() indexes to actual day names
+    days_of_week_mapping = {0: 'Monday', 1: 'Tuesday', 2: 'Wednesday', 3: 'Thursday', 4: 'Friday', 5: 'Saturday',
+                            6: 'Sunday'}
+
+    # Mapping of value names in Dog Stances
+    stance_name_mapping = {backend: frontend for backend, frontend in DogStance.DOG_STANCE_CHOICES}
+
+    # Loop to populate the dictionary with actual data
+    for entry in stances_with_datetime:
+        # Convert the UTC time in the database to local time
+        utc_observation_time = entry['observation__obsDateTime']
+        local_observation_time = timezone.localtime(utc_observation_time)
+
+        # Get the local weekday index (Monday is 0, Sunday is 6)
+        day_index = local_observation_time.weekday()
+
+        # Map the weekday index to its string name
+        day_name = days_of_week_mapping[day_index]
+
+        # Skip Friday and Saturday
+        if day_name in ['Friday', 'Saturday']:
+            continue  # Skip to next iteration of the loop, ignoring this entry
+
+        # Fetch the stance for this particular record
+        stance = entry['dogStance']
+
+        # If this stance is among the top stances we are tracking, update the count
+        if stance in top_dog_stances:
+            stance_count_by_day[day_name][stance] += 1
+
+    transformed_stance_count_by_day = {}
+
+    for day, stances in stance_count_by_day.items():
+        transformed_stances = {}
+        for stance_key, count in stances.items():
+            transformed_key = stance_name_mapping.get(stance_key, "Unknown")
+            transformed_stances[transformed_key] = count
+        transformed_stance_count_by_day[day] = transformed_stances
+
+    return transformed_stance_count_by_day
 
 
 # Helper function to filter out unwanted attributes.

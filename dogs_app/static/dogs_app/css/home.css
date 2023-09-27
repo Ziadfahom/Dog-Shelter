@@ -92,3 +92,76 @@ input[type='password']:focus {
     outline: 0;
     box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
 }
+
+/* Hero section */
+.hero {
+  background: linear-gradient(rgba(25, 25, 25, 0.9), rgba(50, 50, 50, 0.9), rgba(75, 75, 75, 0.9));
+  height: auto;
+  display: flex;
+  justify-content: flex-start;  /* Logo stays on the left */
+  align-items: center;
+  padding: 20px;
+  border-radius: 15px;
+}
+
+/* Logo positioning */
+.logo-hero {
+  position: relative;
+}
+
+.image-container {
+  position: relative;
+}
+
+.logo-hero img {
+  width: 500px;
+  height: 188.5px;
+  object-fit: contain;
+  filter: drop-shadow(0px 0px 10px rgba(255, 255, 255, 0.4));
+  border-radius: 10px;
+}
+
+/* Text overlay */
+.text-overlay {
+  position: absolute;
+  bottom: 85%;
+  right: -70%;
+  color: white;
+  font-size: 22px;
+  font-weight: bold;
+  text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.7);
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+.scrollable-news-section {
+  overflow-y: auto;
+  max-height: 400px;
+}
+
+.add-news-btn {
+    width: 100%;
+    margin-top: 2px;
+    border-radius: 16px;
+    padding: 8px 8px;
+}
+
+.view-more-news-link {
+    font-size: 14px;
+    padding: 5px 10px;
+    background: linear-gradient(to right, #ccc, #d4d4d4);  /* subtle gradient */
+    color: #333;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.view-more-news-link:hover {
+    background: linear-gradient(to right, #bbb, #c2c2c2);  /* subtle gradient on hover */
+    color: #111;
+}
+
+/* To align the link to the left */
+.view-more-wrapper {
+    text-align: left;
+}
+

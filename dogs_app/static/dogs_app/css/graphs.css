@@ -7,24 +7,44 @@ body {
     margin: 0 auto 2em auto;
     padding: 20px;
     box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
-    background-color: white;
-    border-radius: 15px;
+    background-color: #FFF8DC;
+    border-radius: 0 0 15px 15px;
 }
+
+
+.chart-container-day {
+    background-color: #F0FFF0;  /* Lavender */
+}
+
+.chart-container-kong {
+    background-color: #F0E68C;  /* Khaki */
+}
+
+.chart-container-without-kong {
+    background-color: #ADD8E6;  /* Light Blue */
+}
+
+.chart-container-breeds {
+    background-color: #FAF3E0;  /* Light Gray */
+}
+
 
 /* Title container styling */
 .title-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: darkslategrey; /* Subtle gradient background */
+    background: linear-gradient(160deg, #2F4F4F, #3C636C); /* Subtle gradient background */
     color: #fff;
     padding: 1em 0;
-    margin: 2em auto;
-    border-radius: 20px; /* Rounded corners */
-    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); /* Add shadow for a "lifted" effect */
-    width: 80%;
-    font-family: 'Roboto', sans-serif; /* Use a clean, modern font */
+    border-radius: 40px 40px 0 0;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Enhanced shadow for a "lifted" effect */
+    font-family: 'Helvetica Neue', sans-serif; /* A sleek, modern font */
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase; /* Optionally make text uppercase for a more formal appearance */
 }
+
 
 h1 {
     font-size: 2.5em;
@@ -62,4 +82,33 @@ h1 {
     justify-content: space-around;
     align-items: center;
     margin: 2em 0;
+}
+
+.carousel-indicators {
+    bottom: 2rem;
+}
+
+.carousel-control-prev {
+    left: -2.5rem;
+}
+
+.carousel-control-next {
+    right: -2.5rem;
+}
+
+.breed-distribution-container {
+    display: flex;
+    align-items: flex-start; /* Vertical alignment */
+}
+
+.card-title {
+    margin-right: 2rem; /* Space between h2 and canvas */
+    align-self: center; /* Adjust vertical alignment */
+}
+
+#chart_dogBreeds {
+    height: 30rem;
+    width: 30rem;
+    display: block;
+    box-sizing: border-box;
 }

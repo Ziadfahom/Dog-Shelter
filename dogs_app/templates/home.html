@@ -14,9 +14,15 @@
 
             <!-- Welcome message -->
             <div class="card border-dark mb-3 text-center">
-                <div class="card-header text-white bg-dark bg-gradient">
-                    <h2>Welcome to the Dogs Shelter system, {{ user.username }}!</h2>
-                </div>
+                   <section class="hero card-header text-white">
+                      <div class="logo-hero">
+                        <div class="image-container">
+                          <img src="{% static 'dogs_app/img/dogwatch_logo.png' %}" alt="Logo" />
+                          <h3 class="text-overlay">Welcome to the Dogs Shelter system, {{ user.username }}!</h3>
+                        </div>
+                      </div>
+                    </section>
+
                 <div class="card-body">
                     <p class="lead">We're home to <strong>{{ total_dogs }}</strong> dogs right now, and
                         <strong>{{ toy_treatment_dogs }}</strong> of
@@ -32,7 +38,7 @@
                         <div class="card-header text-white bg-dark bg-gradient">
                             <h3>Our Latest News</h3>
                         </div>
-                        <ul class="list-group list-group-flush">
+                        <ul class="list-group list-group-flush scrollable-news-section" id="news-section">
                             {% for news in news_items %}
                                 <li class="list-group-item">
                                     <h4>{{ news.title }}</h4>
@@ -54,18 +60,21 @@
                                     <p>No news available.</p>
                                 </li>
                             {% endfor %}
-                            {% if user.is_superuser %}
-                                <li class="list-group-item">
-                                    <a href="{% url 'dogs_app:add_news' %}" class="btn btn-primary btn-sm">Add News</a>
-                                </li>
-                            {% endif %}
+                        <li class="list-group-item text-left">
+                            <div class="view-more-wrapper">
+                                <a href="#" class="view-more-news-link">View Older News</a>
+                            </div>
+                        </li>
                         </ul>
                     </div>
+                {% if user.is_superuser %}
+                    <a href="{% url 'dogs_app:add_news' %}" class="btn btn-primary btn-sm add-news-btn">Add News</a>
+                {% endif %}
                 </div>
 
                 <div class="col-md-8">
                     <!-- User Profile -->
-                    <div class="card border-dark mb-3 mt-4 text-center">
+                    <div class="card border-dark mb-3 mt-4 text-center" id="user-profile">
                         <div class="card-header text-center text-white bg-dark bg-gradient">
                             <h2>User Profile</h2>
                         </div>
@@ -126,5 +135,6 @@
                 </div>
             </div>
         {% endif %}
+            <script src="{% static 'dogs_app/js/home.js' %}"></script>
     {% endblock %}
 </div>
