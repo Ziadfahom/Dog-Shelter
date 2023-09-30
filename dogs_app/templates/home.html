@@ -33,7 +33,7 @@
 
             <!-- News section -->
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-7">
                     <div class="card border-dark mt-4 text-center">
                         <div class="card-header text-white bg-dark bg-gradient">
                             <h3>Our Latest News</h3>
@@ -72,7 +72,7 @@
                 {% endif %}
                 </div>
 
-                <div class="col-md-8">
+                <div class="col-md-5">
                     <!-- User Profile -->
                     <div class="card border-dark mb-3 mt-4 text-center" id="user-profile">
                         <div class="card-header text-center text-white bg-dark bg-gradient">
@@ -135,6 +135,24 @@
                 </div>
             </div>
         {% endif %}
-            <script src="{% static 'dogs_app/js/home.js' %}"></script>
+
+        <!-- About Us Placeholder Section -->
+        <div class="row mt-5 about-us-section unique-section">
+            <div class="col">
+                <div class="card about-us-card text-center">
+                    <div class="card-header about-us-header unique-header">
+                        <h3 class="unique-title">About Us (Placeholder Section)</h3>
+                    </div>
+                    <div class="card-body about-us-body">
+                        <p class="lead about-us-text">This is a placeholder for the About Us section.</p>
+                        <p class="about-us-subtext">Content to be added soon.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+        <script src="{% static 'dogs_app/js/home.js' %}"></script>
     {% endblock %}
 </div>

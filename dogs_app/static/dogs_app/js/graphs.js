@@ -5,6 +5,7 @@ var detailedData_without_kong = [];
 
 
 function fetchDataAndCreateCharts() {
+    Chart.register(ChartDataLabels);
     fetch(chartDataUrl)
         .then(response => {
             if (!response.ok) {
@@ -104,7 +105,7 @@ function fetchDataAndCreateCharts() {
                 }
             });
 
-            Chart.register(ChartDataLabels);
+
 
             var chart_breeds = new Chart(ctx_breeds, {
                 type: 'pie',

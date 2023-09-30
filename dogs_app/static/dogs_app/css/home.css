@@ -165,3 +165,83 @@ input[type='password']:focus {
     text-align: left;
 }
 
+/* About Us Custom Styles */
+.about-us-section {
+    background: #f9f9f9; /* Light gray background */
+}
+
+
+
+.about-us-header {
+    background: #343a40; /* Dark gray header */
+    color: #fff;  /* White text */
+}
+
+.about-us-body {
+    padding: 20px 30px;  /* Padding for body */
+}
+
+.about-us-text {
+    font-weight: 400;  /* Regular weight for lead text */
+    color: #555;  /* Dark gray text */
+}
+
+.about-us-subtext {
+    color: #777;  /* Lighter gray for subtext */
+}
+
+/* Unique Styling for About Us */
+.unique-section {
+    background-color: transparent;  /* Transparent background */
+}
+
+.unique-header {
+    background: #464e56;  /* Slightly different dark gray */
+}
+
+.unique-title {
+    font-family: 'Courier New', Courier, monospace;  /* Different font for the title */
+    font-size: 24px;  /* Slightly bigger font size */
+}
+
+/* This will add a slight border-radius to the bottom of the card */
+.about-us-card {
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+}
+
+.about-us-card {
+    border: 1px solid #ccc; /* Lighter border */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Subtle shadow */
+}
+
+.unique-header {
+    background: #2c3e50;  /* Slightly different color for more contrast */
+    color: #ecf0f1;  /* Light color text */
+    text-shadow: 2px 2px 4px #000000;  /* Text shadow for more depth */
+}
+
+.unique-title {
+    font-family: 'Georgia', serif;  /* Different, more elegant font */
+    font-size: 26px;  /* Slightly larger font size */
+    font-weight: bold;  /* Bold for emphasis */
+}
+
+.about-us-body {
+    padding: 30px;  /* Extra padding for more room */
+}
+
+.about-us-text {
+    font-size: 18px;  /* Larger font size for readability */
+    color: #34495e;  /* Darker color for contrast */
+}
+
+.about-us-subtext {
+    font-style: italic;  /* Italicized text for stylistic emphasis */
+}
+
+/* Hover effect for more interactivity */
+.about-us-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);  /* Add shadow on hover */
+    transition: box-shadow 0.3s ease-in-out;  /* Smooth transition */
+}

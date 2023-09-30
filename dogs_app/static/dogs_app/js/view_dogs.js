@@ -324,18 +324,19 @@ $(document).ready(function() {
       });
   });
 
-
   $('#exportExcelButton').click(function() {
     $.ajax({
       url: '/get_filtered_dog_ids/',
       type: 'GET',
       success: function(response) {
         let filteredDogIDs = response.filtered_dogs_ids;
+        let params = getURLParameters();
+        let sort_by = params.sort_by || '-dateOfArrival';
 
         $.ajax({
             url: '/export_dogs_excel/',
             type: 'POST',
-            data: JSON.stringify({'dog_ids': filteredDogIDs}),
+            data: JSON.stringify({'dog_ids': filteredDogIDs, 'sort_by': sort_by}),
             contentType: 'application/json; charset=utf-8',
             headers: { 'X-CSRFToken': getCookie('csrftoken') },
             success: function(data) {
@@ -344,6 +345,9 @@ $(document).ready(function() {
                 link.href = window.URL.createObjectURL(blob);
                 link.download = 'Shelter_dogs_data.xlsx';
                 link.click();
+            },
+            xhrFields: {
+                responseType: 'arraybuffer'
             },
         });
       },
@@ -370,11 +374,12 @@ function getCookie(name) {
 
 
 function downloadJSON(data, filename) {
-let blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-  let url = window.URL.createObjectURL(blob);
-  let a = document.createElement('a');
-  a.setAttribute('href', url);
-  a.setAttribute('download', filename);
-  a.click();
-  window.URL.revokeObjectURL(url);
+
+    let blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+    let url = window.URL.createObjectURL(blob);
+    let a = document.createElement('a');
+    a.setAttribute('href', url);
+    a.setAttribute('download', filename);
+    a.click();
+    window.URL.revokeObjectURL(url);
 }

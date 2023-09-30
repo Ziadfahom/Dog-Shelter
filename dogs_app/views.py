@@ -1,6 +1,7 @@
 import json
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
+from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 from django.db.models import Prefetch
 from django.db.models import Value
 from django.db.models.functions import Concat
@@ -19,12 +20,14 @@ from .models import *
 from django.conf import settings
 import os
 from django.core import serializers
+from django.core.serializers import serialize
 from django.db.models import Count, Q
 from django.core.paginator import Paginator
 from django.template.loader import render_to_string
 from datetime import date, timedelta
 from django.db import IntegrityError
-from django.db.models.functions import ExtractWeekDay
+from io import BytesIO
+from .serializers import DogSerializer
 
 
 # Location of the default User profile picture if they don't have a picture
@@ -853,7 +856,6 @@ def chart_data(request):
         'stance_count_by_day': stance_count_by_day,
     }
 
-    print(list(dog_breeds))
     return JsonResponse(data)
 
 
@@ -1084,7 +1086,7 @@ def filter_dogs(request):
         return JsonResponse({'error': 'Not an AJAX request'}, status=400)
 
 
-# Helper function for getting all dog IDs for dogs being filtered on the page (for exporting data)
+# Helper function for getting all dog IDs for dogs being filtered on the page (for exporting data in JSON/Excel)
 def get_filtered_dog_ids(request):
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         filtered_dogs_ids = request.session.get('filtered_dogs_ids', [])
@@ -1093,13 +1095,28 @@ def get_filtered_dog_ids(request):
         return JsonResponse({'error': 'Not an AJAX request'}, status=400)
 
 
-# View for handling JSON file exports in view_dogs page
+# Main function to export Dogs in JSON format
 def export_dogs_json(request):
     if request.method == 'POST':
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             dog_ids = json.loads(request.POST.get('dog_ids'))
-            dogs = Dog.objects.filter(dogID__in=dog_ids)
-            dog_data = list(dogs.values())  # Converts QuerySet to list of dictionaries
+
+            # Use select_related and prefetch_related for optimization and fetching all associated entities
+            dogs = Dog.objects\
+                .select_related('owner')\
+                .prefetch_related('entranceexamination_set',
+                                  'treatment_set',
+                                  'dogplacement_set__kennel',
+                                  Prefetch('observers',
+                                           queryset=Observes.objects.prefetch_related(
+                                               Prefetch('observation_set',
+                                                        queryset=Observation.objects
+                                                        .prefetch_related('dogstance_set')))))\
+                .filter(dogID__in=dog_ids)
+
+            # Serialize dogs
+            dog_data = DogSerializer.serialize_dogs(dogs)
+
             return JsonResponse(dog_data, safe=False)
 
 
@@ -1110,9 +1127,10 @@ def export_dogs_excel(request):
 
             data = json.loads(request.body.decode('utf-8'))
             dog_ids = data.get('dog_ids', [])
-            dogs = Dog.objects.filter(dogID__in=dog_ids)
+            sort_by = data.get('sort_by', '-dateOfArrival')
 
-            print(dogs)
+            # Filter and sort dogs
+            dogs = Dog.objects.filter(dogID__in=dog_ids).order_by(sort_by)
 
             # Create workbook and worksheet
             wb = Workbook()
@@ -1123,40 +1141,105 @@ def export_dogs_excel(request):
             headers = ['ID', 'Chip Number', 'Name', 'Date of Birth', 'Date of Arrival',
                        'Date of Vaccination', 'Breed', 'Gender', 'Fur Color', 'Neutered',
                        'Dangerous', 'Image', 'Last Kong Date Given', 'Owner']
+
+            # Styling headers with bold font and background color
+            header_font = Font(bold=True, color="FFFFFF")
+            data_font = Font(name='Arial', size=11)
+
+            # Define fills
+            header_fill = PatternFill(start_color="0070C0",
+                                      end_color="0070C0", fill_type="solid")
+            light_blue_fill = PatternFill(start_color="D9EBF5", end_color="D9EBF5", fill_type="solid")
+            light_gray_fill = PatternFill(start_color="E5E5E5", end_color="E5E5E5", fill_type="solid")
+
+            # Define Center alignment
+            center_aligned = Alignment(horizontal="center", vertical="center")
+
+            # Define border
+            thin_border = Border(left=Side(style='thin'),
+                                 right=Side(style='thin'),
+                                 top=Side(style='thin'),
+                                 bottom=Side(style='thin'))
+
+            # Header row styling
             for col_num, header in enumerate(headers, 1):
                 col_letter = get_column_letter(col_num)
-                ws['{}1'.format(col_letter)] = header
+                cell = ws['{}1'.format(col_letter)]
+                cell.value = header
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = center_aligned
+                cell.border = thin_border
+                ws.column_dimensions[col_letter].width = 15 if header not in ['ID', 'Gender', 'Neutered',
+                                                                              'Dangerous'] else 10
 
-            # Populate Excel file with dog data
-            for row_num, dog in enumerate(dogs, 2):  # Start from row 2 to not overwrite headers
-                ws.cell(row=row_num, column=1, value=dog.dogID if dog.dogID else "N/A")
-                ws.cell(row=row_num, column=2, value=dog.chipNum if dog.chipNum else "N/A")
-                ws.cell(row=row_num, column=3, value=dog.dogName if dog.dogName else "N/A")
-                ws.cell(row=row_num, column=4, value=dog.dateOfBirthEst if dog.dateOfBirthEst else "N/A")
-                ws.cell(row=row_num, column=5, value=dog.dateOfArrival if dog.dateOfArrival else "N/A")
-                ws.cell(row=row_num, column=6, value=dog.dateOfVaccination if dog.dateOfVaccination else "N/A")
-                ws.cell(row=row_num, column=7, value=dog.breed if dog.breed else "N/A")
-                ws.cell(row=row_num, column=8, value=dog.gender if dog.gender else "N/A")
-                ws.cell(row=row_num, column=9, value=dog.furColor if dog.furColor else "N/A")
-                ws.cell(row=row_num, column=10, value=dog.isNeutered if dog.isNeutered else "N/A")
-                ws.cell(row=row_num, column=11, value=dog.isDangerous if dog.isDangerous else "N/A")
-                ws.cell(row=row_num, column=12, value=str(dog.dogImage) if dog.dogImage else "N/A")
-                ws.cell(row=row_num, column=13, value=dog.kongDateAdded if dog.kongDateAdded else "N/A")
-                ws.cell(row=row_num, column=14, value=str(dog.owner) if dog.owner else "N/A")
-                from io import BytesIO
+            # Check if dogs queryset is empty
+            if not dogs.exists():
+                # Merge cells from A2 to N2 (14 columns)
+                ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=14)
 
-                # Initialize BytesIO and save workbook to it
-                excel_file = BytesIO()
-                wb.save(excel_file)
+                # Reference to the merged cell
+                merged_cell = ws.cell(row=2, column=1)
 
-                # Prepare the HttpResponse
-                response = HttpResponse(
-                    excel_file.getvalue(),
-                    content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                )
-                response['Content-Disposition'] = 'attachment; filename=dogs_data.xlsx'
+                # Populate the merged cell
+                merged_cell.value = "No Data Available"
 
-                return response
+                # Style the merged cell
+                merged_cell.font = Font(name='Arial', size=12, bold=True)
+                merged_cell.alignment = center_aligned
+                merged_cell.fill = PatternFill(start_color="FFFF99", end_color="FFFF99", fill_type="solid")
+                merged_cell.border = thin_border
+
+            # Otherwise, proceed with populating Excel file with dog data and apply styles
+            else:
+                # Populate Excel file with dog data and apply styles
+                for row_num, dog in enumerate(dogs, 2):  # Start from row 2 to not overwrite headers
+                    for col_num in range(1, 15):  # 14 columns in total
+                        # Determine row color
+                        if row_num % 2 == 0:
+                            row_fill = light_gray_fill
+                        else:
+                            row_fill = light_blue_fill
+
+                        cell = ws.cell(row=row_num, column=col_num)
+
+                        # Populate the cell based on the column number
+                        cell.value = {
+                            1: dog.dogID if dog.dogID else "N/A",
+                            2: dog.chipNum if dog.chipNum else "N/A",
+                            3: dog.dogName if dog.dogName else "N/A",
+                            4: dog.dateOfBirthEst if dog.dateOfBirthEst else "N/A",
+                            5: dog.dateOfArrival if dog.dateOfArrival else "N/A",
+                            6: dog.dateOfVaccination if dog.dateOfVaccination else "N/A",
+                            7: dog.breed if dog.breed else "N/A",
+                            8: dog.get_gender_display() if dog.gender else "N/A",
+                            9: dog.furColor if dog.furColor else "N/A",
+                            10: dog.get_isNeutered_display() if dog.isNeutered else "N/A",
+                            11: dog.get_isDangerous_display() if dog.isDangerous else "N/A",
+                            12: str(dog.dogImage) if dog.dogImage else "N/A",
+                            13: dog.kongDateAdded if dog.kongDateAdded else "N/A",
+                            14: str(dog.owner) if dog.owner else "N/A"
+                        }.get(col_num)
+
+                        # Apply styling
+                        cell.font = data_font
+                        cell.alignment = center_aligned
+                        cell.border = thin_border
+                        cell.fill = row_fill
+
+            # Initialize BytesIO and save workbook to it
+            excel_file = BytesIO()
+            wb.save(excel_file)
+            excel_file.seek(0)
+
+            # Prepare the HttpResponse
+            response = HttpResponse(
+                excel_file.read(),
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            response['Content-Disposition'] = 'attachment; filename=dogs_data.xlsx'
+
+            return response
         else:
             return JsonResponse({'error': 'Not an AJAX request'}, status=400)
     else:
