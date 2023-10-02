@@ -40,6 +40,8 @@ def breadcrumb_processor(request):
 
     if 'details/' in url_path:
         breadcrumbs.append({"name": "Details", "url": f"{url_path}"})
+    if 'news/' in url_path:
+        breadcrumbs.append({"name": "News", "url": f"{url_path}"})
     if 'add_dog/' in url_path:
         breadcrumbs.append({"name": "New Dog", "url": f"{url_path}"})
     if 'graphs/' in url_path:

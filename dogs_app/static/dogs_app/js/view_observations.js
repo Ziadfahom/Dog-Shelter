@@ -42,9 +42,9 @@ $(document).ready(function() {
     }
 
     // Switch between dropdown and dropup icons when expanded or collapsed rows detected
-    const expandIcon = $(this).find('.expand-icon');
-  $(".clickable-row").click(function(event) {
-      expandIcon.toggleClass('fa-angle-down fa-angle-up expanded');
+    $(".clickable-row").click(function(event) {
+        const expandIcon = $(this).find('i'); // Find the specific icon inside the clicked row
+        expandIcon.toggleClass('fa-angle-down fa-angle-up');
     });
 });
 

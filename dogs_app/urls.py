@@ -20,10 +20,12 @@ urlpatterns = [
     path('change_password/', views.change_password, name='change_password'),
     path('graphs/', views.graphs, name='graphs'),
     path('chart_data/', views.chart_data, name='chart_data'),
+    path('news/', views.view_news, name='view_news'),
     path('dogs/', views.view_dogs, name='view_dogs'),
     path('filter/', views.filter_dogs, name='filter_dogs'),
     path('export_dogs_json/', views.export_dogs_json, name='export_dogs_json'),
     path('get_filtered_dog_ids/', views.get_filtered_dog_ids, name='get_filtered_dog_ids'),
     path('export_dogs_excel/', views.export_dogs_excel, name='export_dogs_excel'),
+    path('import_dogs_excel/', views.import_dogs_excel, name='import_dogs_excel'),
 
 ]

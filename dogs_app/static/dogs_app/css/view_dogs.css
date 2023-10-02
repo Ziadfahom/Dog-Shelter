@@ -27,7 +27,7 @@ td {
 }
 
 .stylish-table {
-    background: #f4fcf9;
+    background: #a8d5c2;
     border-radius: 1px 1px 11px 11px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     padding-top: 12px;
@@ -43,11 +43,11 @@ td {
 }
 
 .toolbar {
-    background-color: #a8e5de; /* Light background color */
+    background-color: #c3e8d9; /* Light background color */
     padding: 8px;
     margin-bottom: 1px; /* Add some space between the toolbar and the table */
     box-shadow: 0px 0px 3px 3px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
-    border-radius: 4px 4px 0px 0px; /* Rounded corners */
+    border-radius: 6px; /* Rounded corners */
     display: flex;
     justify-content: space-around;
     align-items: center;
@@ -103,7 +103,7 @@ body {
 }
 
 .caption-toolbar {
-    background-color: #a8e5de; /* Harmonizing with toolbar color */
+    background-color: #a8d5c2; /* Harmonizing with toolbar color */
     padding: 0 12px 12px;
     border-radius: 10px 10px 1px 1px;
     box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */

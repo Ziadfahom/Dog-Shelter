@@ -7,6 +7,7 @@
             <a class="navbar-brand mb-0 h1" href="{% url 'dogs_app:home' %}">
                 <img src="{% static 'dogs_app/img/dogwatch_logo.png' %}" alt="Site Favicon" width="100" height="38">
             </a>
+        </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -30,7 +31,7 @@
                                 <i class="fas fa-chart-bar"></i> Graphs
                             </a>
                             <!-- Placeholder All News Button -->
-                            <a class="dropdown-item" href="#">
+                            <a class="dropdown-item" href="{% url 'dogs_app:view_news' %}">
                                 <i class="fas fa-newspaper"></i> All News
                             </a>
                         </div>

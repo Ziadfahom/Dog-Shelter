@@ -299,9 +299,10 @@ function getURLParameters() {
 }
 
 
-// Handle logic for exporting Dog table as JSON/Excel file.
+// Handle logic for exporting/importing Dog table as JSON/Excel file.
 $(document).ready(function() {
-  $('#exportJsonButton').click(function() {
+    // Exporting Dog table as JSON
+    $('#exportJsonButton').click(function() {
       // First, fetch the filtered dog IDs
       $.ajax({
           url: '/get_filtered_dog_ids/',
@@ -322,9 +323,10 @@ $(document).ready(function() {
               });
           }
       });
-  });
+    });
 
-  $('#exportExcelButton').click(function() {
+    // Exporting Dog table as Excel
+    $('#exportExcelButton').click(function() {
     $.ajax({
       url: '/get_filtered_dog_ids/',
       type: 'GET',
@@ -352,7 +354,34 @@ $(document).ready(function() {
         });
       },
     });
-  });
+    });
+
+    // Importing Dog entities from Excel
+    $('#excelFileInput').change(function() {
+        let params = getURLParameters();
+        let excelFileInput = document.getElementById('excelFileInput');
+        let formData = new FormData();
+        formData.append('excel_file', excelFileInput.files[0]);
+
+        $.ajax({
+            url: '/import_dogs_excel/',
+            type: 'POST',
+            data: formData,
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            processData: false,
+            contentType: false,
+            success: function(response) {
+
+                refreshTable(params, 1);
+                $('#excelFileInput').val('');  // Reset file input
+
+            },
+            error: function(response) {
+                // Handle error
+                $('#excelFileInput').val('');  // Reset file input
+            }
+        });
+    });
 });
 
 

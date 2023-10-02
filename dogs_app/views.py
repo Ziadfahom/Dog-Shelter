@@ -1,5 +1,5 @@
 import json
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 from django.db.models import Prefetch
@@ -834,11 +834,14 @@ def chart_data(request):
     # Getting breeds and their counts
     dog_breeds = Dog.objects.values('breed').annotate(total=Count('breed')).exclude(breed='').exclude(breed__isnull=True).order_by('-total')
 
-    # Count of DogStances with and without kong toy
+    # Count of DogStances with and without kong toy, then make sure we use the front-end names of the values
     stances_with_kong = DogStance.objects.filter(observation__in=obs_with_kong).values('dogStance').annotate(
         total=models.Count('observation'))
+    stances_with_kong = map_stances_to_frontend(list(stances_with_kong))
+
     stances_without_kong = DogStance.objects.filter(observation__in=obs_without_kong).values('dogStance').annotate(
         total=models.Count('observation'))
+    stances_without_kong = map_stances_to_frontend(list(stances_without_kong))
 
     # Define the limit for the required top dog stances then fetch
     # those values for "Dog Stances Across The Week" Graph
@@ -857,6 +860,16 @@ def chart_data(request):
     }
 
     return JsonResponse(data)
+
+
+# Switch the Stances names to the front-end friendly version
+def map_stances_to_frontend(stances):
+    # Prepare a dictionary for the front-end names
+    DOG_STANCE_DICT = dict(DogStance.DOG_STANCE_CHOICES)
+
+    for stance in stances:
+        stance['dogStance'] = DOG_STANCE_DICT.get(stance['dogStance'], stance['dogStance'])
+    return stances
 
 
 # Returns the top dog stances, parameter to set limit
@@ -952,6 +965,12 @@ def get_unique_owners():
                                                           'owner').distinct().order_by('owner__firstName',
                                                                                        'owner__lastName')
 
+
+# View for displaying all News in a dedicated news page
+def view_news(request):
+    news_list = News.objects.all().order_by('-created_at')  # Fetch news in descending order
+    context = {'news_list': news_list}
+    return render(request, 'news_page.html', context)
 
 # View for viewing all dogs in a table
 def view_dogs(request):
@@ -1117,7 +1136,10 @@ def export_dogs_json(request):
             # Serialize dogs
             dog_data = DogSerializer.serialize_dogs(dogs)
 
-            return JsonResponse(dog_data, safe=False)
+            # Add a root key "data" to wrap the list
+            wrapped_dog_data = {'data': dog_data}
+
+            return JsonResponse(wrapped_dog_data, safe=False)
 
 
 # View for handling Excel file exports in view_dogs page
@@ -1240,6 +1262,60 @@ def export_dogs_excel(request):
             response['Content-Disposition'] = 'attachment; filename=dogs_data.xlsx'
 
             return response
+        else:
+            return JsonResponse({'error': 'Not an AJAX request'}, status=400)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+
+# View for handling Excel file imports in view_dogs page
+def import_dogs_excel(request):
+    if request.method == 'POST':
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            try:
+                excel_file = request.FILES['excel_file']
+                wb = load_workbook(excel_file)
+                ws = wb.active
+
+                row = ws[2]  # Get the row containing the first dog entry
+
+                def local_path_to_url(local_path):
+                    return
+
+                #Validate Data First
+                gender_value = 'M' if row[7].value == 'Male' else 'F' if row[7].value == 'Female' else ''
+                is_neutered_value = 'Y' if row[9].value == 'Yes' else 'N' if row[9].value == 'No' else ''
+                is_dangerous_value = 'Y' if row[10].value == 'Yes' else 'N' if row[10].value == 'No' else ''
+                # dog_image_url = None if row[11].value is None else '/static/img/' + row[11].value
+                dog_image_url = None # TO-DO Work on Images
+
+                dog_data = {
+                    'dogID': row[0].value,
+                    'chipNum': row[1].value,
+                    'dogName': row[2].value,
+                    'dateOfBirthEst': row[3].value,
+                    'dateOfArrival': row[4].value,
+                    'dateOfVaccination': row[5].value,
+                    'breed': row[6].value,
+                    'gender': gender_value,
+                    'furColor': row[8].value,
+                    'isNeutered': is_neutered_value,
+                    'isDangerous': is_dangerous_value,
+                    'dogImage': dog_image_url,
+                    'kongDateAdded': row[12].value,
+                    'owner': None
+                    # 'owner': omitted for now
+                }
+
+                # Validate data before saving
+                # ...
+
+                # Create new Dog instance and save it
+                Dog.objects.create(**dog_data)
+
+                return JsonResponse({'status': 'success'}, status=200)
+            except Exception as e:
+                return JsonResponse({'error': str(e)}, status=400)
         else:
             return JsonResponse({'error': 'Not an AJAX request'}, status=400)
     else:

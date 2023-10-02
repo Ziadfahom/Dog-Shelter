@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+    <!-- News_page.css-->
+    <link href="{% static 'dogs_app/css/news_page.css' %}" rel="stylesheet">
+    <!-- DataTables UI -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+
+    <div class="table-wrapper">
+        <div class="table-header">
+            <div class="spacer"></div>
+            <div class="title">Latest News</div>
+            {% if user.is_superuser %}
+                <a href="{% url 'dogs_app:add_news' %}" class="btn btn-primary btn-sm add-news-btn">
+                    <i class="fas fa-plus"></i>
+                    <i class="fas fa-newspaper"></i>
+                </a>
+            {% else %}
+                <div class="spacer"></div>
+            {% endif %}
+        </div>
+        <table id="newsTable">
+        <thead>
+            <tr>
+                <th>Date Created</th>
+                <th>Title</th>
+                <th class="empty-th"></th> <!-- Placeholder for alignment -->
+                <th class="actions-th">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for news in news_list %}
+            <tr data-content="{{ news.content|escapejs }}" class="first-row">
+                <td>{{ news.created_at }}</td>
+                <td>{{ news.title }}</td>
+                <td class="empty-td"><!-- Empty Space --></td>
+                <td class="button-cell">
+                    <div class="btn-group" role="group">
+                        <a href="{% url 'dogs_app:update_news' news.id %}" class="btn btn-warning btn-sm">Edit</a>
+                        <a href="{% url 'dogs_app:delete_news' news.id %}" class="btn btn-danger btn-sm">Delete</a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+
+        </table>
+    </div>
+
+
+    <!-- DataTables UI -->
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <!-- News_page.js-->
+    <script src="{% static 'dogs_app/js/news_page.js' %}"></script>
+
+{% endblock %}

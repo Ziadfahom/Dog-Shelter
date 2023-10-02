@@ -37,7 +37,11 @@
                 <a class="dropdown-item" href="#" id="importJsonButton">
                     <i class="fas fa-file-code"></i> Import from JSON
                 </a>
-                <a class="dropdown-item" href="#" id="importExcelButton">
+
+                <!-- Hidden file input to upload Excel file -->
+                <input type="file" id="excelFileInput" style="display: none;" accept=".xlsx, .xls, .csv"/>
+
+                <a class="dropdown-item" href="#" id="importExcelButton" onclick="document.getElementById('excelFileInput').click();">
                     <i class="fas fa-file-excel"></i> Import from Excel
                 </a>
             </div>

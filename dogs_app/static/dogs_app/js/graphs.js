@@ -21,6 +21,7 @@ function fetchDataAndCreateCharts() {
             var daysOfWeek = Object.keys(stance_count_by_day);
             var stances = Object.keys(stance_count_by_day[daysOfWeek[0]]);
 
+
             var gradient_with_kong = ctx_with_kong.createLinearGradient(0, 0, 0, 400);
             gradient_with_kong.addColorStop(0, 'rgba(75, 192, 192, 1)');
             gradient_with_kong.addColorStop(1, 'rgba(75, 192, 192, 0.5)');
@@ -147,19 +148,27 @@ function fetchDataAndCreateCharts() {
                 const colorIndex = index % colors.length;  // Loop through colors if there are more stances than colors
                 return {
                     label: stance,
-                    data: daysOfWeek.map(day => stance_count_by_day[day][stance]),
+                    data: daysOfWeek.map(day => {
+                        // Only include the count if it's not zero
+                        return stance_count_by_day[day][stance] !== 0 ? stance_count_by_day[day][stance] : null;
+                    }).filter(v => v !== null),  // Remove nulls (indicating zero counts)
                     borderColor: colors[colorIndex],
-                    borderWidth: 3,
-                    borderSkipped: false,
+                    borderWidth: 2,
+                    borderSkipped: true,
                     backgroundColor: backgroundColors[colorIndex],
                     stack: 'stack1'
                 };
             });
 
+            // Create a new array of labels (daysOfWeek) that only includes days with non-zero values for each stance.
+            var filteredDaysOfWeek = daysOfWeek.filter(day => {
+                return stances.some(stance => stance_count_by_day[day][stance] !== 0);
+            });
+
             var chart_stances_by_days = new Chart(ctx_by_day, {
                 type: 'bar',
                 data: {
-                    labels: daysOfWeek,
+                    labels: filteredDaysOfWeek,
                     datasets: datasets
                 },
 
