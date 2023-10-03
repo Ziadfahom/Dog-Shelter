@@ -20,7 +20,7 @@ function fetchDataAndCreateCharts() {
             var stance_count_by_day = data.stance_count_by_day;
             var daysOfWeek = Object.keys(stance_count_by_day);
             var stances = Object.keys(stance_count_by_day[daysOfWeek[0]]);
-
+            var ctx_stance_position = document.getElementById('chart_dogStance_dogPosition_with_without').getContext('2d');
 
             var gradient_with_kong = ctx_with_kong.createLinearGradient(0, 0, 0, 400);
             gradient_with_kong.addColorStop(0, 'rgba(75, 192, 192, 1)');
@@ -53,14 +53,13 @@ function fetchDataAndCreateCharts() {
             ];
 
 
-            const backgroundColors = colors.map(color => color.replace('1)', '0.7)')); // Corresponding lighter colors for background
-
-
+            const backgroundColors = colors.map(color => color.replace('1)', '0.8)')); // Corresponding lighter colors for background
 
             var ctx_by_day = document.getElementById('chart_dogStances_by_day').getContext('2d');
             var gradient_by_day = ctx_by_day.createLinearGradient(0, 0, 0, 400);
             gradient_by_day.addColorStop(0, 'rgba(128, 0, 128, 1)');
             gradient_by_day.addColorStop(1, 'rgba(128, 0, 128, 0.5)');
+
 
             var chart_with_kong = new Chart(ctx_with_kong, {
                 type: 'bar',
@@ -81,6 +80,70 @@ function fetchDataAndCreateCharts() {
                         text: 'Dog Stances with Kong',
                         fontSize: 24
                     },
+                    plugins: {
+                        datalabels: {
+                            color: '#000000',
+                            offset: -10,
+                            font: {
+                                size: 18,
+                                weight: 'bold'
+                            },
+                            formatter: function(value, context) {
+                                return value;
+                            }
+                        },
+                        legend: {
+                            labels: {
+                                font: {
+                                    size: 17,
+                                    weight: 'bold'
+                                },
+                                color: '#333333'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            pointLabels: {
+                                color: '#333333',
+                                font: {
+                                    size: 18
+                                }
+                            },
+                            grid: {
+                                color: '#666666'
+                            },
+                            angleLines: {
+                                color: ''
+                            },
+                            ticks: {
+                                color: '#333333',
+                                font: {
+                                    size: 20
+                                }
+                            }
+                        },
+                        y: {
+                            pointLabels: {
+                                color: '#333333',
+                                font: {
+                                    size: 18
+                                }
+                            },
+                            grid: {
+                                color: '#666666'
+                            },
+                            angleLines: {
+                                color: ''
+                            },
+                            ticks: {
+                                color: '#333333',
+                                font: {
+                                    size: 20
+                                }
+                            }
+                        }
+                    }
                 }
             });
 
@@ -103,6 +166,70 @@ function fetchDataAndCreateCharts() {
                         text: 'Dog Stances without Kong',
                         fontSize: 24
                     },
+                    plugins: {
+                        datalabels: {
+                            color: '#000000',
+                            offset: -10,
+                            font: {
+                                size: 18,
+                                weight: 'bold'
+                            },
+                            formatter: function(value, context) {
+                                return value;
+                            }
+                        },
+                        legend: {
+                            labels: {
+                                font: {
+                                    size: 17,
+                                    weight: 'bold'
+                                },
+                                color: '#333333'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            pointLabels: {
+                                color: '#333333',
+                                font: {
+                                    size: 18
+                                }
+                            },
+                            grid: {
+                                color: '#666666'
+                            },
+                            angleLines: {
+                                color: ''
+                            },
+                            ticks: {
+                                color: '#333333',
+                                font: {
+                                    size: 20
+                                }
+                            }
+                        },
+                        y: {
+                            pointLabels: {
+                                color: '#333333',
+                                font: {
+                                    size: 18
+                                }
+                            },
+                            grid: {
+                                color: '#666666'
+                            },
+                            angleLines: {
+                                color: ''
+                            },
+                            ticks: {
+                                color: '#333333',
+                                font: {
+                                    size: 20
+                                }
+                            }
+                        }
+                    }
                 }
             });
 
@@ -132,15 +259,25 @@ function fetchDataAndCreateCharts() {
                             display: true,
                             color: '#333333',
                             font: {
-                                size: 30
+                                size: 25,
+                                weight: 'bold'
                             },
                             textShadowColor: 'rgba(255, 255, 255, 0.5)',
                             textShadowBlur: 5,
                             formatter: (value, context) => {
                                 return value;
                             }
+                        },
+                        legend: {
+                            labels: {
+                                font: {
+                                    size: 17,
+                                    weight: 'bold'
+                                },
+                                color: '#333333'
+                            }
                         }
-                    }
+                    },
                 }
             });
 
@@ -179,12 +316,157 @@ function fetchDataAndCreateCharts() {
                         text: 'Dog Stances by Day (Across The Week)',
                         fontSize: 24
                     },
+                    plugins: {
+                        datalabels: {
+                            display: true,
+                            color: '#333333',
+                            font: {
+                                size: 20,
+                                weight: 'bold'
+                            },
+                            textShadowColor: 'rgba(255, 255, 255, 0.5)',
+                            textShadowBlur: 5,
+                            formatter: (value, context) => {
+                                return value;
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#333333',
+                            titleColor: '#FFFFFF',
+                            bodyColor: '#FFFFFF'
+                        },
+                        legend: {
+                            labels: {
+                                font: {
+                                    size: 17,
+                                    weight: 'bold'
+                                },
+                                color: '#333333'
+                            }
+                        }
+                    },
                     scales: {
                         y: {
-                            stacked: true // Enables stacking on the Y-axis
+                            stacked: true, // Enables stacking on the Y-axis
+                            pointLabels: {
+                                color: '#333333',
+                                font: {
+                                    size: 20
+                                }
+                            },
+                            grid: {
+                                color: '#666666'
+                            },
+                            ticks: {
+                                color: '#333333',
+                                font: {
+                                    size: 20
+                                }
+                            }
                         },
                         x: {
-                            stacked: true // Enables stacking on the X-axis
+                            stacked: true, // Enables stacking on the X-axis
+                            pointLabels: {
+                                color: '#333333',
+                                font: {
+                                    size: 20
+                                }
+                            },
+                            grid: {
+                                color: '#666666'
+                            },
+                            ticks: {
+                                color: '#333333',
+                                font: {
+                                    size: 20
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Create the Stance+Position With/Without Kong Radar chart
+            var chart_stance_position = new Chart(ctx_stance_position, {
+                type: 'radar',
+                data: {
+                    labels: data.top_stance_position_combos.map(item => item[0]), // Stance + Position
+                    datasets: [
+                        {
+                            label: 'With Kong',
+                            data: data.top_stance_position_combos.map(item => item[1]), // Count with Kong
+                            backgroundColor: 'rgba(0, 128, 0, 0.5)', // Teal-ish green
+                            borderColor: 'rgba(0, 128, 0, 1)',
+                            borderWidth: 2,
+                            pointBackgroundColor: 'rgba(75, 192, 192, 1)' // Sky blue
+                        },
+                        {
+                            label: 'Without Kong',
+                            data: data.top_stance_position_combos.map(item => item[2]), // Count without Kong
+                            backgroundColor: 'rgba(220, 20, 60, 0.5)', // Crimson-ish red
+                            borderColor: 'rgba(220, 20, 60, 1)',
+                            borderWidth: 2,
+                            pointBackgroundColor: 'rgba(255, 99, 132, 1)' // Red
+                        }
+                    ]
+                },
+                options: {
+                    responsive: false,
+                    title: {
+                        display: true,
+                        text: 'Most Common General Behaviors - Comparison',
+                        fontSize: 24,
+                        fontColor: '#333333'
+                    },
+                    plugins: {
+                        datalabels: {
+                            display: true,
+                            color: '#333333',
+                            font: {
+                                size: 20,
+                                weight: 'bold'
+                            },
+                            textShadowColor: 'rgba(255, 255, 255, 0.5)',
+                            textShadowBlur: 5,
+                            formatter: (value, context) => {
+                                return value;
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#333333',
+                            titleColor: '#FFFFFF',
+                            bodyColor: '#FFFFFF'
+                        },
+                        legend: {
+                            labels: {
+                                font: {
+                                    size: 17,
+                                    weight: 'bold'
+                                },
+                                color: '#333333'
+                            }
+                        }
+                    },
+                    scales: {
+                        r: {
+                            pointLabels: {
+                                color: '#333333',
+                                font: {
+                                    size: 20
+                                }
+                            },
+                            grid: {
+                                color: '#666666'
+                            },
+                            angleLines: {
+                                color: ''
+                            },
+                            ticks: {
+                                color: '#333333',
+                                font: {
+                                    size: 20
+                                }
+                            }
                         }
                     }
                 }

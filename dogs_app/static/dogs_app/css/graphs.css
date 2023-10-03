@@ -21,13 +21,17 @@ body {
 }
 
 .chart-container-without-kong {
-    background-color: #ADD8E6;  /* Light Blue */
+    background-color: #98FB98;  /* Pale Green */
 }
 
 .chart-container-breeds {
     background-color: #FAF3E0;  /* Light Gray */
 }
 
+.chart-container-stance-pos {
+    /*background-color: #FFE4E1;  !* Misty Rose *!*/
+    background-color: #ADD8E6;  /* Light Blue */
+}
 
 /* Title container styling */
 .title-container {
@@ -111,4 +115,29 @@ h1 {
     width: 30rem;
     display: block;
     box-sizing: border-box;
+}
+
+.with-color {
+    color: green;
+}
+
+.without-color {
+    color: red;
+}
+
+.with-kong-color {
+    color: rgba(75, 192, 192, 1);
+}
+
+.without-kong-color {
+    color: rgba(255, 99, 132, 1);
+}
+
+#stance-pos-title {
+    margin-top: -1rem;
+    margin-right: 0;
+}
+
+#chart_dogStance_dogPosition_with_without {
+    margin-bottom: 2rem;
 }

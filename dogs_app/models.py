@@ -1,5 +1,4 @@
 import os
-
 import pytz
 from django.db import models
 from django.utils import timezone
@@ -351,7 +350,7 @@ class DogStance(models.Model):
         ('STANDING', 'Standing'),
         ('SITTING', 'Sitting'),
         ('WALKING_AROUND', 'Walking Around'),
-        ('SLEEPING_LYING', 'Sleeping/Lying'),
+        ('SLEEPING_LYING', 'Sleeping/Laying'),
         ('EATING', 'Eating'),
         ('DRINKING', 'Drinking'),
         ('UNDER', 'Under'),
@@ -363,11 +362,11 @@ class DogStance(models.Model):
     ]
 
     DOG_LOCATION_CHOICES = [
-        ('FLOOR', 'Floor'),
-        ('BENCH', 'Bench'),
+        ('FLOOR', 'On Floor'),
+        ('BENCH', 'On Bench'),
         ('ONBARS', 'On Bars'),
-        ('WALLTOWALL', 'Wall to Wall'),
-        ('ELSE', 'Else'),
+        ('WALLTOWALL', 'From Wall to Wall'),
+        ('ELSE', 'And Else'),
     ]
 
     observation = models.ForeignKey('Observation', on_delete=models.SET_NULL, null=True)

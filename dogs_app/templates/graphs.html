@@ -18,20 +18,54 @@
                 <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1" aria-label="Slide 2"></button>
                 <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2" aria-label="Slide 3"></button>
                 <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="3" aria-label="Slide 4"></button>
+                <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="4" aria-label="Slide 5"></button>
             </div>
             <div class="carousel-inner">
                 <div class="carousel-item active">
+                    <div class="card chart-container chart-container-stance-pos d-block w-100">
+                        <div class="card-body">
+                            <h2 class="card-title" id="stance-pos-title">
+                                Most Common General Behaviors -
+                                <br>Comparison
+                                <span class="with-color">
+                                    With
+                                </span>
+                                /
+                                <span class="without-color">
+                                    Without
+                                </span>
+                                Kongs
+                            </h2>
+                            <canvas id="chart_dogStance_dogPosition_with_without" width="800" height="450"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item">
                     <div class="card chart-container chart-container-day d-block w-100">
                         <div class="card-body">
                             <h2 class="card-title">Dog Stances by Day (Across The Week)</h2>
-                            <canvas id="chart_dogStances_by_day"></canvas>
+                            <canvas id="chart_dogStances_by_day"  width="800" height="450"></canvas>
                         </div>
                     </div>
                 </div>
                 <div class="carousel-item">
                     <div class="card chart-container chart-container-with-kong d-block w-100">
                         <div class="card-body">
-                            <h2 class="card-title">Dog Stances with Kong</h2>
+                            <select id="year-select">
+                                <option value="2023">2023</option>
+                                <option value="2022">2022</option>
+                                <option value="2021">2021</option>
+                                <option value="2020">2020</option>
+                                <option value="2019">2019</option>
+                                <option value="2018">2018</option>
+                            </select>
+                            <h2 class="card-title">
+                                Dog Stances
+                                <span class="with-kong-color">
+                                    With
+                                </span>
+                                 Kong
+                            </h2>
                             <canvas id="chart_dogStances_with_kong"></canvas>
                         </div>
                     </div>
@@ -39,7 +73,21 @@
                 <div class="carousel-item">
                     <div class="card chart-container chart-container-without-kong d-block w-100">
                         <div class="card-body">
-                            <h2 class="card-title">Dog Stances without Kong</h2>
+                            <select id="year-select">
+                                <option value="2023">2023</option>
+                                <option value="2022">2022</option>
+                                <option value="2021">2021</option>
+                                <option value="2020">2020</option>
+                                <option value="2019">2019</option>
+                                <option value="2018">2018</option>
+                            </select>
+                            <h2 class="card-title">
+                                Dog Stances
+                                <span class="without-kong-color">
+                                    Without
+                                </span>
+                                Kong
+                            </h2>
                             <canvas id="chart_dogStances_without_kong"></canvas>
                         </div>
                     </div>
@@ -71,8 +119,7 @@
         const chartDataUrl = '{% url 'dogs_app:chart_data' %}';
     </script>
 
-    <!-- ChartJS Plugin for Data Labels -->
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0-rc.1"></script>
+
     <!-- Include external JS file for charts -->
     <script src="{% static 'dogs_app/js/graphs.js' %}"></script>
 

@@ -3,7 +3,7 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 from django.db.models import Prefetch
-from django.db.models import Value
+from django.db.models import Value, CharField, Count, Q
 from django.db.models.functions import Concat
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout, get_user_model, update_session_auth_hash
@@ -20,14 +20,15 @@ from .models import *
 from django.conf import settings
 import os
 from django.core import serializers
-from django.core.serializers import serialize
-from django.db.models import Count, Q
 from django.core.paginator import Paginator
 from django.template.loader import render_to_string
 from datetime import date, timedelta
 from django.db import IntegrityError
 from io import BytesIO
 from .serializers import DogSerializer
+
+
+
 
 
 # Location of the default User profile picture if they don't have a picture
@@ -831,6 +832,10 @@ def chart_data(request):
     obs_with_kong = Observation.objects.filter(isKong='Y', obsDateTime__isnull=False)
     obs_without_kong = Observation.objects.filter(isKong='N', obsDateTime__isnull=False)
 
+    # Fetch a dictionary of the top combined stance+position in DogStances,
+    # with their counts of "with" and "without" kong individually
+    top_stance_position_combos = fetch_top_stance_position_combos(obs_with_kong, obs_without_kong)
+
     # Getting breeds and their counts
     dog_breeds = Dog.objects.values('breed').annotate(total=Count('breed')).exclude(breed='').exclude(breed__isnull=True).order_by('-total')
 
@@ -857,6 +862,7 @@ def chart_data(request):
         'stances_without_kong': list(stances_without_kong),
         'dog_breeds': list(dog_breeds),
         'stance_count_by_day': stance_count_by_day,
+        'top_stance_position_combos': top_stance_position_combos,
     }
 
     return JsonResponse(data)
@@ -945,6 +951,72 @@ def get_stance_count_by_day(top_dog_stances):
         transformed_stance_count_by_day[day] = transformed_stances
 
     return transformed_stance_count_by_day
+
+
+# Helper function for fetching a top 10 list of combined dogStances + dogPositions and their counts with/without kongs
+def fetch_top_stance_position_combos(obs_with_kong, obs_without_kong):
+    # Define the mapping dictionaries for the final display
+    stance_choices_dict = dict(DogStance.DOG_STANCE_CHOICES)
+    location_choices_dict = dict(DogStance.DOG_LOCATION_CHOICES)
+
+    # Fetch a list of top stance+location combinations with kong
+    stance_pos_combo_with = DogStance.objects \
+                                .filter(observation__in=obs_with_kong) \
+                                .annotate(stance_location=Concat('dogStance',
+                                                                 Value(' + '),
+                                                                 'dogLocation',
+                                                                 output_field=CharField())) \
+                                .values('stance_location') \
+                                .annotate(count=Count('stance_location')) \
+                                .order_by('-count')[:10]
+
+    # Fetch a list of top stance+location combinations with kong
+    stance_pos_combo_without = DogStance.objects \
+                                   .filter(observation__in=obs_without_kong) \
+                                   .annotate(stance_location=Concat('dogStance',
+                                                                    Value(' + '),
+                                                                    'dogLocation',
+                                                                    output_field=CharField())) \
+                                   .values('stance_location') \
+                                   .annotate(count=Count('stance_location')) \
+                                   .order_by('-count')[:10]
+
+    # Replace the values in the QuerySets for both lists
+    for stance in stance_pos_combo_with:
+        stance_db, location_db = stance['stance_location'].split(' + ')
+        location_display = location_choices_dict.get(location_db, '')
+        stance[
+            'stance_location'] = f"{stance_choices_dict[stance_db]} {location_display}".strip()
+
+    for stance in stance_pos_combo_without:
+        stance_db, location_db = stance['stance_location'].split(' + ')
+        location_display = location_choices_dict.get(location_db, '')
+        stance[
+            'stance_location'] = f"{stance_choices_dict[stance_db]} {location_display}".strip()
+
+    # Union of both lists keys
+    unique_keys = set([item['stance_location'] for item in stance_pos_combo_with] + [item['stance_location'] for item in
+                                                                                     stance_pos_combo_without])
+
+    # Initialize dictionaries with zeros
+    dict_with = {key: 0 for key in unique_keys}
+    dict_without = {key: 0 for key in unique_keys}
+
+    # Populate the dictionaries with actual counts
+    for item in stance_pos_combo_with:
+        dict_with[item['stance_location']] = item['count']
+
+    for item in stance_pos_combo_without:
+        dict_without[item['stance_location']] = item['count']
+
+    # Create a list containing the unique combinations and their counts in both lists
+    combined_list = [(key, dict_with[key], dict_without[key]) for key in unique_keys]
+
+    # Sort the list based the sum of both counts for sorting
+    combined_list.sort(key=lambda x: x[1] + x[2], reverse=True)
+
+    # Return the combined top 10 Stance+Position combos and the counts for both with and without kong
+    return combined_list[:10]
 
 
 # Helper function to filter out unwanted attributes.
