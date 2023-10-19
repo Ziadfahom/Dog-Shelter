@@ -5,6 +5,11 @@
     <link href="{% static 'dogs_app/css/view_observations.css' %}" rel="stylesheet">
     <!-- DateTime styling -->
     <link href="{% static 'dogs_app/css/_datetime_picker.css' %}" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
     <!-- Header -->
     <div class="header">
@@ -37,7 +42,7 @@
                     <th>Edit/Delete</th>
                 </tr>
             </thead>
-            <tbody class="table-group-divider">
+            <tbody class="table-group-divider" id="divider">
                 {% for observation in paginated_observations %}
                     {% include '_observation_row.html' %}
                 {% empty %}
@@ -136,5 +141,59 @@
         }
     </script>
     <script src="{% static 'dogs_app/js/view_observations.js' %}"></script>
+    <script>
+            var table = document.getElementById('observations-table');
+            
+            for (var r = 1, n = table.rows.length; r < n; r++) {
+              var element = table.rows[r].cells[4]; //video url
+              if(element!=null) {
+                // Make sure we have files to use
+              
+              const video = document.createElement("video");
+              var file = new Blob([element.innerText],{"type" : "video\/mp4"}); 
+              var value = URL.createObjectURL(file);
+              console.log(file);
+
+              video.autoplay = false;
+              video.controls = true;
+              
+              video.addEventListener("load", () => {
+                URL.revokeObjectURL(urlObj);
+              });
+            
+              // Append the video element
+              const box = document.getElementById("divider");
+
+              box.appendChild(video);
+            
+              // Allow us to control the video
+              video.controls = "true";
+              video.height = 240;
+              video.width = 320;
+            }
+
+
+                /* console.log(element.innerText); //check
+                {
+                // Create a blob that we can use as an src for our audio element
+                const urlObj = createObjectURL(element);
+                console.log(element.innerText);
+                // Create a video element
+              
+                // Clean up the URL Object after we are done with it
+                video.addEventListener("load", () => {
+                  URL.revokeObjectURL(urlObj);
+                });
+              
+                // Append the video element
+                document.body.appendChild(video);
+              
+                // Allow us to control the audio
+                video.controls = "true";
+              
+                // Set the src and start loading the video from the file
+                video.src = urlObj;*/
+            }
+    </script>
 
 {% endblock %}
