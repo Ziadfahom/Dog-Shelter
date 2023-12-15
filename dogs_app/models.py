@@ -46,7 +46,7 @@ class Owner(models.Model):
     ownerID = models.CharField(max_length=9, blank=True, null=True)
     ownerAddress = models.CharField(max_length=70, blank=True, null=True)
     city = models.CharField(max_length=50, blank=True, null=True)
-    phoneNum = models.CharField(max_length=9, blank=True, null=True)
+    phoneNum = models.CharField(max_length=9, blank=True, null=True, unique=True)
     cellphoneNum = models.CharField(max_length=10, blank=True, null=True)
     comments = models.CharField(max_length=200, blank=True, null=True)
 
@@ -72,8 +72,7 @@ class Owner(models.Model):
 class Dog(models.Model):
     GENDER_CHOICES = [
         ('M', 'Male'),
-        ('F', 'Female'),
-        ('', '-')
+        ('F', 'Female')
     ]
 
     IS_NEUTERED_CHOICES = [

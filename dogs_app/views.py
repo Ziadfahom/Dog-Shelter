@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timedelta
 from openpyxl import Workbook, load_workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
@@ -23,7 +24,7 @@ from django.core import serializers
 from django.core.paginator import Paginator
 from django.template.loader import render_to_string
 from datetime import date, timedelta
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from io import BytesIO
 from .serializers import DogSerializer
 
@@ -825,6 +826,10 @@ def graphs(request):
 
 # View for the Dynamic Graphs page
 def chart_data(request):
+
+    # Prepare a dictionary in JSON for distribution of dogs by gender,  vaccination, isneutered, and isdangerous
+    health_metrics = get_health_metrics_dict()
+
     # Get all the Dogs that have received a Kong Toy
     dogs_with_kong = Dog.objects.filter(kongDateAdded__isnull=False)
 
@@ -863,6 +868,7 @@ def chart_data(request):
         'dog_breeds': list(dog_breeds),
         'stance_count_by_day': stance_count_by_day,
         'top_stance_position_combos': top_stance_position_combos,
+        'health_metrics': health_metrics,
     }
 
     return JsonResponse(data)
@@ -1038,11 +1044,70 @@ def get_unique_owners():
                                                                                        'owner__lastName')
 
 
+# Prepare a dictionary in JSON for distribution of dogs
+# by gender,  vaccination, isneutered, and isdangerous. Used for health_metrics_chart.
+def get_health_metrics_dict():
+    # Fetch required attributes of all dogs
+    dogs_data = Dog.objects.values_list('gender',  'dateOfVaccination', 'isNeutered', 'isDangerous')
+
+    # Initialize data structure
+    health_metrics_dict = {
+        'gender': {'M': 0, 'F': 0},
+        'vaccinated': {'M': {'Y': 0, 'N': 0}, 'F': {'Y': 0, 'N': 0}},
+        'neutered': {
+            'M': {'Y': {'Y': 0, 'N': 0, '-': 0}, 'N': {'Y': 0, 'N': 0, '-': 0}},
+            'F': {'Y': {'Y': 0, 'N': 0, '-': 0}, 'N': {'Y': 0, 'N': 0, '-': 0}}}
+        # 'dangerous': {
+        #     'M': {'Y': {'Y': {'Y': 0, 'N': 0, '-': 0}, 'N': {'Y': 0, 'N': 0, '-': 0}, '-': {'Y': 0, 'N': 0, '-': 0}},
+        #           'N': {'Y': {'Y': 0, 'N': 0, '-': 0}, 'N': {'Y': 0, 'N': 0, '-': 0}, '-': {'Y': 0, 'N': 0, '-': 0}}},
+        #     'F': {'Y': {'Y': {'Y': 0, 'N': 0, '-': 0}, 'N': {'Y': 0, 'N': 0, '-': 0}, '-': {'Y': 0, 'N': 0, '-': 0}},
+        #           'N': {'Y': {'Y': 0, 'N': 0, '-': 0}, 'N': {'Y': 0, 'N': 0, '-': 0}, '-': {'Y': 0, 'N': 0, '-': 0}}}}
+    }
+
+    # Loop through each dog entry to populate chart_data
+    for gender, dateOfVaccination, isNeutered, isDangerous in dogs_data:
+        # Gender can't be Null/empty
+
+        # Calculate if vaccination is within the last 365 days or not, if null set as No as well
+        if dateOfVaccination:
+            current_date = datetime.now().date()
+            delta = current_date - dateOfVaccination
+            isVaccinated = 'Y' if delta.days <= 365 else 'N'
+        else:
+            isVaccinated = 'N'
+
+        # Handle Nulls and empties
+        isNeutered = isNeutered or '-'
+        isDangerous = isDangerous or '-'
+
+        # Populate the counters
+        health_metrics_dict['gender'][gender] += 1
+        health_metrics_dict['vaccinated'][gender][isVaccinated] += 1
+        health_metrics_dict['neutered'][gender][isVaccinated][isNeutered] += 1
+        # health_metrics_dict['dangerous'][gender][isVaccinated][isNeutered][isDangerous] += 1
+
+    # def flatten_dict(d, parent_key='', sep='/'):
+    #     items = {}
+    #     for k, v in d.items():
+    #         new_key = f"{parent_key}{sep}{k}" if parent_key else k
+    #         if isinstance(v, dict):
+    #             items.update(flatten_dict(v, new_key, sep=sep))
+    #         else:
+    #             items[new_key] = v
+    #     return items
+    #
+    # flattened_dict = flatten_dict(health_metrics_dict)
+    # print(flattened_dict)
+
+    return health_metrics_dict
+
+
 # View for displaying all News in a dedicated news page
 def view_news(request):
     news_list = News.objects.all().order_by('-created_at')  # Fetch news in descending order
     context = {'news_list': news_list}
     return render(request, 'news_page.html', context)
+
 
 # View for viewing all dogs in a table
 def view_dogs(request):
@@ -1218,122 +1283,124 @@ def export_dogs_json(request):
 def export_dogs_excel(request):
     if request.method == 'POST':
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            try:
+                data = json.loads(request.body.decode('utf-8'))
+                dog_ids = data.get('dog_ids', [])
+                sort_by = data.get('sort_by', '-dateOfArrival')
 
-            data = json.loads(request.body.decode('utf-8'))
-            dog_ids = data.get('dog_ids', [])
-            sort_by = data.get('sort_by', '-dateOfArrival')
+                # Filter and sort dogs
+                dogs = Dog.objects.filter(dogID__in=dog_ids).order_by(sort_by)
 
-            # Filter and sort dogs
-            dogs = Dog.objects.filter(dogID__in=dog_ids).order_by(sort_by)
+                # Create workbook and worksheet
+                wb = Workbook()
+                ws = wb.active
+                ws.title = "Dogsheler Dogs Data"
 
-            # Create workbook and worksheet
-            wb = Workbook()
-            ws = wb.active
-            ws.title = "Dogsheler Dogs Data"
+                # Define headers and write them to the first row
+                headers = ['Chip Number', 'Name', 'Date of Birth', 'Date of Arrival',
+                           'Date of Vaccination', 'Breed', 'Gender', 'Fur Color', 'Neutered',
+                           'Dangerous', 'Image', 'Last Kong Date Given', 'Owner']
 
-            # Define headers and write them to the first row
-            headers = ['ID', 'Chip Number', 'Name', 'Date of Birth', 'Date of Arrival',
-                       'Date of Vaccination', 'Breed', 'Gender', 'Fur Color', 'Neutered',
-                       'Dangerous', 'Image', 'Last Kong Date Given', 'Owner']
+                # Styling headers with bold font and background color
+                header_font = Font(bold=True, color="FFFFFF")
+                data_font = Font(name='Arial', size=11)
 
-            # Styling headers with bold font and background color
-            header_font = Font(bold=True, color="FFFFFF")
-            data_font = Font(name='Arial', size=11)
+                # Define fills
+                header_fill = PatternFill(start_color="0070C0",
+                                          end_color="0070C0", fill_type="solid")
+                light_blue_fill = PatternFill(start_color="D9EBF5", end_color="D9EBF5", fill_type="solid")
+                light_gray_fill = PatternFill(start_color="E5E5E5", end_color="E5E5E5", fill_type="solid")
 
-            # Define fills
-            header_fill = PatternFill(start_color="0070C0",
-                                      end_color="0070C0", fill_type="solid")
-            light_blue_fill = PatternFill(start_color="D9EBF5", end_color="D9EBF5", fill_type="solid")
-            light_gray_fill = PatternFill(start_color="E5E5E5", end_color="E5E5E5", fill_type="solid")
+                # Define Center alignment
+                center_aligned = Alignment(horizontal="center", vertical="center")
 
-            # Define Center alignment
-            center_aligned = Alignment(horizontal="center", vertical="center")
+                # Define border
+                thin_border = Border(left=Side(style='thin'),
+                                     right=Side(style='thin'),
+                                     top=Side(style='thin'),
+                                     bottom=Side(style='thin'))
 
-            # Define border
-            thin_border = Border(left=Side(style='thin'),
-                                 right=Side(style='thin'),
-                                 top=Side(style='thin'),
-                                 bottom=Side(style='thin'))
+                # Header row styling
+                for col_num, header in enumerate(headers, 1):
+                    col_letter = get_column_letter(col_num)
+                    cell = ws['{}1'.format(col_letter)]
+                    cell.value = header
+                    cell.font = header_font
+                    cell.fill = header_fill
+                    cell.alignment = center_aligned
+                    cell.border = thin_border
+                    ws.column_dimensions[col_letter].width = 15 if header not in ['Gender', 'Neutered', 'Dangerous'] else 10
 
-            # Header row styling
-            for col_num, header in enumerate(headers, 1):
-                col_letter = get_column_letter(col_num)
-                cell = ws['{}1'.format(col_letter)]
-                cell.value = header
-                cell.font = header_font
-                cell.fill = header_fill
-                cell.alignment = center_aligned
-                cell.border = thin_border
-                ws.column_dimensions[col_letter].width = 15 if header not in ['ID', 'Gender', 'Neutered',
-                                                                              'Dangerous'] else 10
+                # Check if dogs queryset is empty
+                if not dogs.exists():
+                    # Merge cells from A2 to N2 (14 columns)
+                    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=13)
 
-            # Check if dogs queryset is empty
-            if not dogs.exists():
-                # Merge cells from A2 to N2 (14 columns)
-                ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=14)
+                    # Reference to the merged cell
+                    merged_cell = ws.cell(row=2, column=1)
 
-                # Reference to the merged cell
-                merged_cell = ws.cell(row=2, column=1)
+                    # Populate the merged cell
+                    merged_cell.value = "No Data Available"
 
-                # Populate the merged cell
-                merged_cell.value = "No Data Available"
+                    # Style the merged cell
+                    merged_cell.font = Font(name='Arial', size=12, bold=True)
+                    merged_cell.alignment = center_aligned
+                    merged_cell.fill = PatternFill(start_color="FFFF99", end_color="FFFF99", fill_type="solid")
+                    merged_cell.border = thin_border
 
-                # Style the merged cell
-                merged_cell.font = Font(name='Arial', size=12, bold=True)
-                merged_cell.alignment = center_aligned
-                merged_cell.fill = PatternFill(start_color="FFFF99", end_color="FFFF99", fill_type="solid")
-                merged_cell.border = thin_border
+                # Otherwise, proceed with populating Excel file with dog data and apply styles
+                else:
+                    # Populate Excel file with dog data and apply styles
+                    for row_num, dog in enumerate(dogs, 2):  # Start from row 2 to not overwrite headers
+                        for col_num in range(1, 14):  # 13 columns in total
+                            # Determine row color
+                            if row_num % 2 == 0:
+                                row_fill = light_gray_fill
+                            else:
+                                row_fill = light_blue_fill
 
-            # Otherwise, proceed with populating Excel file with dog data and apply styles
-            else:
-                # Populate Excel file with dog data and apply styles
-                for row_num, dog in enumerate(dogs, 2):  # Start from row 2 to not overwrite headers
-                    for col_num in range(1, 15):  # 14 columns in total
-                        # Determine row color
-                        if row_num % 2 == 0:
-                            row_fill = light_gray_fill
-                        else:
-                            row_fill = light_blue_fill
+                            cell = ws.cell(row=row_num, column=col_num)
 
-                        cell = ws.cell(row=row_num, column=col_num)
+                            # Populate the cell based on the column number
+                            cell.value = {
+                                1: dog.chipNum if dog.chipNum else "N/A",
+                                2: dog.dogName if dog.dogName else "N/A",
+                                3: dog.dateOfBirthEst if dog.dateOfBirthEst else "N/A",
+                                4: dog.dateOfArrival if dog.dateOfArrival else "N/A",
+                                5: dog.dateOfVaccination if dog.dateOfVaccination else "N/A",
+                                6: dog.breed if dog.breed else "N/A",
+                                7: dog.get_gender_display() if dog.gender else "N/A",
+                                8: dog.furColor if dog.furColor else "N/A",
+                                9: dog.get_isNeutered_display() if dog.isNeutered else "N/A",
+                                10: dog.get_isDangerous_display() if dog.isDangerous else "N/A",
+                                11: str(dog.dogImage) if dog.dogImage else "N/A",
+                                12: dog.kongDateAdded if dog.kongDateAdded else "N/A",
+                                13: str(dog.owner) if dog.owner else "N/A"
+                            }.get(col_num)
 
-                        # Populate the cell based on the column number
-                        cell.value = {
-                            1: dog.dogID if dog.dogID else "N/A",
-                            2: dog.chipNum if dog.chipNum else "N/A",
-                            3: dog.dogName if dog.dogName else "N/A",
-                            4: dog.dateOfBirthEst if dog.dateOfBirthEst else "N/A",
-                            5: dog.dateOfArrival if dog.dateOfArrival else "N/A",
-                            6: dog.dateOfVaccination if dog.dateOfVaccination else "N/A",
-                            7: dog.breed if dog.breed else "N/A",
-                            8: dog.get_gender_display() if dog.gender else "N/A",
-                            9: dog.furColor if dog.furColor else "N/A",
-                            10: dog.get_isNeutered_display() if dog.isNeutered else "N/A",
-                            11: dog.get_isDangerous_display() if dog.isDangerous else "N/A",
-                            12: str(dog.dogImage) if dog.dogImage else "N/A",
-                            13: dog.kongDateAdded if dog.kongDateAdded else "N/A",
-                            14: str(dog.owner) if dog.owner else "N/A"
-                        }.get(col_num)
+                            # Apply styling
+                            cell.font = data_font
+                            cell.alignment = center_aligned
+                            cell.border = thin_border
+                            cell.fill = row_fill
 
-                        # Apply styling
-                        cell.font = data_font
-                        cell.alignment = center_aligned
-                        cell.border = thin_border
-                        cell.fill = row_fill
+                # Initialize BytesIO and save workbook to it
+                excel_file = BytesIO()
+                wb.save(excel_file)
+                excel_file.seek(0)
 
-            # Initialize BytesIO and save workbook to it
-            excel_file = BytesIO()
-            wb.save(excel_file)
-            excel_file.seek(0)
+                # Prepare the HttpResponse
+                response = HttpResponse(
+                    excel_file.read(),
+                    content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                )
+                response['Content-Disposition'] = 'attachment; filename=dogs_data.xlsx'
 
-            # Prepare the HttpResponse
-            response = HttpResponse(
-                excel_file.read(),
-                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-            )
-            response['Content-Disposition'] = 'attachment; filename=dogs_data.xlsx'
-
-            return response
+                return response
+            except Exception as e:
+                # Handling any exception that occurs during export
+                error_message = f"Export failed due to error: {str(e)}"
+                return JsonResponse({'status': 'error', 'message': error_message}, status=400)
         else:
             return JsonResponse({'error': 'Not an AJAX request'}, status=400)
     else:
@@ -1349,46 +1416,93 @@ def import_dogs_excel(request):
                 wb = load_workbook(excel_file)
                 ws = wb.active
 
-                row = ws[2]  # Get the row containing the first dog entry
+                dog_count = 0  # Initialize a counter for imported dogs
 
-                def local_path_to_url(local_path):
-                    return
+                # Start the transaction block
+                with transaction.atomic():
+                    # Iterate through each row in the worksheet
+                    for row_number, row in enumerate(ws.iter_rows(min_row=2), start=2):
+                        try:
+                            # Validate Data First
+                            gender_value = ''
+                            is_neutered_value = ''
+                            is_dangerous_value = ''
 
-                #Validate Data First
-                gender_value = 'M' if row[7].value == 'Male' else 'F' if row[7].value == 'Female' else ''
-                is_neutered_value = 'Y' if row[9].value == 'Yes' else 'N' if row[9].value == 'No' else ''
-                is_dangerous_value = 'Y' if row[10].value == 'Yes' else 'N' if row[10].value == 'No' else ''
-                # dog_image_url = None if row[11].value is None else '/static/img/' + row[11].value
-                dog_image_url = None # TO-DO Work on Images
+                            if row[6].value:
+                                gender_value = 'M' if row[6].value.lower() in ['male', 'm'] or row[6].value in ['זכר', 'ז'] \
+                                    else 'F' if row[6].value.lower() in ['female', 'f'] or row[6].value in ['נקבה', 'נ'] \
+                                    else ''
+                            if row[8].value:
+                                is_neutered_value = 'Y' if row[8].value.lower() in ['yes', 'y'] or row[8].value in ['כן', 'כ'] \
+                                    else 'N' if row[8].value.lower() in ['no', 'n'] or row[8].value in ['לא', 'ל'] \
+                                    else ''
+                            if row[9].value:
+                                is_dangerous_value = 'Y' if row[9].value.lower() in ['yes', 'y'] or row[9].value in ['כן', 'כ'] \
+                                    else 'N' if row[9].value.lower() in ['no', 'n'] or row[9].value in ['לא', 'ל'] \
+                                    else ''
 
-                dog_data = {
-                    'dogID': row[0].value,
-                    'chipNum': row[1].value,
-                    'dogName': row[2].value,
-                    'dateOfBirthEst': row[3].value,
-                    'dateOfArrival': row[4].value,
-                    'dateOfVaccination': row[5].value,
-                    'breed': row[6].value,
-                    'gender': gender_value,
-                    'furColor': row[8].value,
-                    'isNeutered': is_neutered_value,
-                    'isDangerous': is_dangerous_value,
-                    'dogImage': dog_image_url,
-                    'kongDateAdded': row[12].value,
-                    'owner': None
-                    # 'owner': omitted for now
-                }
+                            date_of_arrival_value = row[3].value
+                            if not date_of_arrival_value:
+                                date_of_arrival_value = timezone.now().date()
 
-                # Validate data before saving
-                # ...
+                            # dog_image_url = None if row[10].value is None else '/static/img/' + row[10].value
+                            dog_image_url = None # TO-DO Work on Images
 
-                # Create new Dog instance and save it
-                Dog.objects.create(**dog_data)
+                            dog_data = {
+                                'chipNum': row[0].value,
+                                'dogName': row[1].value,
+                                'dateOfBirthEst': row[2].value,
+                                'dateOfArrival': date_of_arrival_value,
+                                'dateOfVaccination': row[4].value,
+                                'breed': row[5].value,
+                                'gender': gender_value,
+                                'furColor': row[7].value,
+                                'isNeutered': is_neutered_value,
+                                'isDangerous': is_dangerous_value,
+                                'dogImage': dog_image_url,
+                                'kongDateAdded': row[11].value,
+                                'owner': None
+                                # 'owner': omitted for now
+                            }
 
-                return JsonResponse({'status': 'success'}, status=200)
+                            # Attempt to create a new Dog instance
+                            new_dog = Dog(**dog_data)
+                            new_dog.full_clean()  # This will raise ValidationError for any field issues
+                            new_dog.save()
+                            # Increment dog count
+                            dog_count += 1
+
+                        except ValidationError as e:
+                            # Handling specific field validation errors
+                            error_details = "\n".join(
+                                [f"Column '{k}': {', '.join(v)}" for k, v in e.message_dict.items()])
+                            error_message = f"Import error at row {row_number}:{error_details}"
+                            raise ValueError(error_message)
+
+                        except IntegrityError as e:
+                            # Handling unique constraint violations like chipNum uniqueness
+                            error_message = f"Import error at row {row_number}:{str(e)}"
+                            raise ValueError(error_message)
+
+                    # add success message with dog count
+                    if dog_count == 1:
+                        success_message = "1 dog has been successfully imported!"
+                    else:
+                        success_message = f"{dog_count} dogs have been successfully imported!"
+                    return JsonResponse({'status': 'success', 'message': success_message}, status=200)
+            except ValueError as e:
+                # Handling custom ValueError which now includes detailed row information
+                error_message = f"Import cancelled due to error:{e}"
+                return JsonResponse({'status': 'error', 'message': error_message}, status=400)
+
             except Exception as e:
-                return JsonResponse({'error': str(e)}, status=400)
+                # General error handling
+                general_error_message = f"General error occurred: {str(e)}. Import cancelled."
+                return JsonResponse({'status': 'error', 'message': general_error_message}, status=400)
         else:
+            # If request is not AJAX, return error
             return JsonResponse({'error': 'Not an AJAX request'}, status=400)
     else:
+        # If request method is not POST, return error
         return JsonResponse({'error': 'Invalid request method'}, status=400)
+

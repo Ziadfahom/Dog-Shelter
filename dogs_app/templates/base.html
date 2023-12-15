@@ -51,14 +51,16 @@
     <!-- Allow pages flexibility to adjust the max column width size -->
     <div class="container mt-5 mb-5 {% block column_size %}col-md-8{% endblock %}">
 
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-warning alert-dismissible fade show col-md-6 offset-md-3 text-center" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
+        <div id="messageContainer">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-warning alert-dismissible fade show col-md-6 offset-md-3 text-center" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
 
         <nav aria-label="breadcrumb" >
             <ol class="breadcrumb">

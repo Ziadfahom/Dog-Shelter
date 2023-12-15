@@ -29,8 +29,11 @@ body {
 }
 
 .chart-container-stance-pos {
-    /*background-color: #FFE4E1;  !* Misty Rose *!*/
     background-color: #ADD8E6;  /* Light Blue */
+}
+
+.chart-container-health-metrics {
+    background-color: #FFE4E1;  /* Misty Rose */
 }
 
 /* Title container styling */
@@ -73,6 +76,13 @@ h1 {
     margin-bottom: 1em;
 }
 
+.card-title-metrics {
+    font-size: 1.8em;
+    text-align: center;
+    color: #333;
+    font-weight: bold;
+    align-self: center; /* Adjust vertical alignment */
+}
 /* Add styles for a hover effect on each chart */
 .chart-container:hover {
     transform: scale(1.02);

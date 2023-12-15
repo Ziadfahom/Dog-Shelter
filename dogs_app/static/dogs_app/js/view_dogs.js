@@ -105,6 +105,9 @@ function refreshTable(params, pageNumber) {
   params.page = pageNumber || 1;
   params.sort_by = params.sort_by || '-dateOfArrival';
 
+  // Dispose of existing tooltips
+  $('[data-bs-toggle="tooltip"]').tooltip('dispose');
+
   // Perform AJAX GET request to the server.
   $.ajax({
     url: '/filter/',
@@ -341,12 +344,31 @@ $(document).ready(function() {
             data: JSON.stringify({'dog_ids': filteredDogIDs, 'sort_by': sort_by}),
             contentType: 'application/json; charset=utf-8',
             headers: { 'X-CSRFToken': getCookie('csrftoken') },
-            success: function(data) {
-                let blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8' });
-                let link = document.createElement('a');
-                link.href = window.URL.createObjectURL(blob);
-                link.download = 'Shelter_dogs_data.xlsx';
-                link.click();
+            success: async function(data) {
+              let blob = new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8' });
+
+              // File handler & file stream
+              const fileHandle = await window.showSaveFilePicker({
+                suggestedName: 'Shelter_dogs_data.xlsx',
+                types: [{
+                  description: "Excel file",
+                  accept: {"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"]}
+                }]
+              });
+              const fileStream = await fileHandle.createWritable();
+
+              // Write file
+              await fileStream.write(blob);
+              await fileStream.close();
+            },
+            error: function(response) {
+                let errorMessage = response.responseJSON && response.responseJSON.message ? response.responseJSON.message : 'Unknown error occurred during export.';
+                // Create error message div and append it to the message area
+                var errorDiv = $('<div/>')
+                    .addClass('alert alert-danger alert-dismissible fade show col-md-6 offset-md-3 text-center')
+                    .text(errorMessage)
+                    .append('<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>');
+                $('#messageContainer').append(errorDiv);
             },
             xhrFields: {
                 responseType: 'arraybuffer'
@@ -371,13 +393,32 @@ $(document).ready(function() {
             processData: false,
             contentType: false,
             success: function(response) {
+                if (response.status === 'success') {
+                    // Create message div and append it to the message area
+                    var messageDiv = $('<div/>')
+                        .addClass('alert alert-success alert-dismissible fade show col-md-6 offset-md-3 text-center')
+                        .text(response.message)
+                        .append('<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>');
+                    $('#messageContainer').append(messageDiv);
 
+                    // Set timeout to remove the message after 5 seconds (5000 milliseconds)
+                    setTimeout(function() {
+                        messageDiv.alert('close');
+                    }, 5000);
+                }
                 refreshTable(params, 1);
                 $('#excelFileInput').val('');  // Reset file input
 
             },
             error: function(response) {
-                // Handle error
+                let errorMessage = response.responseJSON && response.responseJSON.message ? response.responseJSON.message : 'Unknown error occurred during import.';
+                // Create error message div and append it to the message area
+                var errorDiv = $('<div/>')
+                    .addClass('alert alert-danger alert-dismissible fade show col-md-6 offset-md-3 text-center')
+                    .text(errorMessage)
+                    .append('<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>');
+                $('#messageContainer').append(errorDiv);
+
                 $('#excelFileInput').val('');  // Reset file input
             }
         });
