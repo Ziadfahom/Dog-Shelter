@@ -43,10 +43,10 @@ class Owner(models.Model):
     firstName = models.CharField(max_length=50)
     lastName = models.CharField(max_length=50, blank=True, null=True)
     # The actual ID number of the person
-    ownerID = models.CharField(max_length=9, blank=True, null=True)
+    ownerID = models.CharField(max_length=9, blank=True, null=True, unique=True)
     ownerAddress = models.CharField(max_length=70, blank=True, null=True)
     city = models.CharField(max_length=50, blank=True, null=True)
-    phoneNum = models.CharField(max_length=9, blank=True, null=True, unique=True)
+    phoneNum = models.CharField(max_length=9, blank=True, null=True)
     cellphoneNum = models.CharField(max_length=10, blank=True, null=True)
     comments = models.CharField(max_length=200, blank=True, null=True)
 

@@ -143,29 +143,29 @@
     <script src="{% static 'dogs_app/js/view_observations.js' %}"></script>
     <script>
             var table = document.getElementById('observations-table');
-            
+
             for (var r = 1, n = table.rows.length; r < n; r++) {
               var element = table.rows[r].cells[4]; //video url
               if(element!=null) {
                 // Make sure we have files to use
-              
+
               const video = document.createElement("video");
-              var file = new Blob([element.innerText],{"type" : "video\/mp4"}); 
+              var file = new Blob([element.innerText],{"type" : "video\/mp4"});
               var value = URL.createObjectURL(file);
               console.log(file);
 
               video.autoplay = false;
               video.controls = true;
-              
+
               video.addEventListener("load", () => {
                 URL.revokeObjectURL(urlObj);
               });
-            
+
               // Append the video element
               const box = document.getElementById("divider");
 
               box.appendChild(video);
-            
+
               // Allow us to control the video
               video.controls = "true";
               video.height = 240;
@@ -179,18 +179,18 @@
                 const urlObj = createObjectURL(element);
                 console.log(element.innerText);
                 // Create a video element
-              
+
                 // Clean up the URL Object after we are done with it
                 video.addEventListener("load", () => {
                   URL.revokeObjectURL(urlObj);
                 });
-              
+
                 // Append the video element
                 document.body.appendChild(video);
-              
+
                 // Allow us to control the audio
                 video.controls = "true";
-              
+
                 // Set the src and start loading the video from the file
                 video.src = urlObj;*/
             }

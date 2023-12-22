@@ -35,6 +35,9 @@ from .serializers import DogSerializer
 # Location of the default User profile picture if they don't have a picture
 DEFAULT_IMAGE_SOURCE = '/profile_pictures/default.jpg'
 
+# Location of the default Dog picture if they don't have a picture
+DEFAULT_DOG_IMAGE_SOURCE = '/dog_pictures/default_dog.jpg'
+
 # CONSTANTS
 # Number of Dogs/Users/Table Entries we want displayed in a single page across all Paginators
 ENTRIES_PER_PAGE = 10
@@ -1424,14 +1427,14 @@ def import_dogs_excel(request):
                     for row_number, row in enumerate(ws.iter_rows(min_row=2), start=2):
                         try:
                             # Validate Data First
-                            gender_value = ''
+                            gender_value = 'M'
                             is_neutered_value = ''
                             is_dangerous_value = ''
 
                             if row[6].value:
                                 gender_value = 'M' if row[6].value.lower() in ['male', 'm'] or row[6].value in ['זכר', 'ז'] \
                                     else 'F' if row[6].value.lower() in ['female', 'f'] or row[6].value in ['נקבה', 'נ'] \
-                                    else ''
+                                    else 'M'
                             if row[8].value:
                                 is_neutered_value = 'Y' if row[8].value.lower() in ['yes', 'y'] or row[8].value in ['כן', 'כ'] \
                                     else 'N' if row[8].value.lower() in ['no', 'n'] or row[8].value in ['לא', 'ל'] \
@@ -1506,3 +1509,173 @@ def import_dogs_excel(request):
         # If request method is not POST, return error
         return JsonResponse({'error': 'Invalid request method'}, status=400)
 
+
+# View for handling JSON file imports in view_dogs page
+def import_dogs_json(request):
+    if request.method == 'POST':
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            try:
+                json_file = request.FILES['json_file']
+                data = json.load(json_file)['data']
+
+                dog_count = 1  # Initialize a counter for imported dogs
+
+                # Start the transaction block
+                with transaction.atomic():
+                    # Iterate through each dog in the data
+                    for dog_info in data:
+                        try:
+                            # Remove dogID from the data, hold the rest of the associated entities
+                            dog_info.pop('dogID', None)
+
+                            # Hold the rest of the associated entities
+                            owner_info = dog_info.pop('owner', None)
+                            treatments_info = dog_info.pop('treatments', [])
+                            examinations_info = dog_info.pop('entranceExaminations', [])
+                            dogPlacements_info = dog_info.pop('dogPlacements', [])
+                            observes_info = dog_info.pop('observes', [])
+
+                            # Default 'dateOfArrival' to today if not provided
+                            if not dog_info.get('dateOfArrival'):
+                                dog_info['dateOfArrival'] = timezone.now().date().isoformat()
+
+                            # Handle 'owner' field
+                            owner = None  # In case we don't need to associate Dog with an Owner
+                            if owner_info:
+                                owner_info.pop('ownerSerialNum', None)  # Remove ownerSerialNum which is PK auto field
+                                owner_id = owner_info.get('ownerID', None)
+
+                                if owner_id:
+                                    # If ownerID is provided, use get_or_create
+                                    owner, created = Owner.objects.get_or_create(
+                                        ownerID=owner_id,
+                                        defaults={k: v for k, v in owner_info.items()}
+                                    )
+
+                                    if not created:
+                                        # If owner already exists, update the owner info
+                                        for k, v in owner_info.items():
+                                            setattr(owner, k, v)
+                                        owner.save()
+                                else:
+                                    # ownerID not provided, create an owner without one
+                                    owner = Owner(**owner_info)
+                                    owner.save()
+
+                            # Extract and validate dog data from dog_info
+                            # Create Dog instance and save
+                            new_dog = Dog(**dog_info, owner=owner)
+                            new_dog.full_clean()
+                            new_dog.save()
+
+                            # Handle 'treatment' field
+                            for treatment_info in treatments_info:
+                                treatment_info.pop('treatmentID', None)
+                                new_treatment = Treatment(**treatment_info, dog=new_dog)
+                                new_treatment.full_clean()  # Validate the treatment data
+                                new_treatment.save()
+
+                            # Handle 'entranceExamination' field
+                            for examination_info in examinations_info:
+                                examination_info.pop('examinationID', None)
+                                new_examination = EntranceExamination(**examination_info, dog=new_dog)
+                                new_examination.full_clean()
+                                new_examination.save()
+
+                            # Handle 'dogPlacement' field
+                            for dogPlacement_info in dogPlacements_info:
+                                kennel_num = dogPlacement_info.pop('kennelNum', None)
+                                kennel_image = dogPlacement_info.pop('kennelImage', None)
+
+                                kennel = None
+
+                                if kennel_num:
+                                    kennel, created = Kennel.objects.get_or_create(
+                                        kennelNum=kennel_num,
+                                        defaults={'kennelImage': kennel_image}
+                                    )
+
+                                    if not created:
+                                        # If kennel already exists, update the kennel info
+                                        kennel.kennelImage = kennel_image
+                                        kennel.save()
+
+                                new_dogPlacement = DogPlacement(**dogPlacement_info, dog=new_dog, kennel=kennel)
+                                new_dogPlacement.full_clean()
+                                new_dogPlacement.save()
+
+                            # Handle 'observes' field
+                            for observes_data in observes_info:
+                                camID = observes_data.pop('camID', None)
+                                observations_info = observes_data.pop('observations', [])
+
+                                # Default 'sessionDate' to today if not provided
+                                if not observes_data.get('sessionDate'):
+                                    observes_data['sessionDate'] = timezone.now().date().isoformat()
+
+                                camera = None
+                                if camID:
+                                    camera, created = Camera.objects.get_or_create(camID=camID)
+
+                                new_observes = Observes(**observes_data, dog=new_dog, camera=camera)
+                                new_observes.full_clean()
+                                new_observes.save()
+
+                                # Handle 'observation' field
+                                for observation_data in observations_info:
+
+                                    # Default 'obsDateTime' to today if not provided
+                                    if not observation_data.get('obsDateTime'):
+                                        observation_data['obsDateTime'] = timezone.now().date().isoformat()
+
+                                    dogStances_info = observation_data.pop('dogStances', [])
+
+                                    new_observation = Observation(**observation_data, observes=new_observes)
+                                    new_observation.full_clean()
+                                    new_observation.save()
+
+                                    # Handle 'dogStance' field
+                                    for dogStance_data in dogStances_info:
+
+                                        new_dogStance = DogStance(**dogStance_data, observation=new_observation)
+                                        new_dogStance.full_clean()
+                                        new_dogStance.save()
+
+                        except ValidationError as e:
+                            # Handling specific field validation errors
+                            error_details = "\n".join(
+                                [f"Field '{k}': {', '.join(v)}" for k, v in e.message_dict.items()])
+                            error_message = f"Dog #{dog_count}, {error_details}"
+                            raise ValueError(error_message)
+
+                        except IntegrityError as e:
+                            # Handling unique constraint violations like chipNum uniqueness
+                            error_message = f"Dog #{dog_count}, {str(e)}"
+                            raise ValueError(error_message)
+
+                        dog_count += 1  # Increment after each successful processing
+
+                    # add success message with dog count
+                    if dog_count == 1:  # No dogs were successfully imported
+                        success_message = ("Import Completed: No new dogs were added. "
+                                           "Please check the data for accuracy or duplication.")
+                    elif dog_count == 2:  # Since we start count from 1, 2 means only 1 dog processed
+                        success_message = "1 dog has been successfully imported!"
+                    else:
+                        success_message = f"{dog_count - 1} dogs have been successfully imported!"
+                    return JsonResponse({'status': 'success', 'message': success_message}, status=200)
+            except ValueError as e:
+                # Handling custom ValueError which now includes detailed row information
+                error_message = f"Import Cancelled: Error Detected - {e}"
+                return JsonResponse({'status': 'error', 'message': error_message}, status=400)
+
+            except Exception as e:
+                # General error handling
+                general_error_message = f"General error occurred: {str(e)}. Import cancelled."
+                return JsonResponse({'status': 'error', 'message': general_error_message}, status=400)
+        else:
+            # If request is not AJAX, return error
+            return JsonResponse({'error': 'Not an AJAX request'}, status=400)
+    else:
+        # If request method is not POST, return error
+        return JsonResponse({'error': 'Invalid request method'}, status=400)

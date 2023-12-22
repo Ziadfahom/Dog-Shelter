@@ -320,9 +320,23 @@ $(document).ready(function() {
                   type: 'POST',
                   data: {'dog_ids': JSON.stringify(filteredDogIDs)},
                   headers: { 'X-CSRFToken': getCookie('csrftoken') },
-                  success: function(data) {
-                      downloadJSON(data, 'Shelter_dogs_data.json');
-                  }
+                  success: async function(data) {
+                     let blob = new Blob([JSON.stringify(data)], { type: 'application/json;charset=utf-8' });
+
+                     // File handler & file stream
+                     const fileHandle = await window.showSaveFilePicker({
+                       suggestedName: 'Shelter_dogs_data.json',
+                       types: [{
+                         description: "JSON file",
+                         accept: {"application/json": [".json"]}
+                       }]
+                     });
+                     const fileStream = await fileHandle.createWritable();
+
+                     // Write file
+                     await fileStream.write(blob);
+                     await fileStream.close();
+                    },
               });
           }
       });
@@ -423,6 +437,53 @@ $(document).ready(function() {
             }
         });
     });
+
+    // Importing Dog entities from JSON
+    $('#jsonFileInput').change(function() {
+       let params = getURLParameters();
+       let jsonFileInput = document.getElementById('jsonFileInput');
+       let formData = new FormData();
+       formData.append('json_file', jsonFileInput.files[0]);
+
+       $.ajax({
+           url: '/import_dogs_json/',
+           type: 'POST',
+           data: formData,
+           headers: { 'X-CSRFToken': getCookie('csrftoken') },
+           processData: false,
+           contentType: false,
+           success: function(response) {
+               if (response.status === 'success') {
+                   // Create message div and append it to the message area
+                   var messageDiv = $('<div/>')
+                      .addClass('alert alert-success alert-dismissible fade show col-md-6 offset-md-3 text-center')
+                      .text(response.message)
+                      .append('<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>');
+                   $('#messageContainer').append(messageDiv);
+
+                   // Set timeout to remove the message after 5 seconds (5000 milliseconds)
+                   setTimeout(function() {
+                      messageDiv.alert('close');
+                   }, 5000);
+               }
+               refreshTable(params, 1);
+               $('#jsonFileInput').val(''); // Reset file input
+
+           },
+           error: function(response) {
+               let errorMessage = response.responseJSON && response.responseJSON.message ? response.responseJSON.message : 'Unknown error occurred during import.';
+               // Create error message div and append it to the message area
+               var errorDiv = $('<div/>')
+                   .addClass('alert alert-danger alert-dismissible fade show col-md-6 offset-md-3 text-center')
+                   .text(errorMessage)
+                   .append('<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>');
+               $('#messageContainer').append(errorDiv);
+
+               $('#jsonFileInput').val(''); // Reset file input
+           }
+       });
+    });
+
 });
 
 
@@ -442,14 +503,3 @@ function getCookie(name) {
   return cookieValue;
 }
 
-
-function downloadJSON(data, filename) {
-
-    let blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-    let url = window.URL.createObjectURL(blob);
-    let a = document.createElement('a');
-    a.setAttribute('href', url);
-    a.setAttribute('download', filename);
-    a.click();
-    window.URL.revokeObjectURL(url);
-}

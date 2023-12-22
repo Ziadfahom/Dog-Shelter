@@ -30,11 +30,14 @@
 
                 <div class="dropdown-divider padded-divider"></div>
 
-                <!-- TO-DO: make them functional. -->
                 <h6 class="dropdown-header">
                     <i class="fas fa-download"></i> Import
                 </h6>
-                <a class="dropdown-item" href="#" id="importJsonButton">
+
+                <!-- Hidden file input to upload JSON file -->
+                <input type="file" id="jsonFileInput" style="display: none;" accept=".json"/>
+
+                <a class="dropdown-item" href="#" id="importJsonButton" onclick="document.getElementById('jsonFileInput').click();">
                     <i class="fas fa-file-code"></i> Import from JSON
                 </a>
 

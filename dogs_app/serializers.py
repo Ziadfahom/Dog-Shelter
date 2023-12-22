@@ -1,3 +1,6 @@
+from django.utils import timezone
+
+
 class DogSerializer:
     """
     Serializer class for handling the serialization of the Dog model
@@ -103,7 +106,9 @@ class DogSerializer:
         """
         return [
             {
-                'obsDateTime': observation.obsDateTime,
+                'obsDateTime': timezone.localtime(observation.obsDateTime,
+                                                  timezone=timezone.get_current_timezone()).strftime(
+                    "%Y-%m-%d %H:%M:%S"),
                 'sessionDurationInMins': observation.sessionDurationInMins,
                 'isKong': observation.isKong,
                 'jsonFile': str(observation.jsonFile),

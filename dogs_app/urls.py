@@ -27,5 +27,6 @@ urlpatterns = [
     path('get_filtered_dog_ids/', views.get_filtered_dog_ids, name='get_filtered_dog_ids'),
     path('export_dogs_excel/', views.export_dogs_excel, name='export_dogs_excel'),
     path('import_dogs_excel/', views.import_dogs_excel, name='import_dogs_excel'),
+    path('import_dogs_json/', views.import_dogs_json, name='import_dogs_json'),
 
 ]
