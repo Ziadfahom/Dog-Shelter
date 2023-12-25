@@ -21,6 +21,7 @@ document.getElementById('id_image').addEventListener('change', function(e) {
 
 $('#profile_picture').click(function() {
     var imgSrc = $(this).attr('src');
+    console.log(imgSrc)
     $('#modal_image').attr('src', imgSrc);
     $('#imageModal').modal('show');
 });

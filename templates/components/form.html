@@ -1,0 +1,36 @@
+{% load widget_tweaks %}
+<div>
+    {% if form.non_field_errors %}
+    <ul class="bg-danger rounded p-4 text-white mb-5">
+        {% for error in form.non_field_errors %}
+        <li class="form-errors">{{ error }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    
+    {% for hidden_field in form.hidden_fields %}
+        {{ hidden_field.errors }}
+        {{ hidden_field }}
+    {% endfor %}
+
+    {% for field in form.visible_fields %}
+        <div class="mb-4">
+            <label for="{{field.name}}" class="form-label me-2 mb-1 fw-bold">{{field.label|title}}</label>
+            <span class="text-muted">
+                {% if field.help_text %}
+                    {{field.help_text}}
+                {% endif %}
+                </span>
+            {% if field.errors %}
+                {% render_field field class="form-control border border-danger" id=field.name %}
+                <div class="text-danger py-2">
+                    <span>{{ field.errors.0 }}</span>
+                </div>  
+            {% elif field.field.widget.input_type == 'checkbox' %}
+            {% render_field field class="form-check d-inline-block align-middle" id=field.name %}
+            {% else %}
+            {% render_field field class="form-control form-control-lg" id=field.name %}
+        </div>
+            {% endif %} 
+    {% endfor %}
+</div>

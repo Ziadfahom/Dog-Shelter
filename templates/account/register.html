@@ -1,0 +1,52 @@
+{% extends 'base.html' %} {% load dog_filters %} {% load static %} 
+
+
+{% block head %}
+    <title>DogsWatch | Register</title>
+{% endblock %} 
+
+{% block nav %} {% endblock %} 
+{% block breadcrumb %} {% endblock %}
+
+<div class="container-fluid">
+  {% block content %} 
+
+  <section class="w-100 wrapper">
+    <div class="container h-100">
+      <div class="row d-flex justify-content-center align-items-center h-100">
+        <div class="col-12 col-md-8 col-xl-6">
+          <div class="card bg-white text-black shadowed my-5" style="border-radius: 1rem">
+            <div class="card-body p-5">
+              <div class="mb-5">
+                {% include 'components/logo.html' %}
+              </div>
+              <div class="mb-md-5 mt-md-4 pb-5">
+                <div class="">
+                    <h2 class="fw-bold mb-2">Get Started</h2>
+                    <p class="text-dark-50 mb-5">Please fill in the following details.</p>
+                </div>
+
+                <form method="POST" action="{% url 'dogs_app:register' %}">
+                    {% csrf_token %}
+                    {% include "components/form.html" %}
+
+                    <button class="btn btn-outline-dark ight btn-lg px-5 d-block w-100" type="submit">
+                        Sign Up
+                    </button>  
+                </form>
+              </div>
+
+              <div class="text-center">
+                <p class="mb-0">
+                  Already have an account?
+                  <a href="{% url 'dogs_app:login' %}" class="text-dark fw-bold">Sign In</a>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  {% endblock %}
+</div>

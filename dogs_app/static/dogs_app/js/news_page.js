@@ -31,7 +31,7 @@ $(document).ready(function () {
                 $(this).after(contentRow);
 
                 // Apply background color based on the set count
-                const backgroundColor = (setCount % 2 === 0) ? '#f2f2f2' : '#ffffff';
+                const backgroundColor = (setCount % 2 === 0) ? '#F8F9F9' : '#ffffff';
 
                 $(this).css('background-color', backgroundColor);
                 contentRow.css('background-color', backgroundColor);

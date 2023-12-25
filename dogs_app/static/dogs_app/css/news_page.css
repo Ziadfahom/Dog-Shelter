@@ -1,10 +1,7 @@
 /* Wrapper */
 .table-wrapper {
-  width: 80%;
-  margin: 3px auto;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  background: linear-gradient(45deg, #f2f6fa, #e6ebf1);
   overflow: hidden;
   padding: 30px;
 }
@@ -84,6 +81,38 @@
   border-right: none;
 }
 
+#newsTable_wrapper {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+#newsTable_filter {
+  width: 100%;
+  margin-top: 10px;
+
+  & label {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+
+    & input {
+      display: inline-block;
+      margin-top: 5px;
+      width: 99%;
+      padding: 10px;
+      border-radius: 5px;
+      &:focus {
+        outline: none;
+      }
+    }
+  }
+}
+.dataTables_length, .dataTables_paginate{
+  margin-left: auto;
+}
+
 .dataTables_wrapper .dataTables_filter input {
     margin-bottom: 15px;
 }
@@ -92,8 +121,6 @@
   margin-right: 3rem;
 }
 
-
-
 .button-cell {
     width: 10px;  /* Adjust as needed */
 }
@@ -101,6 +128,7 @@
 #newsTable {
   border: 2px solid #333; /* You can choose another color and border style */
   border-collapse: collapse; /* Ensures the borders are clean */
+  margin-bottom: 10px;
 }
 
 .second-row {
@@ -110,6 +138,7 @@
 }
 
 #newsTable th {
+  background-color: black;
   border: 2px solid #333; /* You can choose another color and border style */
   border-collapse: collapse; /* Ensures the borders are clean */
 }

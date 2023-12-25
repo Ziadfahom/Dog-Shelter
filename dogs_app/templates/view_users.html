@@ -1,32 +1,45 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block content %}
+
+
+{% block head %}
+    <title>DogsWatch | View all Users</title>
     <link href="{% static 'dogs_app/css/view_users.css' %}" rel="stylesheet">
-
-    <div class="row container caption-toolbar {% block column_size %}col-md-10{% endblock %}">
-
-        <h2 class="my-3 text-center">List of Users in the System</h2>
-
-        <!-- Toolbar with Search and Filter -->
-        <div class="col-12 toolbar">
-            <form action="" method="get" class="search-filter form-inline justify-content-center">
-                <input type="text" name="search" id="searchInput" placeholder="Search by name..." class="form-control mr-2 search-input" value="{{ search_query }}">
-                <select name="role" id="roleFilter" class="form-control mr-2 filter-select">
-                    <option value="all" {% if role_filter == "all" %}selected{% endif %}>All Users</option>
-                    <option value="Admin" {% if role_filter == "Admin" %}selected{% endif %}>Admins</option>
-                    <option value="Vet" {% if role_filter == "Vet" %}selected{% endif %}>Vets</option>
-                    <option value="Viewer" {% if role_filter == "Viewer" %}selected{% endif %}>Viewers</option>
-                </select>
-                <button type="submit" class="btn btn-primary filter-button"><i class="fas fa-filter"></i> Filter</button>
-            </form>
-        </div>
+{% endblock %}
 
 
-        <div class="table-responsive text-center">
-            <table class="table table-striped table-hover table-bordered">
+{% block content %}
+    <div class="container-fluid p-2 p-md-5 mt-5">
+        <div class="row">
+            <div class="col-12 px-2">
+                <h2 class="my-3 mb-0 text-center bg-dark py-3 text-white fw-bold rounded">
+                    List of Users in the System
+                </h2>
+            </div>
+
+            <!-- Toolbar with Search and Filter -->
+            <div class="col-12 my-5">
+                <form action="" method="get" class="search-filter form-inline justify-content-center">
+                    <input type="text" name="search" id="searchInput" placeholder="Search by name..." class="form-control mr-2 py-2 search-input" value="{{ search_query }}">
+                    <select name="role" id="roleFilter" class="form-control mr-2 py-2 filter-select">
+                        <option value="all" {% if role_filter == "all" %}selected{% endif %}>All Users</option>
+                        <option value="Admin" {% if role_filter == "Admin" %}selected{% endif %}>Admins</option>
+                        <option value="Vet" {% if role_filter == "Vet" %}selected{% endif %}>Vets</option>
+                        <option value="Viewer" {% if role_filter == "Viewer" %}selected{% endif %}>Viewers</option>
+                    </select>
+                    <button type="submit" class="btn btn-dark py-2 px-4">
+                        <i class="fas fa-filter"></i>
+                        Filter
+                    </button>
+                </form>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped table-hover table-bordered">
                     <thead class="table-dark">
                         <tr>
-                            <th ><a href="?order_by=username&direction={% if order_by == 'username' and direction == 'asc' %}desc{% else %}asc{% endif %}&role={{ role_filter }}&search={{ search_query }}">User Name <i class="fas fa-sort"></i></a></th>
+                            <th scope="col">#</th>
+                            <th><a href="?order_by=username&direction={% if order_by == 'username' and direction == 'asc' %}desc{% else %}asc{% endif %}&role={{ role_filter }}&search={{ search_query }}">User Name <i class="fas fa-sort"></i></a></th>
                             <th><a href="?order_by=full_name&direction={% if order_by == 'full_name' and direction == 'asc' %}desc{% else %}asc{% endif %}&role={{ role_filter }}&search={{ search_query }}">Full Name <i class="fas fa-sort"></i></a></th>
                             <th><a href="?order_by=email&direction={% if order_by == 'email' and direction == 'asc' %}desc{% else %}asc{% endif %}&role={{ role_filter }}&search={{ search_query }}">Email <i class="fas fa-sort"></i></a></th>
                             <th><a href="?order_by=role&direction={% if order_by == 'role' and direction == 'asc' %}desc{% else %}asc{% endif %}&role={{ role_filter }}&search={{ search_query }}">Role <i class="fas fa-sort"></i></a></th>
@@ -36,100 +49,107 @@
                             <th>Delete</th>
                         </tr>
                     </thead>
-                <tbody>
-                    {% for user in users %}
-                        <tr>
-                            <td>{{ user.username }}</td>
-                            <td>{{ user.first_name }} {{ user.last_name }}</td>
-                            <td >{{ user.email }}</td>
-                            <td>{{ user.role }}</td>
-                            <td>{{ user.profile.phone_number }}</td>
-                            <td>{{ user.profile.address }}</td>
-                            <td>
-                                <a href="{% url 'dogs_app:update_user' user.id %}" class="btn btn-warning btn-sm">Edit</a>
-                            </td>
-                            <td>
-                                <a href="{% url 'dogs_app:delete_user' user.id %}" class="btn btn-danger btn-sm">Delete</a>
-                            </td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="9">No users found.</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                    <tbody>
+                        {% for user in users %}
+                            <tr>
+                                <th scope="row">{{ forloop.counter }}</th>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.first_name }} {{ user.last_name }}</td>
+                                <td >{{ user.email }}</td>
+                                <td>{{ user.role }}</td>
+                                <td>{{ user.profile.phone_number }}</td>
+                                <td title="{{ user.profile.address }}">{{ user.profile.address|slice:":20" }}{% if user.profile.address|length > 20 %}...{% endif %}</td>
+                                <td>
+                                    <div class="control__button">
+                                        <a href="{% url 'dogs_app:update_user' user.id %}" class="mx-2" title="Edit">
+                                          <span class="icon-edit text-dark"></span>
+                                        </a>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="control__button">
+                                        <a href="{% url 'dogs_app:delete_user' user.id %}" class="mx-2" title="Delete">
+                                          <span class="icon-delete text-dark"></span>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="9">No users found.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
 
-            <!-- Paginator at the bottom of the table for pages -->
-            <div class="row justify-content-center pagination-container">
-                <div class="pagination-wrapper">
-                    <div class="pagination">
-                        <span class="step-links">
-                            <nav aria-label="Page navigation">
-                                <ul class="pagination justify-content-center">
+                <!-- Paginator at the bottom of the table for pages -->
+                <div class="row justify-content-center pagination-container my-5">
+                    <div class="pagination-wrapper">
+                        <div class="pagination">
+                            <span class="step-links">
+                                <nav aria-label="Page navigation">
+                                    <ul class="pagination justify-content-center">
 
-                                    {% if users.has_previous %}
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page=1&role={{ role_filter }}&order_by={{ order_by }}&direction={{ direction }}&search={{ search_query }}" aria-label="First">
-                                                <span aria-hidden="true"><i class="fas fa-step-backward"></i></span>
-                                            </a>
-                                        </li>
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page={{ users.previous_page_number }}&role={{ role_filter }}&order_by={{ order_by }}&direction={{ direction }}&search={{ search_query }}" aria-label="Previous">
-                                                <span aria-hidden="true"><i class="fas fa-arrow-left"></i></span>
-                                            </a>
-                                        </li>
-                                    {% else %}
-                                        <li class="page-item disabled">
-                                            <a class="page-link"><i class="fas fa-step-backward"></i></a>
-                                        </li>
-                                        <li class="page-item disabled">
-                                            <a class="page-link"><i class="fas fa-arrow-left"></i></a>
-                                        </li>
-                                    {% endif %}
-
-                                    {% for i in users.paginator.page_range %}
-                                        {% if pagination_start <= i and i <= pagination_end %}
-                                            {% if users.number == i %}
-                                                <li class="page-item active" aria-current="page">
-                                                    <span class="page-link">{{ i }}</span>
-                                                </li>
-                                            {% else %}
-                                                <li class="page-item">
-                                                    <a class="page-link" href="?page={{ i }}&role={{ role_filter }}&order_by={{ order_by }}&direction={{ direction }}&search={{ search_query }}">{{ i }}</a>
-                                                </li>
-                                            {% endif %}
+                                        {% if users.has_previous %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page=1&role={{ role_filter }}&order_by={{ order_by }}&direction={{ direction }}&search={{ search_query }}" aria-label="First">
+                                                    <span aria-hidden="true"><i class="fas fa-step-backward"></i></span>
+                                                </a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ users.previous_page_number }}&role={{ role_filter }}&order_by={{ order_by }}&direction={{ direction }}&search={{ search_query }}" aria-label="Previous">
+                                                    <span aria-hidden="true"><i class="fas fa-arrow-left"></i></span>
+                                                </a>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item disabled">
+                                                <a class="page-link"><i class="fas fa-step-backward"></i></a>
+                                            </li>
+                                            <li class="page-item disabled">
+                                                <a class="page-link"><i class="fas fa-arrow-left"></i></a>
+                                            </li>
                                         {% endif %}
-                                    {% endfor %}
 
-                                    {% if users.has_next %}
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page={{ users.next_page_number }}&role={{ role_filter }}&order_by={{ order_by }}&direction={{ direction }}&search={{ search_query }}" aria-label="Next">
-                                                <span aria-hidden="true"><i class="fas fa-arrow-right"></i></span>
-                                            </a>
-                                        </li>
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page={{ users.paginator.num_pages }}&role={{ role_filter }}&order_by={{ order_by }}&direction={{ direction }}&search={{ search_query }}" aria-label="Last">
-                                                <span aria-hidden="true"><i class="fas fa-step-forward"></i></span>
-                                            </a>
-                                        </li>
-                                    {% else %}
-                                        <li class="page-item disabled">
-                                            <a class="page-link"><i class="fas fa-arrow-right"></i></a>
-                                        </li>
-                                        <li class="page-item disabled">
-                                            <a class="page-link"><i class="fas fa-step-forward"></i></a>
-                                        </li>
-                                    {% endif %}
+                                        {% for i in users.paginator.page_range %}
+                                            {% if pagination_start <= i and i <= pagination_end %}
+                                                {% if users.number == i %}
+                                                    <li class="page-item active" aria-current="page">
+                                                        <span class="page-link">{{ i }}</span>
+                                                    </li>
+                                                {% else %}
+                                                    <li class="page-item">
+                                                        <a class="page-link" href="?page={{ i }}&role={{ role_filter }}&order_by={{ order_by }}&direction={{ direction }}&search={{ search_query }}">{{ i }}</a>
+                                                    </li>
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endfor %}
 
-                                </ul>
-                            </nav>
-
-                        </span>
+                                        {% if users.has_next %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ users.next_page_number }}&role={{ role_filter }}&order_by={{ order_by }}&direction={{ direction }}&search={{ search_query }}" aria-label="Next">
+                                                    <span aria-hidden="true"><i class="fas fa-arrow-right"></i></span>
+                                                </a>
+                                            </li>
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ users.paginator.num_pages }}&role={{ role_filter }}&order_by={{ order_by }}&direction={{ direction }}&search={{ search_query }}" aria-label="Last">
+                                                    <span aria-hidden="true"><i class="fas fa-step-forward"></i></span>
+                                                </a>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item disabled">
+                                                <a class="page-link"><i class="fas fa-arrow-right"></i></a>
+                                            </li>
+                                            <li class="page-item disabled">
+                                                <a class="page-link"><i class="fas fa-step-forward"></i></a>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 

@@ -16,7 +16,7 @@ from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect, JsonResponse, HttpResponse
 from .filters import DogFilter
 from .forms import SignUpForm, AddDogForm, UpdateUserForm, ProfileUpdateForm, TreatmentForm, EntranceExaminationForm, \
-    DogPlacementForm, ObservesForm, ObservationForm, DogStanceForm
+    DogPlacementForm, ObservesForm, ObservationForm, DogStanceForm, LoginForm, NewsForm
 from .models import *
 from django.conf import settings
 import os
@@ -106,6 +106,38 @@ def logout_user_view(request):
     messages.success(request, message='You have been logged out..')
     return redirect('dogs_app:home')
 
+def login_user_view(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        users = get_user_model()
+
+        # Check if username exists
+        if users.objects.filter(username=username).exists():
+
+            try:
+                # Authenticate
+                user = authenticate(request, username=username, password=password)
+
+                # If correct username+password combination
+                if user is not None:
+                    login(request, user=user)
+                    messages.success(request, message='You have successfully logged in!')
+                    return redirect('dogs_app:home')
+                else:
+                    # Username exists but password was incorrect
+                    messages.error(request, message='The password is incorrect. Please try again...')
+                    return redirect('dogs_app:home')
+            except Exception as e:
+                messages.error(request, message=f'An error occurred during login: {e}')
+                return redirect('dogs_app:home')
+        else:
+            # Username does not exist
+            messages.error(request, message='The username does not exist. Please try again...')
+            return redirect('dogs_app:home')
+    else:
+        form = LoginForm()
+    return render(request, 'account/login.html', {'form': form})    
 
 # User Registration view for new users
 def register_user_view(request):
@@ -138,7 +170,7 @@ def register_user_view(request):
         form = SignUpForm()
         profile_form = ProfileUpdateForm()
 
-    return render(request, 'register.html', {'form': form, 'profile_form': profile_form})
+    return render(request, 'account/register.html', {'form': form, 'profile_form': profile_form})
 
 
 # User password reset view
@@ -158,7 +190,7 @@ def change_password(request):
     # User is trying to open the change password page
     else:
         form = PasswordChangeForm(request.user)
-    return render(request, 'change_password.html', {
+    return render(request, 'account/change_password.html', {
         'form': form,
     })
 
@@ -173,7 +205,12 @@ def add_news(request):
         news_content = request.POST.get('content')
         News.objects.create(title=news_title, content=news_content)
         return redirect('dogs_app:home')
-    return render(request, 'add_news.html')
+    else:
+        form = NewsForm()
+        context = {
+            'form': form
+        }
+    return render(request, 'add_news.html', context)
 
 
 # Dog record page, displays the details for a single dog
@@ -804,7 +841,9 @@ def update_news(request, news_id):
         news.save()
         messages.success(request, f"News Story: '{request.POST['title']}' has been successfully edited...")
         return redirect('dogs_app:home')
-    return render(request, 'update_news.html', {'news': news})
+    else:
+        form = NewsForm(instance=news)
+    return render(request, 'update_news.html', {'news': news, 'form': form})
 
 
 # View for deleting a News story from the homepage. Only available to Admins

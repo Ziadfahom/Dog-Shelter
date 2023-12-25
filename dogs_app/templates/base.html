@@ -1,29 +1,57 @@
 {% load static %}
-
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" href="{% static 'dogs_app/img/favicon.ico' %}">
-    <title>Dogs Shelter - Lod</title>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="{% static 'dogs_app/img/favicon.ico' %}" />
     <!-- Custom Breadcrumbs CSS -->
-    <link href="{% static 'dogs_app/css/base.css' %}" rel="stylesheet">
+    <link href="{% static 'dogs_app/css/base.css' %}" rel="stylesheet" />
+    <link href="{% static 'common/css/icons.css' %}" rel="stylesheet" />
+    <link href="{% static 'common/css/style.css' %}" rel="stylesheet" />
+    {% block head %} 
+      <title>Dogs Shelter - Lod</title>
+    {% endblock %}
     <!-- Fontawesome CSS -->
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
+    <link
+      rel="stylesheet"
+      href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"
+    />
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"
-    integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM"
+      crossorigin="anonymous"
+    />
     <!-- Bootstrap Icons CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css"
+    />
     <!-- Bootstrap Datepicker CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker3.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker3.min.css"
+    />
     <!-- Fonts CSS -->
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap"
+      rel="stylesheet"
+    />
     <!-- Flatpickr CSS (for DateTime attributes) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/confirmDate/confirmDate.css">
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/confirmDate/confirmDate.css"
+    />
 
     <!-- jQuery JS -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
@@ -33,53 +61,63 @@
     <!-- Bootstrap Datepicker JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
     <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
+      crossorigin="anonymous"
+    ></script>
     <!-- Flatpickr JS (for DateTime attributes) -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/confirmDate/confirmDate.js"></script>
-</head>
-<body>
-    {% include 'navbar.html' %}
-    <style>
-        body {
-          background-image: url('{% static "dogs_app/img/background.jpg" %}');
-        }
-    </style>
-    <br><br>
+  </head>
+  <body>
 
-    <!-- Allow pages flexibility to adjust the max column width size -->
-    <div class="container mt-5 mb-5 {% block column_size %}col-md-8{% endblock %}">
+    {% block nav %} {% include 'navbar.html' %} {% endblock %}
 
-        <div id="messageContainer">
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-warning alert-dismissible fade show col-md-6 offset-md-3 text-center" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        </div>
-
-        <nav aria-label="breadcrumb" >
-            <ol class="breadcrumb">
-                {% for crumb in breadcrumbs %}
-                    <li class="breadcrumb-item">
-                        <a href="{{ crumb.url }}">{{ crumb.name }}</a>
-                        {% if not forloop.last %}
-                            <i class="fas fa-angle-right"></i>  <!-- Font Awesome right-angle arrow icon -->
-                        {% endif %}
-                    </li>
-                {% endfor %}
-            </ol>
-        </nav>
-
-        {%  block content %}
-
-
-        {% endblock %}
+    <!-- Application Messages -->
+    <div id="messageContainer">
+      {% if messages %}
+        {% for message in messages %}
+          <div
+            class="alert alert-warning alert-dismissible fade show text-center"
+            role="alert"
+          >
+            {{ message }}
+            <button
+              type="button"
+              class="btn-close position-absolute right-5 top-5"
+              data-bs-dismiss="alert"
+              aria-label="Close"
+            ></button>
+          </div>
+        {% endfor %} 
+      {% endif %}
     </div>
 
-</body>
+    <!-- Breadcrumbs Wrapper -->
+    {% block breadcrumb %}
+      <div class="container-fuild p-5 breadcrumb-wrapper">
+          <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+              {% for crumb in breadcrumbs %}
+              <li class="breadcrumb-item">
+                <a href="{{ crumb.url }}">{{ crumb.name }}</a>
+                {% if not forloop.last %}
+                  <i class="fas fa-angle-right text-white"></i>
+                {% endif %}
+              </li>
+              {% endfor %}
+            </ol>
+          </nav>
+      </div>
+    {% endblock %}
+
+    <div class="container-fluid px-0">
+      {% block content %} {% endblock %}
+    </div>
+
+    <script src="{% static 'common/js/main.js' %}"></script>
+    {% block script %} {% endblock %}
+  
+  </body>
 </html>

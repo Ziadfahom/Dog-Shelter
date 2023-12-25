@@ -4,114 +4,154 @@
 {% load widget_tweaks %}
 {% load static %}
 
-{% block content %}
-
+{% block head %}
     <link href="{% static 'dogs_app/css/update_user.css' %}" rel="stylesheet">
+{% endblock %}
 
-    <div class="container mt-5 col-md-9">
-        <div class="card border-warning stylish-card shadow">
-            <div class="d-flex justify-content-between align-items-center p-2 card-header bg-warning text-black text-center">
-                <button onclick="goBack()" class="btn btn-secondary">Back</button>
-                <h2 class="m-2 flex-grow-1 text-center" style="padding-left: 4rem;">Edit Account Details</h2>
-                {% if user.is_authenticated and user.is_superuser and user.id != user_to_update.id %}
-                    <div class="btn-group">
-                        <button type="submit" class="btn btn-success" onclick="submitUserForm()">Save</button>
-                        <a href="{% url 'dogs_app:delete_user' user_to_update.id %}" class="btn btn-danger">Delete</a>
-                    </div>
-                {% else %}
-                    <button type="submit" class="btn btn-success" onclick="submitUserForm()">Save</button>                    {% endif %}
-            </div>
-            <div class="card-body stylish-card-body">
-                <form id="update_form" method="POST" class="form stylish-form" enctype="multipart/form-data">
-                    {% csrf_token %}
+{% block breadcrumb %} {% endblock %}
 
-                    <!-- Current profile picture and controls -->
-                    <div class="mb-3 text-center">
-                        <label class="form-label"></label>
-                        {% if user_to_update.profile.image and user_to_update.profile.image.url and 'default.jpg' not in user_to_update.profile.image.name %}
-                            <img id="profile_picture" src="{{ user_to_update.profile.image.url }}" alt="Image not available" style="max-width: 200px; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#imageModal">
-                        {% else %}
-                            <img id="profile_picture"  src="{% static 'dogs_app/img/default.jpg' %}" alt="Image not available" style="max-width: 200px;">
-                        {% endif %}
-                        <p id="image_change_alert" style="display: none;" class="alert alert-warning mt-3">
-                            Click the "Save" button at the bottom to save this new profile picture, or "Back" to cancel changes
-                        </p>
+{% block content %}
+    <div class="container p-5">
+        <div class="px-md-5">
+            <div class="card shadowed">
+                <div class="d-flex justify-content-between align-items-center p-2 card-header bg-dark text-white text-center">
+                    <button onclick="goBack()" class="btn btn-light" title="Go Back">
+                        <span class="icon-arrow_back text-dark"></span>
+                    </button>
 
-                        <div class="d-flex justify-content-center align-items-center mt-2">
-                            {% if user_to_update.profile.image and 'default.jpg' not in user_to_update.profile.image.name %}
-                                <button type="submit" class="btn btn-danger me-2" name="deleteImage"
-                                        onclick="return confirm('Are you sure you want to permanently delete this profile picture?')">Remove Picture</button>
-                                <button type="button" id="customUploadButton" class="btn btn-primary">Edit Picture</button>
+                    <h2 class="m-2 flex-grow-1 text-center" style="padding-left: 4rem;">Edit Account Details</h2>
+                    
+                    {% if user.is_authenticated and user.is_superuser and user.id != user_to_update.id %}
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-light" onclick="submitUserForm()" title="Save">
+                                <span class="icon-save text-dark"></span>
+                            </button>
+                            <a href="{% url 'dogs_app:delete_user' user_to_update.id %}" class="btn btn-danger">
+                                <span class="icon-delete text-white"></span>
+                            </a>
+                        </div>
+                    {% else %}
+                        <button type="submit" class="btn btn-light" onclick="submitUserForm()" title="Save">
+                            <span class="icon-save text-dark"></span>
+                        </button>
+                    {% endif %}
+
+                </div>
+
+                <div class="card-body stylish-card-body">
+                    <form id="update_form" method="POST" class="form stylish-form" enctype="multipart/form-data">
+                        {% csrf_token %}
+    
+                        <!-- Current profile picture and controls -->
+                        <div class="mb-3 text-center">
+                            <label class="form-label"></label>
+                            {% if user_to_update.profile.image and user_to_update.profile.image.url and 'default.jpg' not in user_to_update.profile.image.name %}
+                                <img id="profile_picture" src="{{ user_to_update.profile.image.url }}" alt="Image not available" style="max-width: 200px; cursor: pointer;" class="rounded-circle" data-bs-toggle="modal" data-bs-target="#imageModal">
                             {% else %}
-                                <button type="button" id="customUploadButton" class="btn btn-primary">Upload Picture</button>
+                                <img id="profile_picture"  src="{% static 'dogs_app/img/default.jpg' %}" alt="Image not available" style="max-width: 200px;" class="rounded-circle">
                             {% endif %}
-                            <div style="display: none;">
-                                {{ profile_form.image|add_class:"form-control"|as_crispy_field }}
-                            </div>
-                        </div>
-                    </div>
-
-                    {% for field in user_form %}
-                        {% if not field.name == "password" %}
-                            <div class="mb-3">
-                                {% if field.name == "role" and not user.is_superuser %}
-                                    {{ field|add_class:"form-control"|as_crispy_field }}
+                            <p id="image_change_alert" style="display: none;" class="alert alert-warning mt-3">
+                                Click the "Save" button at the bottom to save this new profile picture, or "Back" to cancel changes
+                            </p>
+    
+                            <div class="d-flex justify-content-center align-items-center mt-2">
+                                {% if user_to_update.profile.image and 'default.jpg' not in user_to_update.profile.image.name %}
+                                    <button type="submit" class="btn btn-danger me-2" name="deleteImage"
+                                            onclick="return confirm('Are you sure you want to permanently delete this profile picture?')">Remove Picture</button>
+                                    <button type="button" id="customUploadButton" class="btn btn-primary">Edit Picture</button>
                                 {% else %}
-                                    {{ field|add_class:"form-control"|as_crispy_field }}
+                                    <button type="button" id="customUploadButton" class="btn btn-primary">Upload Picture</button>
                                 {% endif %}
-                                {% if field.errors %}
-                                    <div class="alert alert-danger mt-2" role="alert">
-                                        {{ field.errors }}
-                                    </div>
-                                {% endif %}
+                                <div style="display: none;">
+                                    {{ profile_form.image|add_class:"form-control"|as_crispy_field }}
+                                </div>
                             </div>
-                        {% endif %}
-                    {% endfor %}
-
-                    <!-- Profile details (phone, address, profile image) -->
-                    {% for field in profile_form %}
-                        {% if not field.name == "image" %}
-                            <div class="mb-3">
-                                {{ field|add_class:"form-control"|as_crispy_field }}
-                                {% if field.errors %}
-                                    <div class="alert alert-danger mt-2" role="alert">
-                                        {{ field.errors }}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        {% endif %}
-                    {% endfor %}
-
-                    <div class="card-footer bg-transparent">
-                        <div class="action-buttons mt-1">
-                            <button type="submit" class="btn btn-success me-2">Save</button>
-                            {% if user.is_authenticated and user.is_superuser and user.id != user_to_update.id %}
-                                <a href="{% url 'dogs_app:delete_user' user_to_update.id %}" class="btn btn-danger">Delete</a>
-                            {% endif %}
                         </div>
-                    </div>
-                </form>
-                <div class="back-button">
-                    <button onclick="goBack()" class="btn btn-secondary">Back</button>
+    
+                        {% for field in user_form %}
+                            {% if not field.name == "password" %}
+                                <div class="mb-4">
+                                    {% if field.name == "role" and not user.is_superuser %}
+                                        {{ field|add_class:"form-control form-control-lg"|as_crispy_field }}
+                                    {% else %}
+                                        {{ field|add_class:"form-control form-control-lg"|as_crispy_field }}
+                                    {% endif %}
+                                    {% if field.errors %}
+                                        <div class="alert alert-danger mt-2" role="alert">
+                                            {{ field.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+    
+                        <!-- Profile details (phone, address, profile image) -->
+                        {% for field in profile_form %}
+                            {% if not field.name == "image" %}
+                                <div class="mb-4">
+                                    {{ field|add_class:"form-control form-control-lg"|as_crispy_field }}
+                                    {% if field.errors %}
+                                        <div class="alert alert-danger mt-2" role="alert">
+                                            {{ field.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+    
+                        <div class="card-footer px-0 mx-0 bg-transparent mt-5">
+                            <div class="d-flex mt-1">
+                                <button class="btn flex-grow-1 mx-2 btn-outline-dark btn-lg" type="submit">
+                                    Save
+                                </button> 
+                                {% comment %} <button type="submit" class="btn btn-success me-2">Save</button> {% endcomment %}
+                                {% if user.is_authenticated and user.is_superuser and user.id != user_to_update.id %}
+                                    <a href="{% url 'dogs_app:delete_user' user_to_update.id %}" class="btn btn-danger d-flex align-items-center justify-content-center mx-2 flex-grow-1">Delete</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Image Modal -->
-    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div
+      class="modal fade"
+      id="imageModal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="exampleModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
-          <div class="modal-body">
-            <img id="modal_image" src="" class="img-fluid rounded mx-auto d-block">
+          <div class="modal-header">
+            <button
+              type="button"
+              class="close d-flex align-items-center justify-content-center"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true" class="icon-close"></span>
+            </button>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <div class="row no-gutters">
+            <div class="col-md-12 d-flex">
+              <div class="modal-body p-5 d-flex align-items-center">
+                <div class="text w-100 text-center">
+                    <img id="modal_image" src="" class="img-fluid rounded mx-auto d-block">
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <script src="{% static 'dogs_app/js/update_user.js' %}"></script>
+{% endblock %}
 
+{% block script %}
+    <script src="{% static 'dogs_app/js/update_user.js' %}"></script>
 {% endblock %}

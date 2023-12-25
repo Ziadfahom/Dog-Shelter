@@ -1,37 +1,38 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block content %}
+{% block head %}
+    <title>DogsWatch | Update News | {{ news.title }} </title>
     <link href="{% static 'dogs_app/css/update_news.css' %}" rel="stylesheet">
+{% endblock %}
 
-    <div class="container mt-5 text-center">
-        <div class="col-md-7 mx-auto">
-            <div class="card border-warning shadow-lg">
-                <div class="card-header bg-warning bg-gradient text-black">
-                    <h2 class="card-title">Edit News</h2>
+
+{% block content %}
+    <div class="container-fluid px-5 py-large">
+        <div class="row">
+            <div class="col-12 col-md-6">
+                <h1 class="text-lg">Update News.</h1>
+                <p class="pe-5">{% lorem 40 w random %}</p>
+            </div>
+            <div class="col-12 col-md-6">
+                <div class="mb-5">
+                    <button onclick="goBack()" class="btn btn-dark" title="Go Back">
+                        <span class="icon-arrow_back text-light"></span>
+                    </button>
                 </div>
-                <div class="card-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="title" class="form-label">Title</label>
-                            <input type="text" class="form-control" id="title" name="title" value="{{ news.title }}">
-                        </div>
-                        <div class="mb-3">
-                            <label for="content" class="form-label">Content</label>
-                            <textarea class="form-control" id="content" name="content" rows="6">{{ news.content }}</textarea>
-                        </div>
-                        <div class="action-buttons">
-                            <button type="submit" class="btn btn-success">Update News</button>
-                        </div>
-                    </form>
-                    <div class="back-button">
-                        <button onclick="goBack()" class="btn btn-secondary">Back</button>
-                    </div>
-                </div>
+                <form method="POST">
+                    {% csrf_token %}
+                    {% include 'components/form.html' %}
+                    <button class="btn btn-outline-dark btn-lg px-5 d-block w-100" type="submit">
+                        Update News
+                    </button>  
+                </form>
             </div>
         </div>
     </div>
+{% endblock %}
 
+
+{% block script %}
     <script src="{% static 'dogs_app/js/update_news.js' %}"></script>
 {% endblock %}
