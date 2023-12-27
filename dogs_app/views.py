@@ -16,7 +16,7 @@ from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect, JsonResponse, HttpResponse
 from .filters import DogFilter
 from .forms import SignUpForm, AddDogForm, UpdateUserForm, ProfileUpdateForm, TreatmentForm, EntranceExaminationForm, \
-    DogPlacementForm, ObservesForm, ObservationForm, DogStanceForm
+    DogPlacementForm, ObservesForm, ObservationForm, DogStanceForm, LoginForm, NewsForm
 from .models import *
 from django.conf import settings
 import os
@@ -27,6 +27,7 @@ from datetime import date, timedelta
 from django.db import IntegrityError, transaction
 from io import BytesIO
 from .serializers import DogSerializer
+from django.views.decorators.http import require_POST
 
 
 
@@ -109,6 +110,38 @@ def logout_user_view(request):
     messages.success(request, message='You have been logged out..')
     return redirect('dogs_app:home')
 
+def login_user_view(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        users = get_user_model()
+
+        # Check if username exists
+        if users.objects.filter(username=username).exists():
+
+            try:
+                # Authenticate
+                user = authenticate(request, username=username, password=password)
+
+                # If correct username+password combination
+                if user is not None:
+                    login(request, user=user)
+                    messages.success(request, message='You have successfully logged in!')
+                    return redirect('dogs_app:home')
+                else:
+                    # Username exists but password was incorrect
+                    messages.error(request, message='The password is incorrect. Please try again...')
+                    return redirect('dogs_app:home')
+            except Exception as e:
+                messages.error(request, message=f'An error occurred during login: {e}')
+                return redirect('dogs_app:home')
+        else:
+            # Username does not exist
+            messages.error(request, message='The username does not exist. Please try again...')
+            return redirect('dogs_app:home')
+    else:
+        form = LoginForm()
+    return render(request, 'account/login.html', {'form': form})    
 
 # User Registration view for new users
 def register_user_view(request):
@@ -141,7 +174,7 @@ def register_user_view(request):
         form = SignUpForm()
         profile_form = ProfileUpdateForm()
 
-    return render(request, 'register.html', {'form': form, 'profile_form': profile_form})
+    return render(request, 'account/register.html', {'form': form, 'profile_form': profile_form})
 
 
 # User password reset view
@@ -161,7 +194,7 @@ def change_password(request):
     # User is trying to open the change password page
     else:
         form = PasswordChangeForm(request.user)
-    return render(request, 'change_password.html', {
+    return render(request, 'account/change_password.html', {
         'form': form,
     })
 
@@ -176,7 +209,12 @@ def add_news(request):
         news_content = request.POST.get('content')
         News.objects.create(title=news_title, content=news_content)
         return redirect('dogs_app:home')
-    return render(request, 'add_news.html')
+    else:
+        form = NewsForm()
+        context = {
+            'form': form
+        }
+    return render(request, 'add_news.html', context)
 
 
 # Dog record page, displays the details for a single dog
@@ -423,6 +461,49 @@ def view_observations(request, session_id):
     else:
         messages.error(request, message='You Must Be Logged In To View That Page...')
         return redirect('dogs_app:home')
+
+
+# Handle deleting an Observation
+@require_POST  # Ensures this view can only be accessed with POST request
+def delete_observation(request):
+    if request.method == 'POST' and request.user.is_authenticated and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        observation_id = request.POST.get('observation_id')
+        try:
+            observation = Observation.objects.get(id=observation_id)
+            observation.delete()
+            return JsonResponse({"status": "success"})
+        except Observation.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Observation not found"}, status=404)
+    else:
+        return JsonResponse({"status": "error", "message": "Unauthorized"}, status=401)
+
+
+# Handle editing an Observation
+def edit_observation(request, observation_id):
+    if request.method == 'GET':
+        observation = Observation.objects.get(id=observation_id)
+        observation_form = ObservationForm(instance=observation)
+        # Exclude the file field from the JSON response
+        observation_data = observation_form.initial
+        # Temporary! Remove the file fields from the JSON response
+        del observation_data['jsonFile'] # TODO: Remove this line once the JSON file is implemented
+        del observation_data['rawVideo'] # TODO: Remove this line once the raw video is implemented
+        return JsonResponse({"status": "success", "observation": observation_data}, status=200)
+
+
+    elif request.method == 'POST':
+        observation_form = ObservationForm(request.POST or None, instance=Observation.objects.get(id=observation_id))
+        if observation_form.is_valid():
+            observation_form.save()
+            # Get the updated observation
+            updated_observation = Observation.objects.get(id=observation_id)
+            # Render the _observation_row.html template with the updated observation
+            new_row_html = render_to_string('_observation_row.html', {'observation': updated_observation})
+            return JsonResponse(
+                {"status": "success", "observation": observation_form.cleaned_data, "newRowHtml": new_row_html},
+                status=200)
+        else:
+            return JsonResponse({"status": "error", "errors": observation_form.errors}, status=400)
 
 
 # Deleting a dog record
@@ -807,7 +888,9 @@ def update_news(request, news_id):
         news.save()
         messages.success(request, f"News Story: '{request.POST['title']}' has been successfully edited...")
         return redirect('dogs_app:home')
-    return render(request, 'update_news.html', {'news': news})
+    else:
+        form = NewsForm(instance=news)
+    return render(request, 'update_news.html', {'news': news, 'form': form})
 
 
 # View for deleting a News story from the homepage. Only available to Admins

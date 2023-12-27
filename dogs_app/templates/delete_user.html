@@ -1,28 +1,39 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block content %}
+{% block head %}
+    <title>DogsWatch | Delete User | {{ delete_user.username }}</title>
     <link href="{% static 'dogs_app/css/delete_user.css' %}" rel="stylesheet">
+{% endblock %}
 
+{% block breadcrumb %} {% endblock %}
+
+{% block content %}
     <div class="container mt-5 text-center">
         <div class="col-md-7 mx-auto">
-            <div class="card border-danger shadow-lg">
-                <div class="card-header bg-danger text-white">
-                    <h2 class="card-title">Delete User</h2>
+            <div class="card shadow-lg">
+                <div class="card-header bg-dark text-white d-flex align-items-center py-0">
+                    <button onclick="goBack()" class="btn btn-light my-3 align-self-start" title="Go Back">
+                        <span class="icon-arrow_back text-dark"></span>
+                    </button>
+                    <h2 class="card-title text-center w-100">Delete User</h2>
                 </div>
-                <div class="card-body">
-                    <p class="lead prompt">Are you sure you want to delete this user?</p>
-                    <div class="card-header">
-                        {% if delete_user.profile.image.name %}
-                            <img src="{{ delete_user.profile.image.url }}" class="card-img-top" alt="Image not available" style="width: 25rem; height: 20rem; object-fit: cover;">
-                        {% else %}
-                            <img src="{% static 'dogs_app/img/default.jpg' %}" class="card-img-top" alt="Image not available" style="width: 25rem; height: 20rem; object-fit: cover;">
-                        {% endif %}
+                <div class="card-body py-5">
+                    <p class="text-danger pb-4">Are you sure you want to delete this User?</p>
+                    <div class="d-flex align-items-center">
+                        <div>
+                            {% if delete_user.profile.image.name %}
+                                <img src="{{ delete_user.profile.image.url }}" class="rounded-circle" alt="Image not available" style="width: 7rem; height: 7rem; object-fit: cover;">
+                            {% else %}
+                                <img src="{% static 'dogs_app/img/default.jpg' %}" class="rounded-circle" alt="Image not available" style="width: 7rem; height: 7rem; object-fit: cover;">
+                            {% endif %}
+                        </div>
+                        <div class="d-flex flex-column align-items-start ms-3">
+                            <span class="text-uppercase fw-bold">{{ delete_user.username }}</span>
+                            <span class="text-secondary fs-sm">{{ delete_user.date_joined|date }}</span>
+                        </div>    
                     </div>
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item">
-                            <strong>UserName: </strong><span class="centered-content">{{ delete_user.username }}</span>
-                        </li>
+                    <ul class="list-group list-group-flush mt-4">
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <strong>Name: </strong><span class="centered-content">{{ delete_user.first_name }} {{ delete_user.last_name }}</span>
                         </li>
@@ -30,17 +41,18 @@
                             <strong>Email: </strong><span class="centered-content">{{ delete_user.email }}</span>
                         </li>
                     </ul>
-                    <form method="POST" class="action-buttons">
+                    <form method="POST" class="mt-5 d-flex">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-danger">Delete</button>
+                        <button class="btn flex-grow-1 mx-2 btn-outline-danger btn-lg" type="submit">
+                            Delete
+                        </button>
                     </form>
-                    <div class="back-button">
-                        <button onclick="goBack()" class="btn btn-secondary">Back</button>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
+{% endblock %}
 
+{% block script %}
     <script src="{% static 'dogs_app/js/delete_user.js' %}"></script>
 {% endblock %}

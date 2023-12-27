@@ -1,87 +1,135 @@
-{% load static %}
-{% load group_check %}
+{% load static %} {% load group_check %}
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark bg-gradient fixed-top">
-    <div class="container-fluid">
-        <a class="navbar-brand mb-0 h1" href="{% url 'dogs_app:home' %}">
-            <a class="navbar-brand mb-0 h1" href="{% url 'dogs_app:home' %}">
-                <img src="{% static 'dogs_app/img/dogwatch_logo.png' %}" alt="Site Favicon" width="100" height="38">
-            </a>
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <a class="nav-link" aria-current="page" href="{% url 'dogs_app:home' %}"><i class="bi bi-house-door-fill"></i> Home</a>
-                </li>
+<nav class="navbar navbar-expand-lg p-3 custom-navbar">
+  <div class="container-fluid">
+    {% include 'components/logo.html' %}
 
-                {% if user.is_authenticated %}
-                    <!-- Dropdown -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fas fa-tachometer-alt"></i>  Dashboard
-                        </a>
-                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <a class="dropdown-item" href="{% url 'dogs_app:view_dogs' %}">
-                                <i class="fas fa-dog"></i> Dogs
-                            </a>
-                            <a class="dropdown-item" href="{% url 'dogs_app:graphs' %}">
-                                <i class="fas fa-chart-bar"></i> Graphs
-                            </a>
-                            <!-- Placeholder All News Button -->
-                            <a class="dropdown-item" href="{% url 'dogs_app:view_news' %}">
-                                <i class="fas fa-newspaper"></i> All News
-                            </a>
-                        </div>
-                    </li>
-                {% endif %}
-            </ul>
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#ftco-nav"
+      aria-controls="ftco-nav"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="fa fa-bars"></span>
+    </button>
 
-            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                {% if user.is_authenticated %}
-                    {% if user.is_superuser %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-user-cog"></i> Vet Controls
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="{% url 'dogs_app:view_users' %}"><i class="fas fa-users"></i> View Users</a></li>
-                                <li><a class="dropdown-item" href="{% url 'dogs_app:add_news' %}"><i class="fas fa-newspaper"></i> Add News</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="fas fa-cogs"></i> Admin Page</a></li>
-                            </ul>
-                        </li>
-                    {% endif %}
-                {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'dogs_app:register' %}"><i class="bi bi-person-plus-fill"></i> Register</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'dogs_app:home' %}"><i class="bi bi-box-arrow-in-right"></i> Login</a>
-                    </li>
-                {% endif %}
-            {% if user.is_authenticated %}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fas fa-user-edit"></i> Account
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li>
-                            <a href="{% url 'dogs_app:update_user_self' %}" class="dropdown-item"><i class="fas fa-user-edit"></i> Manage Details</a>
-                        </li>
-                        <li>
-                            <a href="{% url 'dogs_app:change_password' %}" class="dropdown-item"><i class="fas fa-lock"></i> Change Password</a>
-                        </li>
-                    </ul>
-                </li>
-                <li class="nav-item">
-                        <a class="nav-link" href="{% url 'dogs_app:logout' %}"><i class="bi bi-box-arrow-right"></i> Logout</a>
-                </li>
-            {% endif %}
+    <div class="collapse navbar-collapse py-3 py-lg-0" id="ftco-nav">
+      <ul class="navbar-nav ms-md-auto">
+        <li class="nav-item active me-4">
+          <a href="{% url 'dogs_app:home' %}" class="nav-link">Home</a>
+        </li>
 
-            </ul>
-        </div>
+        {% if user.is_authenticated %}
+          <li class="nav-item">
+            <div class="dropdown custom-dropdown nav-link">
+              <span
+                data-bs-toggle="dropdown"
+                class="dropdown-link"
+                style="cursor: pointer"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                DashBoard
+              </span>
+
+              <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                <a href="{% url 'dogs_app:view_dogs' %}" class="dropdown-item">
+                  <strong>Dogs</strong>
+                  <span>Explore From the List of thouands of Dogs.</span>
+                </a>
+                <a href="{% url 'dogs_app:graphs' %}" class="dropdown-item">
+                  <strong>Graphs</strong>
+                  <span>Explore From the List of thouands of Dogs.</span>
+                </a>
+                <a href="{% url 'dogs_app:view_news' %}" class="dropdown-item">
+                  <strong>News</strong>
+                  <span>Find thouands of articles about Dogs naturing.</span>
+                </a>
+              </div>
+            </div>
+          </li>
+        {% endif %}
+
+        {% if user.is_authenticated and user.is_superuser %}
+          <li class="nav-item">
+            <div class="dropdown custom-dropdown nav-link">
+              <span
+                data-bs-toggle="dropdown"
+                class="dropdown-link"
+                style="cursor: pointer"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                Controls
+              </span>
+
+              <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                <a href="{% url 'dogs_app:view_users' %}" class="dropdown-item">
+                  <strong>Users</strong>
+                  <span>Explore all the user.</span>
+                </a>
+                <a href="{% url 'dogs_app:add_news' %}" class="dropdown-item">
+                  <strong>News</strong>
+                  <span>Create News for all the users.</span>
+                </a>
+
+                <a href="{% url 'admin:index' %}" class="dropdown-item">
+                  <strong>Admin Panel</strong>
+                  <span>Admin Panel To control the whole applicaiton.</span>
+                </a>
+              </div>
+            </div>
+          </li>
+        {% endif %}
+
+        {% if user.is_authenticated %}
+          <li class="nav-item">
+            <div class="dropdown custom-dropdown nav-link">
+              <span
+                data-bs-toggle="dropdown"
+                class="dropdown-link"
+                style="cursor: pointer"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                {{ user.username }}
+              </span>
+
+              <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                <a href="{% url 'dogs_app:update_user_self' %}" class="dropdown-item">
+                  <strong>Manage Profile</strong>
+                </a>
+                <a href="{% url 'dogs_app:change_password' %}" class="dropdown-item">
+                  <strong>Change Password</strong>
+                </a>
+                <a href="{% url 'dogs_app:logout' %}" class="dropdown-item">
+                  <strong>Logout</strong>
+                </a>
+              </div>
+            </div>
+          </li>
+        {% endif %}
+
+
+        {% if not user.is_authenticated %}
+          <li class="nav-item">
+            <a href="{% url 'dogs_app:register' %}" class="nav-link">Register</a>
+          </li>
+          <li class="nav-item">
+            <div class="nav-link">
+              <a
+                href="{% url 'dogs_app:login' %}"
+                class="px-5 rounded-pill bg-success py-3 text-white"
+                style="letter-spacing: 1px"
+                >Login</a
+              >
+            </div>
+          </li>
+        {% endif %}
+      </ul>
     </div>
+  </div>
 </nav>

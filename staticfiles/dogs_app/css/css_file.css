@@ -1,0 +1,14 @@
+.text-start-strong {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+.text-start-strong strong {
+    justify-content: flex-start;
+    white-space: nowrap;
+    width: 50px; /* adjust this value accordingly */
+}
+.text-start-strong span {
+    justify-content: flex-start;
+    width: calc(100% - 50px); /* subtract the width of the title */
+}

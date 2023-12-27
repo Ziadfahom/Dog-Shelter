@@ -1,0 +1,326 @@
+.tooltip-inner {
+    border: 1px solid black; /* Add a black border around the tooltip */
+    background-color: rgba(0, 0, 0, 0.1); /* Add a semi-transparent black background */
+    padding: 6px; /* Add some space between the image and the border */
+    max-width: 200px; /* Adjust as per your image size and padding */
+}
+
+.tooltip-inner img {
+    max-width: 180px; /* You can change it according to your image's height */
+}
+
+.bs-tooltip-auto[x-placement^=bottom] .arrow::before, .bs-tooltip-bottom .arrow::before {
+    border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+th {
+    font-size: 0.9em;
+    border-bottom: 1px solid black;
+    border-right: 1px solid black;
+}
+
+th:last-child {
+    border-right: none; /* Removes the border from the last cell of each row */
+}
+td {
+    border: 1px solid black;
+}
+
+.stylish-table {
+    background: #f4fcf9;
+    border-radius: 1px 1px 11px 11px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding-top: 12px;
+}
+
+.stylish-thead th {
+    background-color: #007a5e;
+    color: #fff;
+}
+
+.stylish-tbody td{
+    color: #495057;
+}
+
+.toolbar {
+    background-color: #a8e5de; /* Light background color */
+    padding: 8px;
+    margin-bottom: 1px; /* Add some space between the toolbar and the table */
+    box-shadow: 0px 0px 3px 3px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+    border-radius: 4px 4px 0px 0px; /* Rounded corners */
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    transition: background-color 0.3s;
+}
+
+.toolbar:hover {
+    background-color: #92d5c3; /* Slightly darker shade on hover */
+}
+
+.add-dog-btn {
+    background-color: #007bff; /* Primary blue color for the button */
+    color: #ffffff; /* White text color */
+    padding: 8px 15px;
+    border-radius: 5px; /* Rounded corners for the button */
+    text-decoration: none; /* Remove underline from the link */
+    transition: background-color 0.3s; /* Smooth hover transition */
+}
+.apply-btn,
+.reset-btn {
+    padding: 8px 15px;
+}
+.add-dog-btn:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
+.search-filter {
+    display: flex;
+    align-items: center;
+}
+
+.search-input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    margin-right: 10px; /* Space between search and filter */
+    width: 25rem;
+}
+
+.filter-select {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+.add-dog-div {
+    display: flex;
+    align-items: center;
+}
+
+body {
+    font-family: Arial, sans-serif;
+}
+
+.caption-toolbar {
+    background-color: #a8e5de; /* Harmonizing with toolbar color */
+    padding: 12px;
+    border-radius: 10px 10px 1px 1px;
+    box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.pagination-container {
+    text-align: center; /* Center the text */
+}
+
+.step-links {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap; /* If the content overflows, it will wrap onto the next line */
+    justify-content: center; /* Center the content horizontally */
+}
+
+.step-links a {
+    color: #007bff; /* Set the link color */
+    text-decoration: none; /* Remove underlines */
+    margin: 0 1px; /* Add some margin between links */
+}
+
+.step-links a:hover {
+    text-decoration: underline; /* Underline on hover */
+}
+
+.step-links .current {
+    margin: 0 1px; /* Add some margin to space it from the other links */
+    color: #333;
+    font-weight: bold;
+}
+
+.pagination-wrapper {
+    display: flex;
+    justify-content: center; /* Center the content horizontally */
+    align-items: center; /* Center the content vertically */
+    width: 100%; /* Full width */
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pagination a {
+  margin: 0 10px;
+  text-decoration: none;
+}
+
+.filter-dogs-div {
+    display: flex;
+    align-items: center;
+}
+
+.btn-info {
+    background-color: #00b377;
+    color: #ffffff;
+    padding: 9px 15px;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.btn-info:hover {
+    background-color: #288740;
+}
+
+.search-input {
+    border: none;
+    border-radius: 5px;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Expanded Filter Section */
+.filter-section {
+    background: #e6faf5;
+    padding: 40px;
+    border-radius: 0px 0px 4px 4px;
+    box-shadow: 0px 0px 3px 3px rgba(0, 0, 0, 0.11); /* Soft shadow for depth */
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    text-align: center;
+}
+
+/* When Filter is Expanded */
+.filter-section.expanded {
+    max-height: 500px; /* Adjust as per content */
+    opacity: 1; /* Make it visible */
+}
+
+/* Style Form Controls */
+.filter-section .form-control {
+    border: none;
+    border-radius: 5px;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.form-control,
+.form-control:focus {
+    transition: border-color 0.3s; /* Smooth transition for border color changes */
+}
+
+.form-control:hover,
+.form-control:focus {
+    border-color: #2d645f; /* border color on hover or focus */
+}
+
+/* Style Primary Button */
+.filter-section .btn-primary {
+    background-color: #007bff;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+}
+
+/* Darker shade on hover */
+.filter-section .btn-primary:hover {
+    background-color: #0056b3;
+}
+
+
+.caption-toolbar h2 {
+    color: #00473e; /* Darker shade for better readability */
+    text-align: center;
+    font-family: 'Helvetica', sans-serif; /* Choose an elegant font-family */
+    font-weight: 400; /* Not too bold, maintaining elegance */
+    font-size: 1.5rem; /* Slightly larger font size */
+    letter-spacing: 1px; /* Adding some letter-spacing */
+    padding-top: 5px;
+    padding-bottom: 10px;
+}
+
+.btn-secondary {
+    background-color: #7bc4c0; /* Matching with the toolbar color */
+    border: none;
+    color: #fff;
+    padding: 8px 16px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease; /* Smooth transition effect */
+}
+
+.btn-secondary:hover {
+    background-color: #5aa8a0; /* Darker shade for hover effect */
+}
+
+.page-item.active .page-link {
+    margin-right: 10px;  /* Add some margin to the right side of the active page */
+}
+
+#selectedAgeRange {
+    font-weight: bold;
+    color: #333;
+}
+
+.form-label {
+    font-weight: 600; /* bolder labels */
+    color: #2d645f; /* color that complements the green theme */
+    margin-bottom: 10px; /* more spacing to distinguish label from input */
+}
+
+.btn {
+    border-radius: 5px; /* consistent border-radius */
+    transition: background-color 0.3s, transform 0.2s; /* smooth transition for background and transform */
+}
+
+.filter-section {
+    padding: 1rem;
+}
+
+.date-container, .dropdown-container {
+    padding: 1rem;
+}
+
+.divider-vertical {
+    border-left: 1px solid #e0e0e0;
+    height: 100%;
+}
+
+.divider-horizontal {
+    border-top: 1px solid #e0e0e0;
+    width: 100%;
+    margin: 1rem 0;
+}
+
+.item-margin {
+    margin-right: 10px; /* Adjust value as needed */
+}
+
+.card{
+    background-color: #e8f5e9;  /* Slightly greenish color */
+}
+
+.form-control{
+    background-color: #f1faf5;  /* Slightly greenish color */
+}
+
+.filter-header {
+    font-weight: bold;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #ccc;
+    padding-bottom: 5px;
+}
+
+.vertical-separator {
+    border-right: 1px solid #ccc; /* Color of the vertical line */
+    padding-right: 10px; /* Space between the dropdown and the vertical line */
+    margin-right: 10px; /* Space between the vertical line and the adjacent dropdown */
+}
+
+.adjust-right {
+    padding-right: 10px;  /* Offset the left padding to align with the vertical separator's padding */
+}
+

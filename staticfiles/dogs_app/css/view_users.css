@@ -1,0 +1,166 @@
+.card {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+}
+
+.card-header {
+    font-size: 1.5em;
+    border-radius: 12px;
+    box-shadow: 0 1px 1px 0 rgba(0,0,0,0.2);
+}
+
+.btn-danger {
+    color: #fff;
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-danger:hover {
+    color: #fff;
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+.btn-warning {
+    color: #333333;
+    background-color: #ffc107;
+    border-color: #ffc107;
+}
+
+.btn-warning:hover {
+    color: #333333;
+    background-color: #e0a800;
+    border-color: #d39e00;
+}
+
+th {
+    font-size: 0.8em;
+}
+
+
+body {
+    font-family: Arial, sans-serif;
+}
+
+.caption-toolbar {
+    background-color: lightsteelblue;
+    border-radius: 8px;
+}
+
+.caption-toolbar h2 {
+    color: #555;
+    text-align: center;
+}
+
+.pagination-container {
+    text-align: center; /* Center the text */
+    margin-top: 15px; /* Add some margin to space it from the table */
+    margin-bottom: 15px;
+}
+
+.step-links {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap; /* If the content overflows, it will wrap onto the next line */
+    justify-content: center; /* Center the content horizontally */
+}
+
+.step-links a {
+    color: #007bff; /* Set the link color */
+    text-decoration: none; /* Remove underlines */
+    margin: 0 1px; /* Add some margin between links */
+}
+
+.step-links a:hover {
+    text-decoration: underline; /* Underline on hover */
+}
+
+.step-links .current {
+    margin: 0 1px; /* Add some margin to space it from the other links */
+    color: #333;
+    font-weight: bold;
+}
+
+.pagination-wrapper {
+    display: flex;
+    justify-content: center; /* Center the content horizontally */
+    align-items: center; /* Center the content vertically */
+    width: 100%; /* Full width */
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pagination a {
+  margin: 0 10px;
+  text-decoration: none;
+}
+
+
+.search-input::placeholder {
+  color: #888;
+}
+
+
+.toolbar {
+  padding: 10px;
+  background-color: #f5f5f5;
+  border-radius: 5px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+  margin: 0 auto;
+  width: 97.5%; /* Reduced the width */
+}
+
+.search-filter {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center the elements horizontally */
+  gap: 10px; /* Add space between the elements */
+}
+
+.search-input,
+.filter-select {
+  flex: 1; /* Make these elements take up an equal amount of space */
+  max-width: 300px; /* Set a maximum width to avoid them getting too large */
+}
+
+.filter-button {
+  background-color: #007bff;
+  border: none;
+  color: white;
+  padding: 6px 12px;
+  font-size: 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.filter-button i { /* Target the icon inside the button */
+  margin-right: 8px; /* Add some space between the icon and the text */
+}
+
+.filter-button:hover {
+  background-color: #0056b3;
+}
+
+.container {
+    margin-left: 9%;
+}
+
+h2 {
+    color: #00473e; /* Darker shade for better readability */
+    text-align: center;
+    font-family: 'Helvetica', sans-serif; /* Choose an elegant font-family */
+    font-weight: 400; /* Not too bold, maintaining elegance */
+    font-size: 1.5rem; /* Slightly larger font size */
+    letter-spacing: 1px; /* Adding some letter-spacing */
+}
+
+.page-item.active .page-link {
+    margin-right: 10px;  /* Add some margin to the right side of the active page */
+}
+

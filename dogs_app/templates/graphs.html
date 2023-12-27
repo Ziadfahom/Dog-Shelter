@@ -1,16 +1,22 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block content %}
-
+{% block head %}
+    <title>DogsWatch | Graphs</title>
     <link href="{% static 'dogs_app/css/graphs.css' %}" rel="stylesheet">
+{% endblock %}
 
-    <div class="title-container mx-auto">
-        <h2>Dog Shelter Statistics</h2>
-        <div id="loading">
-            <img src="{% static 'dogs_app/img/spinner.gif' %}" alt="Loading..." />
+{% block content %}
+    <div class="container p-2 p-md-5 mt-5">
+        <div class="mx-auto text-center bg-dark text-white fw-bold py-3 rounded mb-3">
+            <h2>Dog Shelter Statistics</h2>
         </div>
-    </div>
+
+        <div>
+            <div id="loading">
+                <img src="{% static 'dogs_app/img/spinner.gif' %}" alt="Loading..." />
+            </div>
+        </div>
 
         <div id="carouselExampleIndicators" class="carousel carousel-dark slide">
             <div class="carousel-indicators">
@@ -79,7 +85,7 @@
                                 <span class="with-kong-color">
                                     With
                                 </span>
-                                 Kong
+                                    Kong
                             </h2>
                             <canvas id="chart_dogStances_with_kong"></canvas>
                         </div>
@@ -126,9 +132,15 @@
                 <span class="visually-hidden">Next</span>
             </button>
         </div>
+    <div>
+
+{% endblock %}
 
 
 
+
+
+{% block script %}
     <!-- Declare a variable for chart data URL to be used in the following external JavaScript file -->
     <script type="text/javascript">
         const chartDataUrl = '{% url 'dogs_app:chart_data' %}';
@@ -137,5 +149,4 @@
 
     <!-- Include external JS file for charts -->
     <script src="{% static 'dogs_app/js/graphs.js' %}"></script>
-
 {% endblock %}

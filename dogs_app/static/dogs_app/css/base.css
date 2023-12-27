@@ -1,50 +1,217 @@
 /* Add a distinguished background */
 .breadcrumb {
-    padding: 10px 0;
+  padding: 10px 0;
 
 }
 
 /* Change Font and Text Styles */
 .breadcrumb-item a {
-    font-size: 16px;
-    font-weight: 700;
-    color: #000;
-    transition: color 0.3s ease;
-    background: rgba(255, 255, 255, 0.5);
-    border-radius: 5px;
-    padding: 1px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  transition: color 0.3s ease;
+  border-radius: 5px;
+  padding: 1px;
 }
 
 /* Add hover effects */
 .breadcrumb-item a:hover {
-    text-decoration: underline;
-    color: #007bff;
-    transition: color 0.3s ease;
+  color: #000;
+  transition: color 0.3s ease;
 }
 
 /* Highlight the current page */
 .breadcrumb-item.active {
-    font-weight: 600;
-    color: #007bff;
+  font-weight: 600;
+  color: #007bff;
 }
 
-
-
 .breadcrumb-item i {
-    margin: 0 10px;
-    color: #aaa;
-    font-size: 16px;
-    vertical-align: middle;
+  margin: 0 10px;
+  color: #aaa;
+  font-size: 16px;
+  vertical-align: middle;
 }
 
 .breadcrumb-item+.breadcrumb-item::before {
-    content: "" !important;
-    padding-right: 0;
+  content: "" !important;
+  padding-right: 0;
 }
 
 @media (max-width: 768px) {
-    .breadcrumb {
-        display: none;
-    }
+  .breadcrumb {
+    display: none;
+  }
 }
 
+
+/* UTILITIS */
+:root {
+  --primary-color: #8056dc;
+  --arrow-bg: rgba(255, 255, 255, 0.3);
+  --arrow-icon: url(https://upload.wikimedia.org/wikipedia/commons/9/9d/Caret_down_font_awesome_whitevariation.svg);
+  --option-bg: black;
+  --select-bg: rgba(255, 255, 255, 0.2);
+}
+
+.text-xl {
+  font-size: 4rem;
+}
+
+.py-large {
+  padding-top: 5rem;
+  padding-bottom: 5rem;
+}
+
+.font-oswald {
+  font-family: 'Oswald', sans-serif;
+}
+
+/* COVER */
+.button-cover {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #18181a;
+  color: #18181a;
+  display: inline-block;
+  font-size: 15px;
+  line-height: 15px;
+  padding: 20px 20px 17px;
+  text-decoration: none;
+  cursor: pointer;
+  background: #fff;
+  user-select: none;
+  border-radius: 20px;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.button-cover span:first-child {
+  position: relative;
+  transition: color 600ms cubic-bezier(0.48, 0, 0.12, 1);
+  z-index: 10;
+}
+
+.button-cover span:last-child {
+  color: white;
+  display: block;
+  position: absolute;
+  bottom: 0;
+  transition: all 500ms cubic-bezier(0.48, 0, 0.12, 1);
+  z-index: 100;
+  opacity: 0;
+  top: 50%;
+  left: 50%;
+  transform: translateY(225%) translateX(-50%);
+  height: 14px;
+  line-height: 13px;
+}
+
+.button-cover:after {
+  content: "";
+  position: absolute;
+  bottom: -50%;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: black;
+  transform-origin: bottom center;
+  transition: transform 600ms cubic-bezier(0.48, 0, 0.12, 1);
+  transform: skewY(9.3deg) scaleY(0);
+  z-index: 50;
+}
+
+.button-cover:hover:after {
+  transform-origin: bottom center;
+  transform: skewY(9.3deg) scaleY(2);
+}
+
+.button-cover:hover span:last-child {
+  transform: translateX(-50%) translateY(-50%);
+  opacity: 1;
+  transition: all 900ms cubic-bezier(0.48, 0, 0.12, 1);
+}
+
+.row-flex {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.rounded-circle {
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.shadowed {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5)
+}
+
+.wrapper {
+  position: relative;
+}
+
+.wrapper::before {
+
+}
+
+.navbar-brand {
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.breadcrumb-wrapper {
+  height: 250px;
+  display: flex;
+  align-items: center;
+  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+  background-size: 400% 400%;
+	animation: gradient 15s ease infinite;
+}
+
+@keyframes gradient {
+	0% {
+		background-position: 0% 50%;  
+	}
+	50% {
+		background-position: 100% 50%;
+	}
+	100% {
+		background-position: 0% 50%;
+	}
+}
+
+select {
+  display: inline-block;
+  appearance: none;
+  border: 0;
+  outline: 0;
+  font: inherit;
+  width: 15rem;
+  /* margin: 0px 5px !important; */
+  padding: 1rem 4rem 1rem 1rem;
+  background: var(--arrow-icon) no-repeat right 0.8em center / 1.4em,
+    linear-gradient(to left, black 3em, var(--select-bg) 3em);
+  color: black;
+  border-radius: 0.25em;
+  box-shadow: 0 0 1em 0 rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  &::-ms-expand {
+    display: none;
+  }
+  /* Remove focus outline */
+  &:focus {
+    outline: none !important;
+  }
+  /* <option> colors */
+  option {
+    color: black;
+  }
+}
+
+input {
+  font-size: 16px !important;
+}
+
+input::placeholder {
+  font-size: 14px;
+}

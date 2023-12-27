@@ -1,0 +1,78 @@
+.stylish-button {
+    /* styles for the register button */
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    transition-duration: 0.4s;
+    cursor: pointer;
+    border-radius: 12px;
+}
+
+.back-button {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.btn-primary {
+    color: #fff;
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.btn-primary:hover {
+    color: #fff;
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+
+.card {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+}
+
+.card-header,
+.stylish-card-header {
+    font-size: 1.5em;
+    border-radius: 12px;
+    box-shadow: 0 1px 1px 0 rgba(0,0,0,0.2);
+}
+
+.card-body,
+.stylish-card-body {
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 1px 8px 0 rgba(0,0,0,0.2);
+}
+
+.stylish-label,
+.stylish-form-floating {
+    /* styles for label */
+    font-weight: bold;
+    color: #6c757d;
+}
+
+.action-buttons button{
+    font-size: 1.1rem; /* slightly increase font size */
+    transition: transform 0.2s;
+}
+
+.action-buttons button:hover {
+    transform: scale(1.05); /* subtle grow effect on hover */
+}
+
+input[type='password'] {
+    border-radius: 10px;
+    border: 1px solid #ced4da;
+}
+
+input[type='password']:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}

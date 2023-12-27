@@ -1,0 +1,71 @@
+/* Styling for DateTime picker (flatpickr) for DateTime attributes*/
+
+/* Main Input Field */
+#datetimepicker {
+    font-size: 15px;
+    padding: 9px;
+    border: 2px solid #6C757D;
+    border-radius: 10px;
+    background-color: #E8ECEF;
+    color: #333;
+}
+
+/* Calendar Container */
+.flatpickr-calendar {
+    background-color: #EFEFEF;
+    font-size: 18px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+/* Days */
+.flatpickr-day {
+    border-radius: 50%;
+    transition: background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+.flatpickr-day:hover, .flatpickr-day:focus {
+    background-color: #6C757D;
+    color: white;
+    transform: scale(1.1);
+}
+
+.flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange {
+    background-color: #17A2B8;
+    color: #fff;
+}
+
+/* Time Section */
+.flatpickr-time {
+    background-color: #E0E0E0;
+}
+
+.flatpickr-time input {
+    font-size: 22px;
+    background: transparent;
+    color: #333;
+    border: none;
+    border-bottom: 2px solid #17A2B8;
+}
+
+.flatpickr-time .arrowUp, .flatpickr-time .arrowDown {
+    color: #17A2B8;
+}
+
+/* Styling for Flatpickr's "Ok" button */
+.flatpickr-confirm {
+    background-color: #17A2B8;  /* Button background color */
+    color: #fff;  /* Button text color */
+    padding: 10px 20px;  /* Padding */
+    font-size: 20px;  /* Font size */
+    border-radius: 6px;  /* Rounded corners */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);  /* Drop shadow */
+    transition: background-color 0.3s ease-in-out;  /* Transition effect */
+    font-weight: bold;
+    margin-bottom: 1px;
+}
+
+.flatpickr-confirm:hover {
+    background-color: #149298;  /* Hover background color */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);  /* Hover shadow */
+}
+

@@ -1,21 +1,33 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block content %}
+{% block head %}
     <link href="{% static 'dogs_app/css/add_dog.css' %}" rel="stylesheet">
-    
-    <div class="container mt-3 text-center">
+{% endblock %}
+
+{% block content %}
+    <div class="container p-5">
         <div class="col-md-8 mx-auto">
-            <div class="card border-primary shadow-lg">
-                <div class="card-header text-white text-center bg-primary bg-gradient d-flex justify-content-between align-items-center p-2">
+            <div class="card shadow-lg">
+                <div class="card-header bg-dark text-white d-flex align-items-center justify-content-between py-0">
+                    <button onclick="goBack()" class="btn btn-light my-3 align-self-start" title="Go Back">
+                        <span class="icon-arrow_back text-dark"></span>
+                    </button>
+                    <h2 class="card-title">Add Dog</h2>
+                    <button type="submit" class="btn btn-light" onclick="submitDogForm()" title="Save">
+                        <span class="icon-save text-dark"></span>
+                    </button>
+                </div>
+                {% comment %} <div class="card-header text-white text-center bg-primary bg-gradient d-flex justify-content-between align-items-center p-2">
                     <button onclick="goBack()" class="btn btn-secondary">Back</button>
                     <h2 class="m-2 flex-grow-1 text-center" style="padding-left: 2rem;">New Dog</h2>
                     <button type="submit" class="btn btn-success" onclick="submitDogForm()">Add Dog</button>
-                </div>
-                <div class="card-body">
+                </div> {% endcomment %}
+                <div class="card-body py-5 px-4">
                     <form method="POST" class="form stylish-form" action="{% url 'dogs_app:add_dog' %}" enctype="multipart/form-data">
                         {% csrf_token %}
-                        {% for field in form %}
+                        {% include 'components/form.html' %}
+                        {% comment %} {% for field in form %}
                             <div class="form-floating mb-3">
                                 {{ field }}
                                 <label for="{{ field.id_for_label }}">{{ field.label }}</label>
@@ -25,18 +37,19 @@
                                     </div>
                                 {% endif %}
                             </div>
-                        {% endfor %}
-                        <div class="add-dog-button mt-4">
-                            <button type="submit" class="btn btn-success">Add Dog</button>
+                        {% endfor %} {% endcomment %}
+                        <div class="mt-5 d-flex">
+                            <button class="btn flex-grow-1 btn-outline-success btn-lg" type="submit">
+                                Add Dog
+                            </button>
                         </div>
                     </form>
-                    <div class="back-button mt-2">
-                        <button onclick="goBack()" class="btn btn-secondary">Back</button>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
+{% endblock %}
 
+{% block script %}
     <script src="{% static 'dogs_app/js/add_dog.js' %}"></script>
 {% endblock %}

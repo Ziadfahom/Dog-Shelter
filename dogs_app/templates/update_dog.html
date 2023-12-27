@@ -2,31 +2,36 @@
 {% load widget_tweaks %}
 {% load static %}
 
-{% block content %}
-
+{% block head %}
     <link href="{% static 'dogs_app/css/update_dog.css' %}" rel="stylesheet">
+{% endblock %}
 
-    <div class="container mt-5 col-md-9">
-    <div class="card border-warning stylish-card shadow">
-        <div class="d-flex justify-content-between align-items-center p-2 card-header bg-warning text-black text-center stylish-card-header">
+{% block breadcrumb %} {% endblock %}
 
-            <button onclick="goBack()" class="btn btn-secondary">Back</button>
-            <h2 class="m-2 flex-grow-1 text-center" style="padding-left: 4rem;">Update Details</h2>
-            <button type="submit" class="btn btn-success" onclick="submitDogForm()">Save Changes</button>
-
-        </div>
+{% block content %}
+    <div class="container col-12 col-md-8 p-5">
+        <div class="card shadowed mx-md-5">
+            <div class="d-flex justify-content-between align-items-center p-2 card-header bg-dark text-white text-center">
+                <button onclick="goBack()" class="btn btn-light" title="Go Back">
+                    <span class="icon-arrow_back text-dark"></span>
+                </button>
+                <h2 class="m-2 flex-grow-1 text-center" style="padding-left: 4rem;">Update Details</h2>
+                <button type="submit" class="btn btn-light" onclick="submitDogForm()" title="Save">
+                    <span class="icon-save text-dark"></span>
+                </button>
+            </div>
 
             <div class="card-body stylish-card-body">
                 <form method="POST" class="form stylish-form" enctype="multipart/form-data">
                     {% csrf_token %}
 
                     <!-- Dog Image Display -->
-                    <div class="mb-3 text-center">
+                    <div class="mb-5 text-center">
                         <label class="form-label"></label>
                         {% if form.instance.dogImage %}
-                            <img id="dog_picture" src="{{ form.instance.dogImage.url }}" alt="Dog Image" style="max-width: 300px;">
+                            <img id="dog_picture" class="rounded-circle" src="{{ form.instance.dogImage.url }}" alt="Dog Image" style="width: 20rem; height: 20rem;">
                         {% else %}
-                            <img id="dog_picture" src="{% static 'dogs_app/img/default_dog.jpg' %}" alt="Default Dog Image" style="max-width: 300px;">
+                            <img id="dog_picture" class="rounded-circle" src="{% static 'dogs_app/img/default_dog.jpg' %}" alt="Default Dog Image" style="width: 20rem; height: 20rem;">
                         {% endif %}
                         <p id="image_change_alert" style="display: none;" class="alert alert-warning mt-3">
                             Click the "Update Details" button at the bottom to save this new dog picture, or "Back" to cancel changes.
@@ -75,19 +80,32 @@
                     {% endif %}
                     {% endfor %}
 
-                    <div class="add-dog-button mt-4 action-buttons">
-                        <button type="submit" class="btn btn-success">Save Changes</button>
+                    <div class="card-footer px-0 mx-0 bg-transparent mt-5">
+                        <div class="d-flex mt-1">
+                            <button class="btn flex-grow-1 mx-2 btn-outline-dark btn-lg" type="submit">
+                                Update
+                            </button> 
+                        </div>
                     </div>
 
                 </form>
-                <div class="back-button mt-2">
-                    <button onclick="goBack()" class="btn btn-secondary">Back</button>
-                </div>
             </div>
+
         </div>
     </div>
+    {% comment %} <div class="card border-warning stylish-card shadow">
+        <div class="d-flex justify-content-between align-items-center p-2 card-header bg-warning text-black text-center stylish-card-header">
 
-    <!-- Dog Image Edit Javascript -->
+            <button onclick="goBack()" class="btn btn-secondary">Back</button>
+            <h2 class="m-2 flex-grow-1 text-center" style="padding-left: 4rem;">Update Details</h2>
+            <button type="submit" class="btn btn-success" onclick="submitDogForm()">Save Changes</button>
+
+        </div>
+
+        </div>
+    </div> {% endcomment %}
+{% endblock %}
+
+{% block script %}
     <script src="{% static 'dogs_app/js/update_dog.js' %}"></script>
-
 {% endblock %}

@@ -1,0 +1,55 @@
+body {
+    background-color: #f4f4f4;
+}
+
+.chart-container {
+    width: 80%;
+    margin: 0 auto 2em auto;
+    padding: 20px;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+    background-color: white;
+    border-radius: 15px;
+}
+
+/* Title container styling */
+.title-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(to right, #5b86e5, #36d1dc); /* Subtle gradient background */
+    color: #fff;
+    padding: 1em 0;
+    margin: 2em auto;
+    border-radius: 20px; /* Rounded corners */
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); /* Add shadow for a "lifted" effect */
+    width: 80%;
+    font-family: 'Roboto', sans-serif; /* Use a clean, modern font */
+}
+
+h1 {
+    font-size: 2.5em;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* Loading spinner style updates */
+#loading {
+    display: flex;
+    justify-content: center;
+    padding: 2em;
+}
+
+/* Improve card titles */
+.card-title {
+    font-size: 1.8em;
+    text-align: center;
+    color: #333;
+    font-weight: bold;
+    margin-bottom: 1em;
+}
+
+/* Add styles for a hover effect on each chart */
+.chart-container:hover {
+    transform: scale(1.02);
+    transition: transform 0.2s;
+}

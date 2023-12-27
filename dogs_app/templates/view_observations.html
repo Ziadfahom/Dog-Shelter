@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load date_filters %}
 
 {% block content %}
     <link href="{% static 'dogs_app/css/view_observations.css' %}" rel="stylesheet">
     <!-- DateTime styling -->
     <link href="{% static 'dogs_app/css/_datetime_picker.css' %}" rel="stylesheet">
-    
+
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
@@ -116,7 +117,12 @@
                         {% endif %}
                         <div class="form-row">
                             <label for="video-upload">Upload Raw Video:</label>
-                            <input type="file" id="video-upload" class="form-control-file" name="{{ observation_form.rawVideo.name }}" value="{{ observation_form.rawVideo.value }}">
+                            <input type="file" id="video-upload" class="file_multi_video" name="{{ observation_form.rawVideo.name }}" value="{{ observation_form.rawVideo.value }}">
+                            <label for="video_here">Video Preview:</label>
+                            <video width="400" controls>
+                                <source src="mov_bbb.mp4" id="video_here">
+                                  Your browser does not support HTML5 video.
+                            </video>
                         </div>
                     </div>
 
@@ -128,6 +134,75 @@
                 </form>
             </div>
         </div>
+    </div>
+
+    <!-- Edit Observation Modal -->
+    <div class="modal fade" id="editObservationModal" tabindex="-1" aria-labelledby="editObservationModalLabel" aria-hidden="true">
+       <div class="modal-dialog">
+           <div class="modal-content">
+               <div class="modal-header text-center bg-primary">
+                   <h3 class="modal-title w-100" id="editObservationModalLabel">Edit Observation</h3>
+                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+               </div>
+               <form method="post" enctype="multipart/form-data">
+                   {% csrf_token %}
+                   <div class="modal-body" style="padding-bottom: 0;">
+                        {% if observation_form.obsDateTime.errors %}
+                            <div class="form-error-row">
+                                <span class="text-danger form-error">{{ observation_form.obsDateTime.errors }}</span>
+                            </div>
+                        {% endif %}
+                        <div class="form-row">
+                            <label for="datetimepicker">Observation Date/Time:</label>
+                            <input type="text" id="datetimepicker" class="form-control" name="{{ observation_form.obsDateTime.name }}" value="{{ observation_form.obsDateTime.value|format_datetime }}">
+                        </div>
+                        {% if observation_form.sessionDurationInMins.errors %}
+                            <div class="form-error-row">
+                                <span class="text-danger form-error">{{ observation_form.sessionDurationInMins.errors }}</span>
+                            </div>
+                        {% endif %}
+                        <div class="form-row">
+                            <label for="sessionDuration">Session Duration (Minutes):</label>
+                            <input type="number" id="sessionDuration" class="form-control" name="{{ observation_form.sessionDurationInMins.name }}" value="{{ observation_form.sessionDurationInMins.value }}">
+                        </div>
+                        {% if observation_form.isKong.errors %}
+                            <div class="form-error-row">
+                                <span class="text-danger form-error">{{ observation_form.isKong.errors }}</span>
+                            </div>
+                        {% endif %}
+                        <div class="form-row">
+                            <label for="kong-status">Kong Toy Used:</label>
+                            <select id="kong-status" class="form-control" name="{{ observation_form.isKong.name }}">
+                                {% for value, display in observation_form.isKong.field.choices %}
+                                    <option value="{{ value }}" {% if observation_form.isKong.value == value %}selected{% endif %}>{{ display }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% if observation_form.jsonFile.errors %}
+                            <div class="form-error-row">
+                                <span class="text-danger form-error">{{ observation_form.jsonFile.errors }}</span>
+                            </div>
+                        {% endif %}
+                        <div class="form-row">
+                            <label for="json-upload">Upload JSON File:</label>
+                            <input type="file" id="json-upload" class="form-control-file" name="{{ observation_form.jsonFile.name }}" value="{{ observation_form.jsonFile.value }}">
+                        </div>
+                        {% if observation_form.rawVideo.errors %}
+                            <div class="form-error-row">
+                                <span class="text-danger form-error">{{ observation_form.rawVideo.errors }}</span>
+                            </div>
+                        {% endif %}
+                        <div class="form-row">
+                            <label for="video-upload">Upload Raw Video:</label>
+                            <input type="file" id="video-upload" class="form-control-file" name="{{ observation_form.rawVideo.name }}" value="{{ observation_form.rawVideo.value }}">
+                        </div>                   </div>
+                   <div class="modal-footer" style="padding-top: 0;">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                      <button type="submit" class="btn btn-primary">Save</button>
+                   </div>
+               </form>
+           </div>
+       </div>
     </div>
 
     <!-- Ensure Back Button takes user back to appropriate dog_record page with Sessions open and scrolled down to -->
@@ -142,58 +217,11 @@
     </script>
     <script src="{% static 'dogs_app/js/view_observations.js' %}"></script>
     <script>
-            var table = document.getElementById('observations-table');
-
-            for (var r = 1, n = table.rows.length; r < n; r++) {
-              var element = table.rows[r].cells[4]; //video url
-              if(element!=null) {
-                // Make sure we have files to use
-
-              const video = document.createElement("video");
-              var file = new Blob([element.innerText],{"type" : "video\/mp4"});
-              var value = URL.createObjectURL(file);
-              console.log(file);
-
-              video.autoplay = false;
-              video.controls = true;
-
-              video.addEventListener("load", () => {
-                URL.revokeObjectURL(urlObj);
-              });
-
-              // Append the video element
-              const box = document.getElementById("divider");
-
-              box.appendChild(video);
-
-              // Allow us to control the video
-              video.controls = "true";
-              video.height = 240;
-              video.width = 320;
-            }
-
-
-                /* console.log(element.innerText); //check
-                {
-                // Create a blob that we can use as an src for our audio element
-                const urlObj = createObjectURL(element);
-                console.log(element.innerText);
-                // Create a video element
-
-                // Clean up the URL Object after we are done with it
-                video.addEventListener("load", () => {
-                  URL.revokeObjectURL(urlObj);
-                });
-
-                // Append the video element
-                document.body.appendChild(video);
-
-                // Allow us to control the audio
-                video.controls = "true";
-
-                // Set the src and start loading the video from the file
-                video.src = urlObj;*/
-            }
+        $(document).on("change", ".file_multi_video", function(evt) {
+            var $source = $('#video_here');
+            $source[0].src = URL.createObjectURL(this.files[0]);
+            $source.parent()[0].load();
+          });
     </script>
 
 {% endblock %}

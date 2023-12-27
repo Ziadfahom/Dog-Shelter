@@ -1,38 +1,32 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block content %}
+{% block head %}
+    <title>Dogs Watch | Add News </title>
     <link href="{% static 'dogs_app/css/add_news.css' %}" rel="stylesheet">
+{% endblock %}
 
-    <div class="container mt-3 text-center">
-        <div class="col-md-7 mx-auto">
-            <div class="card border-primary shadow-lg">
-                <div class="card-header text-white bg-primary">
-                    <h2 class="card-title">Add News to the Home Page</h2>
-                </div>
-                <div class="card-body">
-                    <form method="POST">
-                        {% csrf_token %}
-                        <div class="form-floating mb-3">
-                            <input type="text" class="form-control" id="title" name="title" placeholder="Title">
-                            <label for="title">Title</label>
-                        </div>
-                        <div class="form-floating mb-3">
-                            <textarea id="content" name="content" class="form-control" placeholder="Content" style="height: 180px;"></textarea>
-                            <label for="content">Content</label>
-                        </div>
-                        <div class="action-buttons">
-                            <button type="submit" class="btn btn-success">Add News</button>
-                        </div>
 
-                    </form>
-                    <div class="back-button">
-                        <button onclick="goBack()" class="btn btn-secondary">Back</button>
-                    </div>
-                </div>
+{% block content %}
+    <div class="container-fluid px-5 py-large">
+        <div class="row">
+            <div class="col-12 col-md-6">
+                <h1 class="text-lg">Add News to the <br/> Home Page</h1>
+                <p class="pe-5">{% lorem 40 w random %}</p>
+            </div>
+            <div class="col-12 col-md-6">
+                <form method="POST">
+                    {% csrf_token %}
+                    {% include 'components/form.html' %}
+                    <button class="btn btn-outline-dark btn-lg px-5 d-block w-100" type="submit">
+                        Add News
+                    </button>  
+                </form>
             </div>
         </div>
     </div>
+{% endblock %}
 
+{% block script %}
     <script src="{% static 'dogs_app/js/add_news.js' %}"></script>
 {% endblock %}

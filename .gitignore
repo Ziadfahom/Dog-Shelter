@@ -1,2 +1,15 @@
 .env
-/staticfiles/
+.idea/
+.vscode/
+/venv/
+/staticfile/
+
+# chache files
+
+*.pyc
+*.pyo
+*.pyd
+**/__pycache__/**
+
+# Profject Requirements
+Mutant46

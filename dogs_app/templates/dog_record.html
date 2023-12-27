@@ -3,106 +3,108 @@
 {% load dog_filters %}
 {% load static %}
 
-{% block content %}
+{% block head %}
+    <title>DogsWatch | Dogs Details | {{ dog_record.dogName|handle_none }}</title>
     <link href="{% static 'dogs_app/css/dog_record.css' %}" rel="stylesheet">
+{% endblock %}
 
-    <div class="container mt-5">
+{% block content %}
+    <div class="container-fluid mt-5 p-5">
         <div class="col-md-10 mx-auto">
-            <div class="card border-secondary shadow-lg">
+            <div class="card shadowed">
                 <div class="card-header bg-dark text-white d-flex align-items-center justify-content-between">
                     <!-- Back button on the left -->
-                    <button onclick="goBack()" class="btn btn-secondary">Back</button>
+                    <button onclick="goBack()" class="btn btn-light" title="Go Back">
+                        <span class="icon-arrow_back text-dark"></span>
+                    </button>
 
                     <!-- Dog's name centered -->
-                    <h2 class="card-title m-2 flex-grow-1 text-center" style="padding-left: 3rem;">{{ dog_record.dogName }}</h2>
+                    <h2 class="card-title m-2 flex-grow-1 text-center" style="padding-left: 3rem;">
+                        {{ dog_record.dogName }}
+                    </h2>
 
                     <!-- Update and Delete on the right -->
                     <div class="btn-group">
                         {% if user.is_authenticated and user|has_group:"Vet" %}
-                            <a href="{% url 'dogs_app:update_dog' dog_record.dogID %}" class="btn btn-warning">Update</a>
-                            <a href="{% url 'dogs_app:delete_dog' dog_record.dogID %}" class="btn btn-danger">Delete</a>
+                            <a href="{% url 'dogs_app:update_dog' dog_record.dogID %}" class="btn btn-light" title="Update">
+                                <span class="icon-edit text-dark"></span>
+                            </a>
+                            <a href="{% url 'dogs_app:delete_dog' dog_record.dogID %}" class="btn btn-danger" title="Delete">
+                                <span class="icon-delete text-white"></span>
+                            </a>
                         {% endif %}
                     </div>
                 </div>
 
-                <div class="card-header text-center">
+                <div class="text-center my-3">
                     {% if dog_record.dogImage and not dog_record.is_default_image %}
-                        <img id="dog_picture" data-bs-toggle="modal" data-bs-target="#imageModal" src="{{ dog_record.dogImage.url }}" class="card-img-top" alt="Dog Image" style="width: 25rem; height: 20rem; object-fit: cover; cursor: pointer;">
+                        <img id="dog_picture" data-bs-toggle="modal" data-bs-target="#imageModal" src="{{ dog_record.dogImage.url }}" class="rounded-circle" alt="Dog Image" style="width: 12rem; height: 12rem; object-fit: cover; cursor: pointer;">
                     {% else %}
-                        <img id="dog_picture" src="{% static 'dogs_app/img/default_dog.jpg' %}" class="card-img-top" alt="Default Dog Image" style="width: 12rem; height: 12rem; object-fit: cover;">
+                        <img id="dog_picture" src="{% static 'dogs_app/img/default_dog.jpg' %}" class="rounded-circle" alt="Default Dog Image" style="width: 12rem; height: 12rem; object-fit: cover;">
                     {% endif %}
                 </div>
-                <div class="card-body">
 
-                    <table class="table styled-table table-bordered">
+                <div class="card-body bg-none shadow-none">
+                    <table class="table table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>#</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
                         <tbody>
-
                             <tr>
                                 <td class="attr-name"><strong>Dog Name</strong></td>
                                 <td>{{ dog_record.dogName|handle_none }}</td>
                             </tr>
-
                             <tr>
                                 <td><strong>Date of Arrival</strong></td>
                                 <td>{{ dog_record.dateOfArrival|handle_none }}</td>
                             </tr>
-
                             <tr>
                                 <td><strong>Chip Number</strong></td>
                                 <td>{{ dog_record.chipNum|handle_none }}</td>
                             </tr>
-
                             <tr>
                                 <td><strong>Gender</strong></td>
                                 <td>{{ dog_record.gender|gender_filter }}</td>
                             </tr>
-
                             <tr>
                                 <td><strong>Breed</strong></td>
                                 <td>{{ dog_record.breed|handle_none }}</td>
                             </tr>
-
                             <tr>
                                 <td><strong>Fur Color</strong></td>
                                 <td>{{ dog_record.furColor|handle_none }}</td>
                             </tr>
-
                             <tr>
                                 <td><strong>Estimated Date of Birth</strong></td>
                                 <td>{{ dog_record.dateOfBirthEst|handle_none }}</td>
                             </tr>
-
                             <tr>
                                 <td><strong>Estimated Age (Years)</strong></td>
                                 <td>{{ dog_record.dateOfBirthEst|calculate_age }}</td>
                             </tr>
-
                             <tr>
                                 <td><strong>Date of Vaccination</strong></td>
                                 <td>{{ dog_record.dateOfVaccination|handle_none }}</td>
                             </tr>
-
                             <tr>
                                 <td><strong>Neutered?</strong></td>
                                 <td>{{ dog_record.isNeutered|yes_no_filter }}</td>
                             </tr>
-
                             <tr>
                                 <td><strong>Dangerous?</strong></td>
                                 <td>{{ dog_record.isDangerous|yes_no_filter }}</td>
                             </tr>
-
                             <tr>
                                 <td><strong>Date Given Last Kong Toy</strong></td>
                                 <td>{{ dog_record.kongDateAdded|handle_none }}</td>
                             </tr>
-
-
                             <tr>
                                 <td class="attr-name" style="{% if dog_record.owner %}padding-top: 1.4rem;{% endif %}"><strong>Owner</strong></td>
                                 <td>
                                     <div class="d-flex justify-content-between align-items-center">
-
                                         {% if dog_record.owner %}
                                             <div style="width:50%"></div>
                                             <div class="text-center" style="width:50%">
@@ -121,20 +123,26 @@
                                     </div>
                                 </td>
                             </tr>
-
                         </tbody>
                     </table>
+                    
                     <hr>
                     <!-- Expand/Collapse All Button -->
-                    <div class="d-inline-block float-end">
-                        <button id="toggleTables" class="btn btn-outline-dark btn-sm">Expand All</button>
+                    <div class="d-flex justify-content-end">
+                        <button id="toggleTables" class="btn btn-dark btn-sm">
+                            Expand All
+                        </button>
                     </div>
 
+                    <br />
                     <!-- Treatments Table -->
                     <div class="scrollable-table">
-                        <div id="treatments_container" class="center-container clickable-container">
-                            <div class="clickable-header">
-                                <h2>Treatments <i class="fas fa-angle-down"></i></h2>
+                        <div id="treatments_container" class="w-100">
+                            <div class="clickable-header h-100 w-100 my-0 py-3 px-5 d-flex justify-content-between">
+                                <h2>Treatments</h2>
+                                <h2>
+                                    <i class="fas fa-angle-down"></i>
+                                </h2>
                             </div>
                         </div>
                         <div id="treatments_table" class="hide">
@@ -174,12 +182,14 @@
                         </div>
                     </div>
 
-
                     <!-- Entrance Examinations Table -->
                     <div class="scrollable-table">
-                        <div id="examinations_container" class="center-container clickable-container">
-                            <div class="clickable-header mt-3">
-                                <h2>Examinations <i class="fas fa-angle-down"></i></h2>
+                        <div id="examinations_container" class="w-100">
+                            <div class="clickable-header h-100 w-100 my-0 py-3 px-5 d-flex justify-content-between">
+                                <h2>Examinations</h2>
+                                <h2>
+                                    <i class="fas fa-angle-down"></i>
+                                </h2>
                             </div>
                         </div>
                         <div id="examinations_table" class="hide">
@@ -224,9 +234,12 @@
 
                     <!-- Placements in Kennels Table -->
                     <div class="scrollable-table">
-                        <div id="placements_container" class="center-container clickable-container">
-                            <div class="clickable-header mt-3">
-                                <h2>Kennel Placements <i class="fas fa-angle-down"></i></h2>
+                        <div id="placements_container" class="w-100">
+                            <div class="clickable-header h-100 w-100 my-0 py-3 px-5 d-flex justify-content-between">
+                                <h2>Kennel Placements</h2>
+                                <h2>
+                                    <i class="fas fa-angle-down"></i>
+                                </h2>
                             </div>
                         </div>
                         <div id="placements_table" class="hide">
@@ -269,9 +282,12 @@
 
                     <!-- Observes (Camera Session) Table -->
                     <div class="scrollable-table">
-                        <div id="sessions_container" class="center-container clickable-container">
-                            <div class="clickable-header mt-3">
-                                <h2>Camera Sessions <i class="fas fa-angle-down"></i></h2>
+                        <div id="sessions_container" class="w-100">
+                            <div class="clickable-header h-100 w-100 my-0 py-3 px-5 d-flex justify-content-between">
+                                <h2>Camera Sessions</h2>
+                                <h2>
+                                    <i class="fas fa-angle-down"></i>
+                                </h2>
                             </div>
                         </div>
                         <div id="sessions_table" class="hide">
@@ -309,21 +325,17 @@
                            {% include "_dog_record_pagination.html" with paginated_data=sessions param_name="sessions_page" %}
                         </div>
                     </div>
-
                 </div>
 
-                <div class="card-footer bg-transparent">
+                <br />
+                <div class="card-footer bg-transparent py-3">
                     {% if user.is_authenticated and user|has_group:"Vet" %}
-                        <div class="mt-1 action-buttons">
-                            <a href="{% url 'dogs_app:update_dog' dog_record.dogID %}" class="btn btn-warning me-2">Update</a>
-                            <a href="{% url 'dogs_app:delete_dog' dog_record.dogID %}" class="btn btn-danger">Delete</a>
+                        <div class="d-flex mt-1">
+                            <a href="{% url 'dogs_app:update_dog' dog_record.dogID %}" class="btn btn-outline-dark flex-grow-1 mx-2 flex-grow-1">Update</a>
+                            <a href="{% url 'dogs_app:delete_dog' dog_record.dogID %}" class="btn btn-danger d-flex align-items-center justify-content-center mx-2 flex-grow-1">Delete</a>
                         </div>
                     {% endif %}
-                    <div class="back-button">
-                        <button onclick="goBack()" class="btn btn-secondary">Back</button>
-                    </div>
                 </div>
-
             </div>
         </div>
     </div>
@@ -632,11 +644,12 @@
             </div>
         </div>
     </div>
+{% endblock %}
 
-    <!-- Declare a variable for displaying the dog's image, to be used in the following external JavaScript file -->
+<!-- Declare a variable for displaying the dog's image, to be used in the following external JavaScript file -->
+{% block script %}
     <script type="text/javascript">
         const dogImageLoad = '{{ dog_record.dogName }}';
     </script>
     <script src="{% static 'dogs_app/js/dog_record.js' %}"></script>
-
 {% endblock %}

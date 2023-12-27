@@ -46,7 +46,137 @@ $(document).ready(function() {
         const expandIcon = $(this).find('i'); // Find the specific icon inside the clicked row
         expandIcon.toggleClass('fa-angle-down fa-angle-up');
     });
+
+    // Handle the delete button click
+    $(".delete-observation-btn").click(function(){
+        var observationId = $(this).data('observation-id');
+        $('#deleteObservationModal').data('observation-id', observationId);
+        $('#deleteObservationModal').modal('show');
+    });
+
+    $('#confirmDeleteBtn').click(function(){
+        var observationId = $('#deleteObservationModal').data('observation-id');
+        $('#deleteObservationModal').modal('hide');
+        deleteObservation(observationId);
+    });
+
+    function deleteObservation(observationId) {
+        var observationRow = $('#observation-' + observationId); // the main observation row
+        var detailsRow = $('#stances-' + observationId); // the expandable details row
+
+        // Check if details row is expanded
+        if (detailsRow.hasClass('show')) {
+            // If expanded, collapse it first
+            detailsRow.collapse('hide');
+            // Wait for the collapse to complete before deleting
+            detailsRow.on('hidden.bs.collapse', function () {
+                performDeletion(observationId);
+                detailsRow.off('hidden.bs.collapse'); // Unbind the event
+            });
+        } else {
+            // If it's not expanded, delete right away
+            performDeletion(observationId);
+        }
+    }
+
+    function performDeletion(observationId){
+        var observationRow = $('#observation-' + observationId); // the main observation row
+
+        $.ajax({
+            url: '/delete_observation/',
+            type: 'post',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            data: {
+                observation_id: observationId,
+            },
+            success: function(response) {
+                if(response.status == 'success'){
+                    observationRow.remove();
+                    // Show toast instead of alert
+                    var toastEl = new bootstrap.Toast(document.getElementById('successToast'));
+                    toastEl.show();
+                } else if (response.status == 'error') {
+                    alert('Error: ' + response.message);
+                }
+            }
+        });
+    }
+
+    $(".edit-observation-btn").click(function(){
+      var observationId = $(this).data('observation-id');
+
+      // Fetch the current observation data
+      $.ajax({
+          url: '/edit_observation/' + observationId + '/',
+          type: 'get',
+          headers: { 'X-CSRFToken': getCookie('csrftoken') },
+          success: function(response) {
+              if(response.status == 'success'){
+                  // Populate the form fields with the current observation data
+                  // Convert the obsDateTime to a JavaScript Date object
+               var obsDateTime = new Date(response.observation.obsDateTime);
+
+               // Format the obsDateTime in the desired format
+               var formattedObsDateTime = obsDateTime.getFullYear() + '-' +
+                 ('0' + (obsDateTime.getMonth() + 1)).slice(-2) + '-' +
+                 ('0' + obsDateTime.getDate()).slice(-2) + ' ' +
+                 ('0' + obsDateTime.getHours()).slice(-2) + ':' +
+                 ('0' + obsDateTime.getMinutes()).slice(-2);
+
+                  // Populate the form fields with the current observation data
+                  $('#editObservationModal input[name="obsDateTime"]').val(formattedObsDateTime);
+                  $('#editObservationModal input[name="sessionDurationInMins"]').val(response.observation.sessionDurationInMins);
+                  $('#editObservationModal select[name="isKong"]').val(response.observation.isKong);
+                  $('#editObservationModal select[name="jsonFile"]').val(response.observation.jsonFile);
+                  $('#editObservationModal select[name="rawVideo"]').val(response.observation.rawVideo);
+                  // Store the observation ID so it can be used when submitting the form
+                  $('#editObservationModal').data('observation-id', observationId);
+
+                  // Show the modal
+                  $('#editObservationModal').modal('show');
+              } else if (response.status == 'error') {
+                  alert('Error: ' + response.message);
+              }
+          }
+      });
+    });
+
+    $('#editObservationModal form').submit(function(e){
+         e.preventDefault();
+         var formData = $(this).serialize();
+         var observationId = $('#editObservationModal').data('observation-id');
+
+         $.ajax({
+             url: '/edit_observation/' + observationId + '/',
+             type: 'post',
+             headers: { 'X-CSRFToken': getCookie('csrftoken') },
+             data: formData,
+             success: function(response) {
+                 if(response.status == 'success'){
+                                   location.reload();
+
+                 } else if (response.status == 'error') {
+                     alert('Error: ' + response.message);
+                 }
+             }
+         });
+    });
 });
+
+function getCookie(name) {
+   var cookieValue = null;
+   if (document.cookie && document.cookie !== '') {
+       var cookies = document.cookie.split(';');
+       for (var i = 0; i < cookies.length; i++) {
+           var cookie = jQuery.trim(cookies[i]);
+           if (cookie.substring(0, name.length + 1) === (name + '=')) {
+               cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+               break;
+           }
+       }
+   }
+   return cookieValue;
+}
 
 
 // Style the Observation submission success message when a successful Observation form is submitted
@@ -68,7 +198,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 // Add click listener to the Add Dog Stance button
-$("button[data-observation-id]").click(function() {
+$(".add-stance-btn").click(function() {
     const observationId = $(this).data("observation-id");
     $("#observation_id").val(observationId);
     $("#addDogStanceModal").modal('show');
@@ -157,4 +287,3 @@ $(document).ready(function(){
         });
     });
 });
-
