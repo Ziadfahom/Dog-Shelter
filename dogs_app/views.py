@@ -448,7 +448,6 @@ def view_observations(request, session_id):
         paginator = Paginator(observations, ENTRIES_PER_PAGE)
         page_number = request.GET.get('page')
         paginated_observations = paginator.get_page(page_number)
-
         context = {
             'observations': observations,
             'paginated_observations': paginated_observations,
@@ -490,7 +489,6 @@ def edit_observation(request, observation_id):
         del observation_data['rawVideo'] # TODO: Remove this line once the raw video is implemented
         return JsonResponse({"status": "success", "observation": observation_data}, status=200)
 
-
     elif request.method == 'POST':
         observation_form = ObservationForm(request.POST or None, instance=Observation.objects.get(id=observation_id))
         if observation_form.is_valid():
@@ -504,6 +502,44 @@ def edit_observation(request, observation_id):
                 status=200)
         else:
             return JsonResponse({"status": "error", "errors": observation_form.errors}, status=400)
+
+
+# Handle deleting a DogStance
+@require_POST # Ensures this view can only be accessed with POST request
+def delete_stance(request):
+    if request.method == 'POST' and request.user.is_authenticated and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        stance_id = request.POST.get('stance_id')
+        try:
+            dog_stance = DogStance.objects.get(id=stance_id)
+            dog_stance.delete()
+            return JsonResponse({"status": "success"})
+        except DogStance.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Dog Stance not found"}, status=404)
+    else:
+        return JsonResponse({"status": "error", "message": "Unauthorized"}, status=401)
+
+
+# Handle editing a DogStance
+def edit_dog_stance(request, stance_id):
+    if request.method == 'GET':
+        stance = DogStance.objects.get(id=stance_id)
+        stance_form = DogStanceForm(instance=stance)
+        stance_data = stance_form.initial
+        return JsonResponse({"status": "success", "stance": stance_data}, status=200)
+
+    elif request.method == 'POST':
+        stance_form = DogStanceForm(request.POST or None, instance=DogStance.objects.get(id=stance_id))
+        if stance_form.is_valid():
+            saved_stance = stance_form.save()
+            observation_id = saved_stance.observation.id
+
+            updated_stance = DogStance.objects.get(id=stance_id)
+            new_row_html = render_to_string('_observation_row.html', {'stance': updated_stance})
+            return JsonResponse(
+               {"status": "success", "stance": stance_form.cleaned_data, "newRowHtml": new_row_html, "observationId": observation_id},
+               status=200)
+        else:
+            return JsonResponse({"status": "error", "errors": stance_form.errors}, status=400)
 
 
 # Deleting a dog record

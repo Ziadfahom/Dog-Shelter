@@ -433,3 +433,6 @@ h4 {
     transform: translate(-50%, -50%);
 }
 
+html {
+    scroll-behavior: smooth;
+}

@@ -35,6 +35,19 @@ flatpickr("#datetimepicker", {
 // Style form errors when submitting Observation form with errors
 $(document).ready(function() {
 
+    // Check for URL parameters to expand a specific observation
+    const urlParams = new URLSearchParams(window.location.search);
+    const expandObservation = urlParams.get('expandObservation');
+    if(expandObservation){
+        // Trigger the click event to expand the specified Observation
+        $("#observation-" + expandObservation + " .clickable-row").click();
+
+        // Scroll smoothly to the expanded Observation
+        document.querySelector("#observation-" + expandObservation).scrollIntoView({
+            behavior: 'smooth'
+        });
+    }
+
     // Check if any form field has an error
     if ($('.form-error').length > 0) {
         // Open the modal
@@ -54,7 +67,7 @@ $(document).ready(function() {
         $('#deleteObservationModal').modal('show');
     });
 
-    $('#confirmDeleteBtn').click(function(){
+    $('#confirmObservationDeleteBtn').click(function(){
         var observationId = $('#deleteObservationModal').data('observation-id');
         $('#deleteObservationModal').modal('hide');
         deleteObservation(observationId);
@@ -161,6 +174,99 @@ $(document).ready(function() {
              }
          });
     });
+
+    // Handle the DogStance delete button click
+    $(".delete-stance-btn").click(function(){
+       var stanceId = $(this).data('stance-id');
+       var observationId = $(this).data('observation-id'); // Get the observation id
+       $('#deleteStanceModal').data('stance-id', stanceId);
+       $('#deleteStanceModal').data('observation-id', observationId); // Store the observation_id
+       $('#deleteStanceModal').modal('show');
+    });
+
+    // Handle the DogStance delete button click
+    $('#confirmStanceDeleteBtn').click(function(){
+       var stanceId = $('#deleteStanceModal').data('stance-id');
+       var observationId = $('#deleteStanceModal').data('observation-id'); // Retrieve the observation id
+       $('#deleteStanceModal').modal('hide');
+       deleteStance(stanceId, observationId);
+    });
+
+    function deleteStance(stanceId, observationId){
+       var stanceRow = $('#stance-' + stanceId); // the main stance row
+
+       $.ajax({
+           url: '/delete_stance/',
+           type: 'post',
+           headers: { 'X-CSRFToken': getCookie('csrftoken') },
+           data: {
+               stance_id: stanceId,
+           },
+           success: function(response) {
+               if(response.status == 'success'){
+                   // Reload the page with a parameter indicating which observation to expand
+                   window.location.href = window.location.pathname + '?expandObservation=' + observationId;
+                   // Show toast instead of alert
+                   var toastEl = new bootstrap.Toast(document.getElementById('successToast'));
+                   toastEl.show();
+               } else if (response.status == 'error') {
+                   alert('Error: ' + response.message);
+               }
+           }
+       });
+    }
+
+    // Handle the DogStance edit button click
+    $(".edit-stance-btn").click(function(){
+       var stanceId = $(this).data('stance-id');
+
+       $.ajax({
+           url: '/edit_dog_stance/' + stanceId + '/',
+           type: 'get',
+           headers: { 'X-CSRFToken': getCookie('csrftoken') },
+           success: function(response) {
+               if(response.status == 'success'){
+
+                   // Populate the form fields with the current stance data
+                   $('#editStanceModal select[name="dogStance"]').prop('value', response.stance.dogStance);
+                   $('#editStanceModal select[name="dogLocation"]').prop('value', response.stance.dogLocation);
+                   $('#editStanceModal input[name="stanceStartTime"]').prop('value', response.stance.stanceStartTime);
+                   // Store the stance ID so it can be used when submitting the form
+                   $('#editStanceModal').data('stance-id', stanceId);
+
+                   // Show the modal
+                   $('#editStanceModal').modal('show');
+               } else if (response.status == 'error') {
+                   alert('Error: ' + response.message);
+               }
+           },
+           error: function(jqXHR, textStatus, errorThrown) {
+       console.log('AJAX Error: ' + textStatus + ', ' + errorThrown);
+     }
+       });
+    });
+
+    $('#editStanceModal form').submit(function(e){
+       e.preventDefault();
+       var formData = $(this).serialize();
+       var stanceId = $('#editStanceModal').data('stance-id');
+
+       $.ajax({
+           url: '/edit_dog_stance/' + stanceId + '/',
+           type: 'post',
+           headers: { 'X-CSRFToken': getCookie('csrftoken') },
+           data: formData,
+           success: function(response) {
+               if(response.status == 'success'){
+                   // Reload the page with the observation expanded
+                window.location.href = window.location.pathname + '?expandObservation=' + response.observationId;
+               } else if (response.status == 'error') {
+                   alert('Error: ' + response.message);
+               }
+           }
+       });
+    });
+
 });
 
 function getCookie(name) {
@@ -239,6 +345,9 @@ $("#saveDogStanceBtn").click(function() {
 
                 // Close the modal
                 $("#addDogStanceModal").modal('hide');
+
+                // Reload the page with a parameter indicating which observation to expand
+                window.location.href = window.location.pathname + '?expandObservation=' + observationId;
             }
         },
         error: function(response) {

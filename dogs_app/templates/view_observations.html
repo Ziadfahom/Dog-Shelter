@@ -195,7 +195,69 @@
                         <div class="form-row">
                             <label for="video-upload">Upload Raw Video:</label>
                             <input type="file" id="video-upload" class="form-control-file" name="{{ observation_form.rawVideo.name }}" value="{{ observation_form.rawVideo.value }}">
-                        </div>                   </div>
+                        </div>
+                   </div>
+                   <div class="modal-footer" style="padding-top: 0;">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                      <button type="submit" class="btn btn-primary">Save</button>
+                   </div>
+               </form>
+           </div>
+       </div>
+    </div>
+
+    <!-- Edit Dog Stance Modal -->
+    <div class="modal fade" id="editStanceModal" tabindex="-1" aria-labelledby="editStanceModalLabel" aria-hidden="true">
+       <div class="modal-dialog">
+           <div class="modal-content">
+               <div class="modal-header text-center bg-primary">
+                   <h3 class="modal-title w-100" id="editObservationModalLabel">Edit Stance</h3>
+                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+               </div>
+               <form method="post" enctype="multipart/form-data">
+                   {% csrf_token %}
+                   <div class="modal-body" style="padding-bottom: 0;">
+
+                        {% if stance_form.stanceStartTime.errors %}
+                            <div class="form-error-row">
+                                <span class="text-danger form-error">{{ stance_form.stanceStartTime.errors }}</span>
+                            </div>
+                        {% endif %}
+                        <div class="form-row">
+                         <label for="timepicker">Stance Start Time:</label>
+                         <input class="form-control" type="text" id="timepicker" name="stanceStartTime" value="{{ stance_form.stanceStartTime.value|format_time }}">
+                        </div>
+
+
+                        {% if stance_form.dogStance.errors %}
+                            <div class="form-error-row">
+                                <span class="text-danger form-error">{{ stance_form.dogStance.errors }}</span>
+                            </div>
+                        {% endif %}
+                        <div class="form-row">
+                            <label for="currentStance">Stance:</label>
+                            <select id="currentStance" class="form-control" name="{{ stance_form.dogStance.name }}">
+                                {% for value, display in stance_form.dogStance.field.choices %}
+                                    <option value="{{ value }}" {% if stance_form.dogStance.value == value %}selected{% endif %}>{{ display }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        {% if stance_form.dogLocation.errors %}
+                            <div class="form-error-row">
+                                <span class="text-danger form-error">{{ stance_form.dogLocation.errors }}</span>
+                            </div>
+                        {% endif %}
+                        <div class="form-row">
+                            <label for="dogLocation">Location:</label>
+                            <select id="dogLocation" class="form-control" name="{{ stance_form.dogLocation.name }}">
+                                {% for value, display in stance_form.dogLocation.field.choices %}
+                                    <option value="{{ value }}" {% if stance_form.dogLocation.value == value %}selected{% endif %}>{{ display }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                   </div>
                    <div class="modal-footer" style="padding-top: 0;">
                       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                       <button type="submit" class="btn btn-primary">Save</button>
