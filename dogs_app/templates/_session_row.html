@@ -8,4 +8,16 @@
         <!-- "View Observations" button to send User to the corresponding Observations page -->
         <a href="{% url 'dogs_app:view_observations' session.id %}" class="btn btn-outline-dark">Observations</a>
     </td>
+
+    <!-- Edit and Delete buttons -->
+    <td>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-info btn-sm edit-session-btn" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Edit this Session" data-session-id="{{ session.id }}">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button type="button" class="btn btn-outline-danger btn-sm delete-session-btn" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Delete this Session" data-session-id="{{ session.id }}">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    </td>
 </tr>

@@ -1,3 +1,9 @@
+// Initialize global variables to keep track of the current pages for pagination
+let currentTreatmentPage = 1;
+let currentExaminationPage = 1;
+let currentPlacementPage = 1;
+let currentSessionPage = 1;
+
 // Handle "Back" button for returning to previous page
 function goBack() {
     const referrer = document.referrer;
@@ -6,6 +12,90 @@ function goBack() {
     } else {
         window.history.back();
     }
+}
+
+
+// Handle updating the content of a table with the new page's data
+function updateTableContent(tableSelector, data) {
+    const $tableBody = $(tableSelector);
+    $tableBody.empty();
+    data.forEach(row => {
+        $tableBody.append(row);
+    });
+}
+
+// Updates the current pagination for one of the 4 tables
+function updatePagination(paginationSelector, html) {
+    const paginationElement = document.querySelector(paginationSelector);
+    if (paginationElement) {
+        paginationElement.innerHTML = html;
+    }
+}
+
+
+// AJAX call for updating pagination for one of the 4 tables
+function fetchTablePage(paramName, pageNumber) {
+    $.ajax({
+        url: window.location.pathname,
+        data: {
+            [paramName]: pageNumber
+        },
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+        type: "GET",
+        dataType: "json",
+        success: function(response) {
+            const navbarHeight = 50; // To account for Navbar when scrolling to top of the table
+            if (paramName === "treatments_page") {
+                currentTreatmentPage = pageNumber;
+                updateTableContent("#treatments_table tbody", response.data);
+                updatePagination("#treatments_table #pagination", response.pagination);
+                smoothScrollWithOffset("#treatments_container", navbarHeight+15);
+            } else if (paramName === "examinations_page") {
+                currentExaminationPage = pageNumber;
+                updateTableContent("#examinations_table tbody", response.data);
+                updatePagination("#examinations_table #pagination", response.pagination);
+                smoothScrollWithOffset("#examinations_container", navbarHeight);
+            } else if (paramName === "placements_page") {
+                currentPlacementPage = pageNumber;
+                updateTableContent("#placements_table tbody", response.data);
+                updatePagination("#placements_table #pagination", response.pagination);
+                smoothScrollWithOffset("#placements_container", navbarHeight);
+            } else if (paramName === "sessions_page") {
+                currentSessionPage = pageNumber;
+                updateTableContent("#sessions_table tbody", response.data);
+                updatePagination("#sessions_table #pagination", response.pagination);
+                smoothScrollWithOffset("#sessions_container", navbarHeight);
+            }
+        }
+    });
+}
+
+
+// Function for smooth scrolling to the top of a table with offset to account for Navbar
+function smoothScrollWithOffset(containerID, offset = 60) {
+    const elementPosition = $(containerID).offset().top;
+    const offsetPosition = elementPosition - offset;
+
+    $('html, body').animate({
+        scrollTop: offsetPosition
+    }, 100);
+}
+
+
+// retrieve the CSRF token from the cookie and add it to the AJAX request header
+function getCookie(name) {
+   var cookieValue = null;
+   if (document.cookie && document.cookie !== '') {
+       var cookies = document.cookie.split(';');
+       for (var i = 0; i < cookies.length; i++) {
+           var cookie = cookies[i].trim();
+           if (cookie.substring(0, name.length + 1) === (name + '=')) {
+               cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+               break;
+           }
+       }
+   }
+   return cookieValue;
 }
 
 
@@ -48,6 +138,9 @@ $(document).ready(function(){
             $('#toggleTables').text('Expand All');
         }
     }
+    // Call the function immediately after defining it
+    checkAllContainersState();
+
 
     // Setting the click event for image modal
     $('#imageModal').on('show.bs.modal', function (event) {
@@ -108,7 +201,8 @@ showModalOnClick('.new-placement', 'addPlacementModal');
 showModalOnClick('.new-session', 'addSessionModal');
 
 
-// Activate Bootstrap Datepicker script for Date attributes, and handle new form submissions for the 4 tables
+// Handle new form submissions, deletions and updating for the 4 tables
+// Also activates Bootstrap Datepicker script for Date attributes
 $(document).ready(function() {
     var date_input = $('[data-provide="datepicker"]');
 
@@ -158,66 +252,56 @@ $(document).ready(function() {
     handleFormSubmission('#addExaminationModal', '#examinations-success-alert', '#examinations_table', '#examinations_table #pagination');
     handleFormSubmission('#addPlacementModal', '#placements-success-alert', '#placements_table', '#placements_table #pagination');
     handleFormSubmission('#addSessionModal', '#sessions-success-alert', '#sessions_table', '#sessions_table #pagination');
-});
 
 
-// Function for smooth scrolling to the top of a table with offset to account for Navbar
-function smoothScrollWithOffset(containerID, offset = 60) {
-    const elementPosition = $(containerID).offset().top;
-    const offsetPosition = elementPosition - offset;
+    // Handle deletion of a Treatment/Examination/Placement/Session entity
+    function handleEntityDeletion(entityName, entityId, modalId, confirmButtonId) {
+        $(document).on('click', '.delete-' + entityName + '-btn', function() {
+            var entityIdValue = $(this).data(entityName + "-id");
+            $("#" + modalId).modal('show');
+            $("#" + confirmButtonId).data(entityName + "-id", entityIdValue);
+        });
 
-    $('html, body').animate({
-        scrollTop: offsetPosition
-    }, 100);
-}
+        // Handle confirmation of deletion
+        $(document).on('click', '#' + confirmButtonId, function() {
+            var entityIdValue = $(this).data(entityName + "-id");
+            var deleteUrl = '/delete_' + entityName + '/' + entityIdValue + '/';
+            var csrftoken = getCookie('csrftoken');
 
-// AJAX call for updating pagination for one of the 4 tables
-function fetchTablePage(paramName, pageNumber) {
-    $.ajax({
-        url: window.location.pathname,
-        data: {
-            [paramName]: pageNumber
-        },
-        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
-        type: "GET",
-        dataType: "json",
-        success: function(response) {
-            const navbarHeight = 50; // To account for Navbar when scrolling to top of the table
-            if (paramName === "treatments_page") {
-                updateTableContent("#treatments_table tbody", response.data);
-                updatePagination("#treatments_table #pagination", response.pagination);
-                smoothScrollWithOffset("#treatments_container", navbarHeight+15);
-            } else if (paramName === "examinations_page") {
-                updateTableContent("#examinations_table tbody", response.data);
-                updatePagination("#examinations_table #pagination", response.pagination);
-                smoothScrollWithOffset("#examinations_container", navbarHeight);
-            } else if (paramName === "placements_page") {
-                updateTableContent("#placements_table tbody", response.data);
-                updatePagination("#placements_table #pagination", response.pagination);
-                smoothScrollWithOffset("#placements_container", navbarHeight);
-            } else if (paramName === "sessions_page") {
-                updateTableContent("#sessions_table tbody", response.data);
-                updatePagination("#sessions_table #pagination", response.pagination);
-                smoothScrollWithOffset("#sessions_container", navbarHeight);
-            }
-        }
-    });
-}
+            $.ajax({
+                url: deleteUrl,
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrftoken },
+                data: {
+                    _method: 'DELETE'
+                },success: function() {
+                    $("#" + modalId).modal('hide');
 
-// Handle updating the content of a table with the new page's data
-function updateTableContent(tableSelector, data) {
-    const $tableBody = $(tableSelector);
-    $tableBody.empty();
-    data.forEach(row => {
-        $tableBody.append(row);
-    });
-}
-
-// Updates the current pagination for one of the 4 tables
-function updatePagination(paginationSelector, html) {
-    const paginationElement = document.querySelector(paginationSelector);
-    if (paginationElement) {
-        paginationElement.innerHTML = html;
+                    // Update Page variable for current page
+                    let currentPage = 1;
+                    switch (entityName) {
+                    case 'treatment':
+                        currentPage = currentTreatmentPage;
+                        break;
+                    case 'examination':
+                        currentPage = currentExaminationPage;
+                        break;
+                    case 'placement':
+                        currentPage = currentPlacementPage;
+                        break;
+                    case 'session':
+                        currentPage = currentSessionPage;
+                        break;
+                    }
+                    fetchTablePage(entityName + 's_page', currentPage);
+                }
+            });
+        });
     }
-}
 
+    handleEntityDeletion('treatment', 'treatmentId', 'deleteTreatmentModal', 'confirmTreatmentDeleteBtn');
+    handleEntityDeletion('examination', 'examinationId', 'deleteExaminationModal', 'confirmExaminationDeleteBtn');
+    handleEntityDeletion('placement', 'placementId', 'deletePlacementModal', 'confirmPlacementDeleteBtn');
+    handleEntityDeletion('session', 'sessionId', 'deleteSessionModal', 'confirmSessionDeleteBtn');
+
+});

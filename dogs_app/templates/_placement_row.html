@@ -6,4 +6,16 @@
     <td>{{ placement.duration|handle_none }}</td>
     <td>{{ placement.kennel }}</td>
     <td>{{ placement.placementReason|handle_none }}</td>
+
+    <!-- Edit and Delete buttons -->
+    <td>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-info btn-sm edit-placement-btn" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Edit this Placement" data-placement-id="{{ placement.id }}">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button type="button" class="btn btn-outline-danger btn-sm delete-placement-btn" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Delete this Placement" data-placement-id="{{ placement.id }}">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    </td>
 </tr>

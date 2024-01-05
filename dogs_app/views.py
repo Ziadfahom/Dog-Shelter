@@ -1,5 +1,7 @@
 import json
 from datetime import datetime, timedelta
+
+from django.views.decorators.csrf import csrf_exempt
 from openpyxl import Workbook, load_workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
@@ -109,6 +111,7 @@ def logout_user_view(request):
     logout(request)
     messages.success(request, message='You have been logged out..')
     return redirect('dogs_app:home')
+
 
 def login_user_view(request):
     if request.method == 'POST':
@@ -395,6 +398,54 @@ def dog_record_view(request, pk):
     else:
         messages.error(request, message='You Must Be Logged In To View That Page...')
         return redirect('dogs_app:home')
+
+
+# Handle deleting a Treatment
+def delete_treatment(request, treatment_id):
+    if request.method == 'POST' and request.POST.get('_method') == 'DELETE' and request.headers.get(
+            'X-Requested-With') == 'XMLHttpRequest':
+        try:
+            treatment = Treatment.objects.get(treatmentID=treatment_id)
+            treatment.delete()
+            return JsonResponse({'status': 'success'})
+        except Treatment.DoesNotExist:
+            return JsonResponse({'status': 'fail'})
+
+
+# Handle deleting an Examination
+def delete_examination(request, examination_id):
+    if request.method == 'POST' and request.POST.get('_method') == 'DELETE' and request.headers.get(
+            'X-Requested-With') == 'XMLHttpRequest':
+        try:
+            examination = EntranceExamination.objects.get(examinationID=examination_id)
+            examination.delete()
+            return JsonResponse({'status': 'success'})
+        except EntranceExamination.DoesNotExist:
+            return JsonResponse({'status': 'fail'})
+
+
+# Handle deleting a DogPlacement
+def delete_placement(request, placement_id):
+    if request.method == 'POST' and request.POST.get('_method') == 'DELETE' and request.headers.get(
+            'X-Requested-With') == 'XMLHttpRequest':
+        try:
+            placement = DogPlacement.objects.get(id=placement_id)
+            placement.delete()
+            return JsonResponse({'status': 'success'})
+        except DogPlacement.DoesNotExist:
+            return JsonResponse({'status': 'fail'})
+
+
+# Handle deleting a Session (Observes)
+def delete_session(request, session_id):
+    if request.method == 'POST' and request.POST.get('_method') == 'DELETE' and request.headers.get(
+            'X-Requested-With') == 'XMLHttpRequest':
+        try:
+            session = Observes.objects.get(id=session_id)
+            session.delete()
+            return JsonResponse({'status': 'success'})
+        except Observes.DoesNotExist:
+            return JsonResponse({'status': 'fail'})
 
 
 # Handle Observations display
