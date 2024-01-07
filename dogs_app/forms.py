@@ -248,6 +248,23 @@ class EntranceExaminationForm(forms.ModelForm):
         }
 
 
+# Form for adding new Owner
+class OwnerForm(forms.ModelForm):
+    class Meta:
+        model = Owner
+        fields = ['firstName', 'lastName', 'ownerID', 'ownerAddress', 'city', 'phoneNum', 'cellphoneNum', 'comments']
+        widgets = {
+            'firstName': forms.TextInput(attrs={'class': 'form-control'}),
+            'lastName': forms.TextInput(attrs={'class': 'form-control'}),
+            'ownerID': forms.TextInput(attrs={'class': 'form-control'}),
+            'ownerAddress': forms.TextInput(attrs={'class': 'form-control'}),
+            'city': forms.TextInput(attrs={'class': 'form-control'}),
+            'phoneNum': forms.TextInput(attrs={'class': 'form-control'}),
+            'cellphoneNum': forms.TextInput(attrs={'class': 'form-control'}),
+            'comments': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+
 # Form for adding new Dog Placements (in Kennels)
 class DogPlacementForm(forms.ModelForm):
     class Meta:

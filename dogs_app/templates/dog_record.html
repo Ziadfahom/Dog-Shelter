@@ -106,19 +106,16 @@
                                 <td>
                                     <div class="d-flex justify-content-between align-items-center">
                                         {% if dog_record.owner %}
-                                            <div style="width:50%"></div>
-                                            <div class="text-center" style="width:50%">
+                                            <div class="text-center" >
                                                 {{ dog_record.owner|handle_none }}
                                             </div>
-                                            <div style="width:50%">
+                                            <div >
                                                 <button type="button" id="owner-button" class="btn btn-primary float-end" data-bs-toggle="modal" data-bs-target="#ownerModal">Details</button>
                                             </div>
                                         {% else %}
-                                            <div style="width:50%"></div>
-                                            <div class="text-center" style="width:50%">
+                                            <div class="text-center" >
                                                 {{ dog_record.owner|handle_none }}
                                             </div>
-                                            <div style="width:50%"></div>
                                         {% endif %}
                                     </div>
                                 </td>
@@ -393,12 +390,109 @@
 
                 <!-- Modal Footer -->
                 <div class="modal-footer">
+                    <button type="button" class="btn btn-primary edit-owner-btn" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Edit this Owner" data-owner-id="{{ dog_record.owner.ownerSerialNum }}">Edit Owner Details</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
 
             </div>
         </div>
     </div>
+
+    <!-- Edit Owner Modal -->
+    <div class="modal fade" id="editOwnerModal" tabindex="-1" aria-labelledby="editOwnerModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header text-center bg-primary">
+                    <h3 class="modal-title w-100" id="editOwnerModalLabel">Edit Owner</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" action="{% url 'dogs_app:dog_record' dog_record.dogID %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="owner_form">
+
+                        <div class="row mb-3">
+                            <div class="col-5 text-end">
+                                <label for="{{ owner.firstName.id_for_label }}" class="col-form-label">First Name:</label>
+                            </div>
+                            <div class="col-7 custom-input">
+                                {{ owner.firstName }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-5 text-end">
+                                <label for="{{ owner.lastName.id_for_label }}" class="col-form-label">Last Name:</label>
+                            </div>
+                            <div class="col-7 custom-input">
+                                {{ owner.lastName }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-5 text-end">
+                                <label for="{{ owner.ownerID.id_for_label }}" class="col-form-label">ID:</label>
+                            </div>
+                            <div class="col-7 custom-input">
+                                {{ owner.ownerID }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-5 text-end">
+                                <label for="{{ owner.ownerAddress.id_for_label }}" class="col-form-label">Address:</label>
+                            </div>
+                            <div class="col-7 custom-input">
+                                {{ owner.ownerAddress }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-5 text-end">
+                                <label for="{{ owner.city.id_for_label }}" class="col-form-label">City:</label>
+                            </div>
+                            <div class="col-7 custom-input">
+                                {{ owner.city }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-5 text-end">
+                                <label for="{{ owner.phoneNum.id_for_label }}" class="col-form-label">Phone Number:</label>
+                            </div>
+                            <div class="col-7 custom-input">
+                                {{ owner.phoneNum }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-5 text-end">
+                                <label for="{{ owner.cellphoneNum.id_for_label }}" class="col-form-label">Cellphone Number:</label>
+                            </div>
+                            <div class="col-7 custom-input">
+                                {{ owner.cellphoneNum }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-5 text-end">
+                                <label for="{{ owner.comments.id_for_label }}" class="col-form-label">Comments:</label>
+                            </div>
+                            <div class="col-7 custom-input">
+                                {{ owner.comments }}
+                            </div>
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-modal edit-owner-confirm-btn">Save Changes</button>
+                            <button type="button" class="btn btn-secondary btn-modal" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <!-- Add Treatment Modal -->
     <div class="modal fade" id="addTreatmentModal" tabindex="-1" aria-labelledby="addTreatmentModalLabel" aria-hidden="true">

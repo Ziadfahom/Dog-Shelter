@@ -18,7 +18,7 @@ from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect, JsonResponse, HttpResponse, HttpResponseNotAllowed
 from .filters import DogFilter
 from .forms import SignUpForm, AddDogForm, UpdateUserForm, ProfileUpdateForm, TreatmentForm, EntranceExaminationForm, \
-    DogPlacementForm, ObservesForm, ObservationForm, DogStanceForm, LoginForm, NewsForm
+    DogPlacementForm, ObservesForm, ObservationForm, DogStanceForm, LoginForm, NewsForm, OwnerForm
 from .models import *
 from django.conf import settings
 import os
@@ -221,7 +221,6 @@ def add_news(request):
 
 
 # Dog record page, displays the details for a single dog
-# Takes in the dog's PK
 def dog_record_view(request, pk):
     # Check if the user is logged in
     if request.user.is_authenticated:
@@ -398,8 +397,13 @@ def dog_record_view(request, pk):
                                                       {'paginated_data': sessions, 'param_name': 'sessions_page'})
             return JsonResponse(data)
 
+        # Generate Owner form
+        owner = Owner.objects.filter(ownerSerialNum=dog_record.owner_id).first()
+        owner_form = OwnerForm(request.POST or None, instance=owner)
+
         context = {
             'dog_record': dog_record,
+            'owner': owner_form if owner_form else None,
             'treatments': treatments,
             'examinations': examinations,
             'placements': placements,
@@ -617,6 +621,49 @@ def edit_session(request, session_id):
                 return JsonResponse(session_data)
             except Observes.DoesNotExist:
                 return JsonResponse({'status': 'fail', 'message': 'Session not found'})
+            except Exception as e:
+                return JsonResponse({'status': 'fail', 'message': str(e)})
+        else:
+            # Return a Method Not Allowed status if not GET or POST
+            return HttpResponseNotAllowed(['POST', 'GET'])
+
+
+# Handle Editing an Owner
+def edit_owner(request, owner_id):
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        if request.method == 'POST' and request.user.is_authenticated:
+            try:
+                owner = Owner.objects.get(ownerSerialNum=owner_id)
+                form = OwnerForm(request.POST, instance=owner)
+                if form.is_valid():
+                    form.save()
+                    return JsonResponse({'status': 'success'})
+                else:
+                    errors = {}
+                    for key, value in form.errors.items():
+                        errors[key] = ', '.join([str(error) for error in value])
+                    return JsonResponse({'status': 'fail', 'errors': errors})
+            except Owner.DoesNotExist:
+                return JsonResponse({'status': 'fail'})
+            except Exception as e:
+                return JsonResponse({'status': 'fail', 'message': str(e)})
+        elif request.method == 'GET':
+            try:
+                owner = Owner.objects.get(ownerSerialNum=owner_id)
+                owner_data = {
+                    'status': 'success',
+                    'firstName': owner.firstName if owner.firstName else None,
+                    'lastName': owner.lastName if owner.lastName else None,
+                    'ownerID': owner.ownerID if owner.ownerID else None,
+                    'ownerAddress': owner.ownerAddress if owner.ownerAddress else None,
+                    'city': owner.city if owner.city else None,
+                    'phoneNum': owner.phoneNum if owner.phoneNum else None,
+                    'cellphoneNum': owner.cellphoneNum if owner.cellphoneNum else None,
+                    'comments': owner.comments if owner.comments else None,
+                }
+                return JsonResponse(owner_data)
+            except Owner.DoesNotExist:
+                return JsonResponse({'status': 'fail', 'message': 'Owner not found'})
             except Exception as e:
                 return JsonResponse({'status': 'fail', 'message': str(e)})
         else:

@@ -15,6 +15,7 @@ urlpatterns = [
     path('delete_dog/<int:pk>', views.delete_dog_view, name='delete_dog'),
     path('add_dog/', views.add_dog_view, name='add_dog'),
     path('update_dog/<int:pk>', views.update_dog_view, name='update_dog'),
+    path('edit_owner/<int:owner_id>/', views.edit_owner, name='edit_owner'),
     path('delete_treatment/<int:treatment_id>/', views.delete_treatment, name='delete_treatment'),
     path('delete_examination/<int:examination_id>/', views.delete_examination, name='delete_examination'),
     path('delete_placement/<int:placement_id>/', views.delete_placement, name='delete_placement'),

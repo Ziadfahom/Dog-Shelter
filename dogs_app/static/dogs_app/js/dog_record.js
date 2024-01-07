@@ -633,8 +633,165 @@ $(document).ready(function() {
         });
     });
 
+    // Handle updating of an Examination
+    // Function to open the Edit Examination Modal and populate it with data
+    function openExaminationEditModal(examinationId) {
+        // Fetch the examination data using AJAX
+        $.ajax({
+            url: '/edit_examination/' + examinationId + '/',
+            method: 'GET',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            success: function(response) {
+                // Populate the form fields with the examination details
+                $('#editExaminationModal input[name="examinationDate"]').val(response.examinationDate);
+                $('#editExaminationModal input[name="examinedBy"]').val(response.examinedBy);
+                $('#editExaminationModal input[name="results"]').val(response.results);
+                $('#editExaminationModal input[name="dogWeight"]').val(response.dogWeight);
+                $('#editExaminationModal input[name="dogTemperature"]').val(response.dogTemperature);
+                $('#editExaminationModal input[name="dogPulse"]').val(response.dogPulse);
+                $('#editExaminationModal textarea[name="comments"]').val(response.comments);
+
+                // Store the examination ID in the submit button for later reference
+                $('#editExaminationModal .edit-examination-confirm-btn').data('examination-id', examinationId);
+
+                // Show the modal
+                $('#editExaminationModal').modal('show');
+            }
+        });
+    }
+
+    // Attach event listener to each Edit button in the examinations table
+    $(document).on('click', '.edit-examination-btn', function() {
+        var examinationId = $(this).data('examination-id');
+        openExaminationEditModal(examinationId);
+    });
+
+    // Submit handler for Edit Examination Modal
+    $('#editExaminationModal .edit-examination-confirm-btn').click(function(e) {
+        e.preventDefault();
+
+        var examinationId = $(this).data('examination-id');  // Retrieve the examination ID stored earlier
+        var $form = $('#editExaminationModal form');  // Get the form inside the modal
+
+        // Remove existing error spans
+        $('.error').remove();
+
+        // Send the updated examination data to the server via AJAX
+        $.ajax({
+            url: '/edit_examination/' + examinationId + '/',
+            method: 'POST',
+            data: $form.serialize(),  // Serialize form data for submission
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            success: function(response) {
+                if (response.status === 'success') {
+                    // Hide the modal
+                    $('#editExaminationModal').modal('hide');
+
+                    // Reset the form
+                    $form[0].reset();
+
+                    // Refresh the examination table to show the updated data
+                    fetchTablePage('examinations_page', currentExaminationPage);
+
+
+                } else {
+                   // Display error messages
+                   for (var field in response.errors) {
+                      var errorMessage = response.errors[field];
+                      $('#editExaminationModal input[name="' + field + '"]').after('<span class="error">' + errorMessage + '</span>');
+                   }
+                }
+            }
+        });
+    });
+
+    // Handle updating of an Owner
+    // Function to open the Edit Owner Modal and populate it with data
+    function openOwnerEditModal(ownerId) {
+        // Fetch the placement data using AJAX
+        $.ajax({
+            url: '/edit_owner/' + ownerId + '/',
+            method: 'GET',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            success: function(response) {
+                // Populate the form fields with the owner details
+                $('#editOwnerModal input[name="firstName"]').val(response.firstName);
+                $('#editOwnerModal input[name="lastName"]').val(response.lastName);
+                $('#editOwnerModal input[name="ownerID"]').val(response.ownerID);
+                $('#editOwnerModal input[name="ownerAddress"]').val(response.ownerAddress);
+                $('#editOwnerModal input[name="city"]').val(response.city);
+                $('#editOwnerModal input[name="phoneNum"]').val(response.phoneNum);
+                $('#editOwnerModal input[name="cellphoneNum"]').val(response.cellphoneNum);
+                $('#editOwnerModal textarea[name="comments"]').val(response.comments);
+
+                // Store the owner ID in the submit button for later reference
+$('#editOwnerModal .edit-owner-confirm-btn').attr('data-owner-id', ownerId);
+
+                // Show the modal
+                $('#editOwnerModal').modal('show');
+            }
+        });
+    }
+
+    // Attach event listener to the Edit button in the owner table
+    $(document).on('click', '.edit-owner-btn', function() {
+        var ownerId = $(this).data('owner-id');
+        openOwnerEditModal(ownerId);
+    });
+
+    // Submit handler for Edit Owner Modal
+    $('#editOwnerModal .edit-owner-confirm-btn').click(function(e) {
+        e.preventDefault();
+
+        var ownerId = $(this).data('owner-id');  // Retrieve the owner ID stored earlier
+        var $form = $('#editOwnerModal form');  // Get the form inside the modal
+
+        // Remove existing error spans
+        $('.error').remove();
+
+        // Send the updated owner data to the server via AJAX
+        $.ajax({
+            url: '/edit_owner/' + ownerId + '/',
+            method: 'POST',
+            data: $form.serialize(),  // Serialize form data for submission
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            success: function(response) {
+                if (response.status === 'success') {
+                // Set a flag in sessionStorage before reloading
+                sessionStorage.setItem('ownerEditSuccess', 'true');
+
+                // Reload the page
+                location.reload();
+
+                } else {
+                    // Display error messages
+                    for (var field in response.errors) {
+                       if (field === '__all__') {
+                           // Handle the general error message
+                           $('.general-error').text(response.errors[field]);
+                       } else {
+                           // Handle field-specific error messages
+                           var errorMessage = response.errors[field];
+                           $('#editOwnerModal input[name="' + field + '"]').after('<span class="error">' + errorMessage + '</span>');
+                       }
+                    }
+
+                }
+            }
+        });
+    });
+
+    // Check if the Owner Editing form was successfully submitted, open Owner details if so
+    if (sessionStorage.getItem('ownerEditSuccess') === 'true') {
+        // Trigger the click event on the #owner-button
+        $("#owner-button").click();
+
+        // Clear the flag immediately
+        sessionStorage.removeItem('ownerEditSuccess');
+    }
+
     // Disable all error messages after closing modals
-    $('#editSessionModal, #editTreatmentModal, #editExaminationModal, #editPlacementModal').on('hidden.bs.modal', function () {
+    $('#editSessionModal, #editTreatmentModal, #editExaminationModal, #editPlacementModal, #editOwnerModal').on('hidden.bs.modal', function () {
         $('.error').remove();
     });
 

@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import User
+import re
 
 
 # Location of the default User profile picture if they don't have one
@@ -38,16 +39,31 @@ class Profile(models.Model):
         return self.image.name in [DEFAULT_PROFILE_IMAGE_SOURCE, ALTERNATIVE_DEFAULT_PROFILE_IMAGE_SOURCE]
 
 
+def validate_phoneNum(value):
+    if not re.match(r'^\d{0,9}$', value):
+        raise ValidationError("Phone number must be up to 9 digits long and only contain digits.")
+
+
+def validate_cellphoneNum(value):
+    if not re.match(r'^\d{0,10}$', value):
+        raise ValidationError("Cellphone number must be up to 10 digits long and only contain digits.")
+
+
+def validate_ownerID(value):
+    if not re.match(r'^\d*$', value):  # Matches only digits, allows empty string
+        raise ValidationError("Owner ID must contain only digits.")
+
+
 class Owner(models.Model):
     ownerSerialNum = models.AutoField(primary_key=True)
     firstName = models.CharField(max_length=50)
     lastName = models.CharField(max_length=50, blank=True, null=True)
     # The actual ID number of the person
-    ownerID = models.CharField(max_length=9, blank=True, null=True, unique=True)
+    ownerID = models.CharField(max_length=9, blank=True, null=True, unique=True, validators=[validate_ownerID])
     ownerAddress = models.CharField(max_length=70, blank=True, null=True)
     city = models.CharField(max_length=50, blank=True, null=True)
-    phoneNum = models.CharField(max_length=9, blank=True, null=True)
-    cellphoneNum = models.CharField(max_length=10, blank=True, null=True)
+    phoneNum = models.CharField(max_length=9, blank=True, null=True, validators=[validate_phoneNum])
+    cellphoneNum = models.CharField(max_length=10, blank=True, null=True, validators=[validate_cellphoneNum])
     comments = models.CharField(max_length=200, blank=True, null=True)
 
     def __str__(self):
@@ -55,18 +71,6 @@ class Owner(models.Model):
             return f"{self.firstName}"
         else:
             return f"{self.firstName} {self.lastName}"
-
-    class Meta:
-        constraints = [
-            models.CheckConstraint(
-                check=models.Q(phoneNum__regex='^[0-9]{9}$'),
-                name='phoneNum_check',
-            ),
-            models.CheckConstraint(
-                check=models.Q(cellphoneNum__regex='^[0-9]{10}$'),
-                name='cellphoneNum_check',
-            ),
-        ]
 
 
 class Dog(models.Model):
