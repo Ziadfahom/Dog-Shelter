@@ -412,6 +412,8 @@
                     <form method="post" action="{% url 'dogs_app:dog_record' dog_record.dogID %}">
                         {% csrf_token %}
 
+                        <input type="hidden" name="form_type" value="treatment_form">
+
                         <div class="row mb-3">
                             <div class="col-5 text-end">
                                 <label for="{{ treatment_form.treatmentName.id_for_label }}" class="col-form-label">Treatment Name:</label>
@@ -468,6 +470,8 @@
                 <div class="modal-body">
                     <form method="post" action="{% url 'dogs_app:dog_record' dog_record.dogID %}">
                         {% csrf_token %}
+
+                        <input type="hidden" name="form_type" value="examination_form">
 
                         <div class="row mb-3">
                             <div class="col-5 text-end">
@@ -553,6 +557,8 @@
                     <form method="post" action="{% url 'dogs_app:dog_record' dog_record.dogID %}">
                         {% csrf_token %}
 
+                        <input type="hidden" name="form_type" value="placement_form">
+
                         <div class="row mb-3">
                             <div class="col-5 text-end">
                                 <label for="{{ placement_form.kennel.id_for_label }}" class="col-form-label">Kennel:</label>
@@ -612,6 +618,9 @@
                 <div class="modal-body">
                     <form method="post" action="{% url 'dogs_app:dog_record' dog_record.dogID %}">
                         {% csrf_token %}
+
+                        <input type="hidden" name="form_type" value="session_form">
+
 
                         <div class="row mb-3">
                             <div class="col-5 text-end">
@@ -737,7 +746,6 @@
                 <div class="modal-body">
                     <form method="post" action="{% url 'dogs_app:dog_record' dog_record.dogID %}">
                         {% csrf_token %}
-
                         <div class="row mb-3">
                             <div class="col-5 text-end">
                                 <label for="{{ treatment_form.treatmentName.id_for_label }}" class="col-form-label">Treatment Name:</label>
@@ -782,6 +790,194 @@
             </div>
         </div>
     </div>
+
+    <!-- Edit Examination Modal -->
+    <div class="modal fade" id="editExaminationModal" tabindex="-1" aria-labelledby="editExaminationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header text-center bg-primary">
+                    <h3 class="modal-title w-100" id="editExaminationModalLabel">Edit Examination</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" action="{% url 'dogs_app:dog_record' dog_record.dogID %}">
+                        {% csrf_token %}
+                        <div class="row mb-3">
+                            <div class="col-5 text-end">
+                                <label for="{{ examination_form.examinationDate.id_for_label }}" class="col-form-label">Examination Date:</label>
+                            </div>
+                            <div class="col-7 custom-input">
+                                {{ examination_form.examinationDate }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-5 text-end">
+                                <label for="{{ examination_form.examinedBy.id_for_label }}" class="col-form-label">Examined By:</label>
+                            </div>
+                            <div class="col-7 custom-input">
+                                {{ examination_form.examinedBy }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-5 text-end">
+                                <label for="{{ examination_form.results.id_for_label }}" class="col-form-label">Results:</label>
+                            </div>
+                            <div class="col-7 custom-input">
+                                {{ examination_form.results }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-5 text-end">
+                                <label for="{{ examination_form.dogWeight.id_for_label }}" class="col-form-label">Weight:</label>
+                            </div>
+                            <div class="col-7 custom-input">
+                                {{ examination_form.dogWeight }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-5 text-end">
+                                <label for="{{ examination_form.dogTemperature.id_for_label }}" class="col-form-label">Temperature:</label>
+                            </div>
+                            <div class="col-7 custom-input">
+                                {{ examination_form.dogTemperature }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-5 text-end">
+                                <label for="{{ examination_form.dogPulse.id_for_label }}" class="col-form-label">Pulse:</label>
+                            </div>
+                            <div class="col-7 custom-input">
+                                {{ examination_form.dogPulse }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-5 text-end">
+                                <label for="{{ examination_form.comments.id_for_label }}" class="col-form-label">Comments:</label>
+                            </div>
+                            <div class="col-7 custom-input">
+                                {{ examination_form.comments }}
+                            </div>
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-modal edit-examination-confirm-btn">Save Examination</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Placement Modal -->
+    <div class="modal fade" id="editPlacementModal" tabindex="-1" aria-labelledby="editPlacementModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header text-center bg-primary">
+                    <h3 class="modal-title w-100" id="editPlacementModalLabel">Edit Placement</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" action="{% url 'dogs_app:dog_record' dog_record.dogID %}">
+                        {% csrf_token %}
+                        <div class="row mb-3">
+                            <div class="col-5 text-end">
+                                <label for="{{ placement_form.kennel.id_for_label }}" class="col-form-label">Kennel:</label>
+                            </div>
+                            <div class="col-7 custom-input">
+                                {{ placement_form.kennel }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-5 text-end">
+                                <label for="{{ placement_form.entranceDate.id_for_label }}" class="col-form-label">Entrance Date:</label>
+                            </div>
+                            <div class="col-7 custom-input">
+                                {{ placement_form.entranceDate }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-5 text-end">
+                                <label for="{{ placement_form.expirationDate.id_for_label }}" class="col-form-label">Expiration Date:</label>
+                            </div>
+                            <div class="col-7 custom-input">
+                                {{ placement_form.expirationDate }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-5 text-end">
+                                <label for="{{ placement_form.placementReason.id_for_label }}" class="col-form-label">Placement Reason:</label>
+                            </div>
+                            <div class="col-7 custom-input">
+                                {{ placement_form.placementReason }}
+                            </div>
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-modal edit-placement-confirm-btn">Save Placement</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Session Modal -->
+    <div class="modal fade" id="editSessionModal" tabindex="-1" aria-labelledby="editSessionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header text-center bg-primary">
+                    <h3 class="modal-title w-100" id="editSessionModalLabel">Edit Session</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" action="{% url 'dogs_app:dog_record' dog_record.dogID %}">
+                        {% csrf_token %}
+                        <div class="row mb-3">
+                            <div class="col-5 text-end">
+                                <label for="{{ session_form.camera.id_for_label }}" class="col-form-label">Camera:</label>
+                            </div>
+                            <div class="col-7 custom-input">
+                                {{ session_form.camera }}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-5 text-end">
+                                <label for="{{ session_form.sessionDate.id_for_label }}" class="col-form-label">Session Start Date:</label>
+                            </div>
+                            <div class="col-7 custom-input">
+                                {{ session_form.sessionDate }}
+                            </div>
+                        </div>
+
+
+                        <div class="row mb-3">
+                            <div class="col-5 text-end">
+                                <label for="{{ session_form.comments.id_for_label }}" class="col-form-label">Comments:</label>
+                            </div>
+                            <div class="col-7 custom-input">
+                                {{ session_form.comments }}
+                            </div>
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-modal edit-session-confirm-btn">Save Session</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {% endblock %}
 
 <!-- Declare a variable for displaying the dog's image, to be used in the following external JavaScript file -->

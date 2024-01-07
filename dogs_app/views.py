@@ -15,7 +15,7 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponseRedirect, JsonResponse, HttpResponse
+from django.http import HttpResponseRedirect, JsonResponse, HttpResponse, HttpResponseNotAllowed
 from .filters import DogFilter
 from .forms import SignUpForm, AddDogForm, UpdateUserForm, ProfileUpdateForm, TreatmentForm, EntranceExaminationForm, \
     DogPlacementForm, ObservesForm, ObservationForm, DogStanceForm, LoginForm, NewsForm
@@ -266,91 +266,109 @@ def dog_record_view(request, pk):
 
         # Handle user submitting a new Treatment/Examination/Placement/Session form
         if request.method == "POST":
-
             # Ensure only one form is submitted
-            # Check if it's a Treatment form
-            if treatment_form.is_valid():
-                new_treatment = treatment_form.save(commit=False)
-                new_treatment.dog = dog_record
-                new_treatment.save()
+            form_type = request.POST.get('form_type')
 
-                # If this is an AJAX request, send back the new treatments data
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                    treatments_data = Treatment.objects.filter(dog=dog_record).order_by('-treatmentDate')[:MAX_PER_PAGE]
-                    data = {
-                        'data': [render_to_string('_treatment_row.html',
-                                                  {'treatment': treatment}) for treatment in treatments_data],
-                        'pagination': render_to_string('_dog_record_pagination.html',
-                                                       {'paginated_data': treatments,
-                                                        'param_name': 'treatments_page'})
-                    }
-                    return JsonResponse(data)
+            # Check if it's a Treatment form
+            if form_type == 'treatment_form':
+                if treatment_form.is_valid():
+                    new_treatment = treatment_form.save(commit=False)
+                    new_treatment.dog = dog_record
+                    new_treatment.save()
+
+                    # If this is an AJAX request, send back the new treatments data
+                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                        treatments_data = Treatment.objects.filter(dog=dog_record).order_by('-treatmentDate')[:MAX_PER_PAGE]
+                        data = {
+                            'data': [render_to_string('_treatment_row.html',
+                                                      {'treatment': treatment}) for treatment in treatments_data],
+                            'pagination': render_to_string('_dog_record_pagination.html',
+                                                           {'paginated_data': treatments,
+                                                            'param_name': 'treatments_page'})
+                        }
+                        return JsonResponse(data)
+                    else:
+                        # Redirect back to the dog_record_view to see the new treatment.
+                        return redirect('dogs_app:dog_record', pk=dog_record.pk)
                 else:
-                    # Redirect back to the dog_record_view to see the new treatment.
-                    return redirect('dogs_app:dog_record', pk=dog_record.pk)
+                    errors = treatment_form.errors.as_json()
+                    return JsonResponse({'status': 'fail', 'errors': errors}, status=400)
 
             # Check if it's an Examination form
-            elif examination_form.is_valid():
-                new_examination = examination_form.save(commit=False)
-                new_examination.dog = dog_record
-                new_examination.save()
+            elif form_type == 'examination_form':
+                if examination_form.is_valid():
+                    new_examination = examination_form.save(commit=False)
+                    new_examination.dog = dog_record
+                    new_examination.save()
 
-                # If this is an AJAX request, send back the new Examination data
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                    examinations_data = EntranceExamination.objects.filter(dog=dog_record).order_by('-examinationDate')[:MAX_PER_PAGE]
-                    data = {
-                        'data': [render_to_string('_examination_row.html',
-                                                  {'examination': examination}) for examination in examinations_data],
-                        'pagination': render_to_string('_dog_record_pagination.html',
-                                                       {'paginated_data': examinations,
-                                                        'param_name': 'examinations_page'})
-                    }
-                    return JsonResponse(data)
+                    # If this is an AJAX request, send back the new Examination data
+                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                        examinations_data = EntranceExamination.objects.filter(dog=dog_record).order_by('-examinationDate')[:MAX_PER_PAGE]
+                        data = {
+                            'data': [render_to_string('_examination_row.html',
+                                                      {'examination': examination}) for examination in examinations_data],
+                            'pagination': render_to_string('_dog_record_pagination.html',
+                                                           {'paginated_data': examinations,
+                                                            'param_name': 'examinations_page'})
+                        }
+                        return JsonResponse(data)
+                    else:
+                        # Redirect back to the dog_record_view to see the new treatment.
+                        return redirect('dogs_app:dog_record', pk=dog_record.pk)
                 else:
-                    # Redirect back to the dog_record_view to see the new treatment.
-                    return redirect('dogs_app:dog_record', pk=dog_record.pk)
+                    # Form is not valid
+                    errors = examination_form.errors.as_json()
+                    return JsonResponse({'status': 'fail', 'errors': errors}, status=400)
 
             # Check if it's a Placement form
-            elif placement_form.is_valid():
-                new_placement = placement_form.save(commit=False)
-                new_placement.dog = dog_record
-                new_placement.save()
+            elif form_type == 'placement_form':
+                if placement_form.is_valid():
+                    new_placement = placement_form.save(commit=False)
+                    new_placement.dog = dog_record
+                    new_placement.save()
 
-                # If this is an AJAX request, send back the new Placement data
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                    placements_data = DogPlacement.objects.filter(dog=dog_record).order_by('-entranceDate')[:MAX_PER_PAGE]
-                    data = {
-                        'data': [render_to_string('_placement_row.html',
-                                                  {'placement': placement}) for placement in placements_data],
-                        'pagination': render_to_string('_dog_record_pagination.html',
-                                                       {'paginated_data': placements,
-                                                        'param_name': 'placements_page'})
-                    }
-                    return JsonResponse(data)
+                    # If this is an AJAX request, send back the new Placement data
+                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                        placements_data = DogPlacement.objects.filter(dog=dog_record).order_by('-entranceDate')[:MAX_PER_PAGE]
+                        data = {
+                            'data': [render_to_string('_placement_row.html',
+                                                      {'placement': placement}) for placement in placements_data],
+                            'pagination': render_to_string('_dog_record_pagination.html',
+                                                           {'paginated_data': placements,
+                                                            'param_name': 'placements_page'})
+                        }
+                        return JsonResponse(data)
+                    else:
+                        # Redirect back to the dog_record_view to see the new placement.
+                        return redirect('dogs_app:dog_record', pk=dog_record.pk)
                 else:
-                    # Redirect back to the dog_record_view to see the new placement.
-                    return redirect('dogs_app:dog_record', pk=dog_record.pk)
+                    errors = placement_form.errors.as_json()
+                    return JsonResponse({'status': 'fail', 'errors': errors}, status=400)
 
             # Check if it's a Session (Observes) form
-            elif session_form.is_valid():
-                new_session = session_form.save(commit=False)
-                new_session.dog = dog_record
-                new_session.save()
+            elif form_type == 'session_form':
+                if session_form.is_valid():
+                    new_session = session_form.save(commit=False)
+                    new_session.dog = dog_record
+                    new_session.save()
 
-                # If this is an AJAX request, send back the new Session data
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                    sessions_data = Observes.objects.filter(dog=dog_record).order_by('-sessionDate')[:MAX_PER_PAGE]
-                    data = {
-                        'data': [render_to_string('_session_row.html',
-                                                  {'session': session}) for session in sessions_data],
-                        'pagination': render_to_string('_dog_record_pagination.html',
-                                                       {'paginated_data': sessions,
-                                                        'param_name': 'sessions_page'})
-                    }
-                    return JsonResponse(data)
+                    # If this is an AJAX request, send back the new Session data
+                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                        sessions_data = Observes.objects.filter(dog=dog_record).order_by('-sessionDate')[:MAX_PER_PAGE]
+                        data = {
+                            'data': [render_to_string('_session_row.html',
+                                                      {'session': session}) for session in sessions_data],
+                            'pagination': render_to_string('_dog_record_pagination.html',
+                                                           {'paginated_data': sessions,
+                                                            'param_name': 'sessions_page'})
+                        }
+                        return JsonResponse(data)
+                    else:
+                        # Redirect back to the dog_record_view to see the new placement.
+                        return redirect('dogs_app:dog_record', pk=dog_record.pk)
                 else:
-                    # Redirect back to the dog_record_view to see the new placement.
-                    return redirect('dogs_app:dog_record', pk=dog_record.pk)
+                    errors = session_form.errors.as_json()
+                    return JsonResponse({'status': 'fail', 'errors': errors}, status=400)
 
         # Check if request is AJAX call for switching pages
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -446,6 +464,164 @@ def delete_session(request, session_id):
             return JsonResponse({'status': 'success'})
         except Observes.DoesNotExist:
             return JsonResponse({'status': 'fail'})
+
+
+# Handle editing a Treatment
+def edit_treatment(request, treatment_id):
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        if request.method == 'POST' and request.user.is_authenticated:
+            try:
+                treatment = Treatment.objects.get(treatmentID=treatment_id)
+                form = TreatmentForm(request.POST, instance=treatment)
+                if form.is_valid():
+                    form.save()
+                    return JsonResponse({'status': 'success'})
+                else:
+                    errors = {}
+                    for key, value in form.errors.items():
+                        errors[key] = ', '.join([str(error) for error in value])
+                    return JsonResponse({'status': 'fail', 'errors': errors})
+            except Treatment.DoesNotExist:
+                return JsonResponse({'status': 'fail'})
+            except Exception as e:
+                return JsonResponse({'status': 'fail', 'message': str(e)})
+        elif request.method == 'GET':
+            try:
+                treatment = Treatment.objects.get(treatmentID=treatment_id)
+                treatment_data = {
+                    'status': 'success',
+                    'treatmentName': treatment.treatmentName if treatment.treatmentName else None,
+                    'treatmentDate': treatment.treatmentDate.isoformat() if treatment.treatmentDate else None,
+                    'treatedBy': treatment.treatedBy if treatment.treatedBy else None,
+                    'comments': treatment.comments if treatment.comments else None,
+                }
+                return JsonResponse(treatment_data)
+            except Treatment.DoesNotExist:
+                return JsonResponse({'status': 'fail', 'message': 'Treatment not found'})
+            except Exception as e:
+                return JsonResponse({'status': 'fail', 'message': str(e)})
+        else:
+            # Return a Method Not Allowed status if not GET or POST
+            return HttpResponseNotAllowed(['POST', 'GET'])
+
+
+# Handle editing an Examination
+def edit_examination(request, examination_id):
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        if request.method == 'POST' and request.user.is_authenticated:
+            try:
+                examination = EntranceExamination.objects.get(examinationID=examination_id)
+                form = EntranceExaminationForm(request.POST, instance=examination)
+                if form.is_valid():
+                    form.save()
+                    return JsonResponse({'status': 'success'})
+                else:
+                    errors = {}
+                    for key, value in form.errors.items():
+                        errors[key] = ', '.join([str(error) for error in value])
+                    return JsonResponse({'status': 'fail', 'errors': errors})
+            except EntranceExamination.DoesNotExist:
+                return JsonResponse({'status': 'fail'})
+            except Exception as e:
+                return JsonResponse({'status': 'fail', 'message': str(e)})
+        elif request.method == 'GET':
+            try:
+                examination = EntranceExamination.objects.get(examinationID=examination_id)
+                examination_data = {
+                    'status': 'success',
+                    'examinationDate': examination.examinationDate.isoformat() if examination.examinationDate else None,
+                    'examinedBy': examination.examinedBy if examination.examinedBy else None,
+                    'results': examination.results if examination.results else None,
+                    'dogWeight': examination.dogWeight if examination.dogWeight else None,
+                    'dogTemperature': examination.dogTemperature if examination.dogTemperature else None,
+                    'dogPulse': examination.dogPulse if examination.dogPulse else None,
+                    'comments': examination.comments if examination.comments else None,
+                }
+                return JsonResponse(examination_data)
+            except EntranceExamination.DoesNotExist:
+                return JsonResponse({'status': 'fail', 'message': 'Examination not found'})
+            except Exception as e:
+                return JsonResponse({'status': 'fail', 'message': str(e)})
+        else:
+            # Return a Method Not Allowed status if not GET or POST
+            return HttpResponseNotAllowed(['POST', 'GET'])
+
+
+# Handle editing a DogPlacement
+def edit_placement(request, placement_id):
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        if request.method == 'POST' and request.user.is_authenticated:
+            try:
+                placement = DogPlacement.objects.get(id=placement_id)
+                form = DogPlacementForm(request.POST, instance=placement)
+                if form.is_valid():
+                    form.save()
+                    return JsonResponse({'status': 'success'})
+                else:
+                    errors = {}
+                    for key, value in form.errors.items():
+                        errors[key] = ', '.join([str(error) for error in value])
+                    return JsonResponse({'status': 'fail', 'errors': errors})
+            except DogPlacement.DoesNotExist:
+                return JsonResponse({'status': 'fail'})
+            except Exception as e:
+                return JsonResponse({'status': 'fail', 'message': str(e)})
+        elif request.method == 'GET':
+            try:
+                placement = DogPlacement.objects.get(id=placement_id)
+                placement_data = {
+                    'status': 'success',
+                    'kennel': serializers.serialize('json', [placement.kennel]) if placement.kennel else None,
+                    'entranceDate': placement.entranceDate.isoformat() if placement.entranceDate else None,
+                    'expirationDate': placement.expirationDate.isoformat() if placement.expirationDate else None,
+                    'placementReason': placement.placementReason if placement.placementReason else None,
+                }
+                return JsonResponse(placement_data)
+            except DogPlacement.DoesNotExist:
+                return JsonResponse({'status': 'fail', 'message': 'Placement not found'})
+            except Exception as e:
+                return JsonResponse({'status': 'fail', 'message': str(e)})
+        else:
+            # Return a Method Not Allowed status if not GET or POST
+            return HttpResponseNotAllowed(['POST', 'GET'])
+
+
+# Handle editing a Session (Observes)
+def edit_session(request, session_id):
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        if request.method == 'POST' and request.user.is_authenticated:
+            try:
+                session = Observes.objects.get(id=session_id)
+                form = ObservesForm(request.POST, instance=session)
+                if form.is_valid():
+                    form.save()
+                    return JsonResponse({'status': 'success'})
+                else:
+                    errors = {}
+                    for key, value in form.errors.items():
+                        errors[key] = ', '.join([str(error) for error in value])
+                    return JsonResponse({'status': 'fail', 'errors': errors})
+            except Observes.DoesNotExist:
+                return JsonResponse({'status': 'fail'})
+            except Exception as e:
+                return JsonResponse({'status': 'fail', 'message': str(e)})
+        elif request.method == 'GET':
+            try:
+                session = Observes.objects.get(id=session_id)
+                session_data = {
+                    'status': 'success',
+                    'camera': serializers.serialize('json', [session.camera]) if session.camera else None,
+                    'sessionDate': session.sessionDate.isoformat() if session.sessionDate else None,
+                    'comments': session.comments if session.comments else None,
+                }
+                return JsonResponse(session_data)
+            except Observes.DoesNotExist:
+                return JsonResponse({'status': 'fail', 'message': 'Session not found'})
+            except Exception as e:
+                return JsonResponse({'status': 'fail', 'message': str(e)})
+        else:
+            # Return a Method Not Allowed status if not GET or POST
+            return HttpResponseNotAllowed(['POST', 'GET'])
 
 
 # Handle Observations display

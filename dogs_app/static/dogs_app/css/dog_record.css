@@ -397,3 +397,7 @@ textarea {
     color: #333;
     text-align: center;
 }
+
+.error {
+   color: red;
+}

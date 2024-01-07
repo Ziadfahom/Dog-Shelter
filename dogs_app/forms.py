@@ -281,6 +281,12 @@ class ObservesForm(forms.ModelForm):
             'comments': forms.Textarea(attrs={'class': 'form-control', 'rows': 2})
         }
 
+    def clean_camera(self):
+        camera = self.cleaned_data['camera']
+        if not camera:
+            raise forms.ValidationError("A camera must be selected.")
+        return camera
+
 
 # Form for adding new Observation
 class ObservationForm(forms.ModelForm):

@@ -244,6 +244,7 @@ $(document).ready(function() {
                     // Update pagination controls
                     updatePagination(`${paginationId}`, data.pagination);
                 }
+
             });
         });
     }
@@ -303,5 +304,338 @@ $(document).ready(function() {
     handleEntityDeletion('examination', 'examinationId', 'deleteExaminationModal', 'confirmExaminationDeleteBtn');
     handleEntityDeletion('placement', 'placementId', 'deletePlacementModal', 'confirmPlacementDeleteBtn');
     handleEntityDeletion('session', 'sessionId', 'deleteSessionModal', 'confirmSessionDeleteBtn');
+
+
+    // Handle updating of a Treatment
+    // Function to open the Edit Treatment Modal and populate it with data
+    function openTreatmentEditModal(treatmentId) {
+        // Fetch the treatment data using AJAX
+        $.ajax({
+            url: '/edit_treatment/' + treatmentId + '/',
+            method: 'GET',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            success: function(response) {
+                // Populate the form fields with the treatment details
+                $('#editTreatmentModal input[name="treatmentName"]').val(response.treatmentName);
+                $('#editTreatmentModal input[name="treatmentDate"]').val(response.treatmentDate);
+                $('#editTreatmentModal input[name="treatedBy"]').val(response.treatedBy);
+                $('#editTreatmentModal textarea[name="comments"]').val(response.comments);
+
+                // Store the treatment ID in the submit button for later reference
+                $('#editTreatmentModal .edit-treatment-confirm-btn').data('treatment-id', treatmentId);
+
+                // Show the modal
+                $('#editTreatmentModal').modal('show');
+            }
+        });
+    }
+
+    // Attach event listener to each Edit button in the treatments table
+    $(document).on('click', '.edit-treatment-btn', function() {
+        var treatmentId = $(this).data('treatment-id');
+        openTreatmentEditModal(treatmentId);
+    });
+
+    // Submit handler for Edit Treatment Modal
+    $('#editTreatmentModal .edit-treatment-confirm-btn').click(function(e) {
+        e.preventDefault();
+
+        var treatmentId = $(this).data('treatment-id');  // Retrieve the treatment ID stored earlier
+        var $form = $('#editTreatmentModal form');  // Get the form inside the modal
+
+        // Remove existing error spans
+        $('.error').remove();
+
+        // Send the updated treatment data to the server via AJAX
+        $.ajax({
+            url: '/edit_treatment/' + treatmentId + '/',
+            method: 'POST',
+            data: $form.serialize(),  // Serialize form data for submission
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            success: function(response) {
+                if (response.status === 'success') {
+                    // Hide the modal
+                    $('#editTreatmentModal').modal('hide');
+
+                    // Reset the form
+                    $form[0].reset();
+
+                    // Refresh the treatments table to show the updated data
+                    fetchTablePage('treatments_page', currentTreatmentPage);
+
+
+                } else {
+                   // Display error messages
+                   for (var field in response.errors) {
+                      var errorMessage = response.errors[field];
+                      $('#editTreatmentModal input[name="' + field + '"]').after('<span class="error">' + errorMessage + '</span>');
+                   }
+                }
+            }
+        });
+    });
+
+
+    // Handle updating of an Examination
+    // Function to open the Edit Examination Modal and populate it with data
+    function openExaminationEditModal(examinationId) {
+        // Fetch the examination data using AJAX
+        $.ajax({
+            url: '/edit_examination/' + examinationId + '/',
+            method: 'GET',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            success: function(response) {
+                // Populate the form fields with the examination details
+                $('#editExaminationModal input[name="examinationDate"]').val(response.examinationDate);
+                $('#editExaminationModal input[name="examinedBy"]').val(response.examinedBy);
+                $('#editExaminationModal input[name="results"]').val(response.results);
+                $('#editExaminationModal input[name="dogWeight"]').val(response.dogWeight);
+                $('#editExaminationModal input[name="dogTemperature"]').val(response.dogTemperature);
+                $('#editExaminationModal input[name="dogPulse"]').val(response.dogPulse);
+                $('#editExaminationModal textarea[name="comments"]').val(response.comments);
+
+                // Store the examination ID in the submit button for later reference
+                $('#editExaminationModal .edit-examination-confirm-btn').data('examination-id', examinationId);
+
+                // Show the modal
+                $('#editExaminationModal').modal('show');
+            }
+        });
+    }
+
+    // Attach event listener to each Edit button in the examinations table
+    $(document).on('click', '.edit-examination-btn', function() {
+        var examinationId = $(this).data('examination-id');
+        openExaminationEditModal(examinationId);
+    });
+
+    // Submit handler for Edit Examination Modal
+    $('#editExaminationModal .edit-examination-confirm-btn').click(function(e) {
+        e.preventDefault();
+
+        var examinationId = $(this).data('examination-id');  // Retrieve the examination ID stored earlier
+        var $form = $('#editExaminationModal form');  // Get the form inside the modal
+
+        // Remove existing error spans
+        $('.error').remove();
+
+        // Send the updated examination data to the server via AJAX
+        $.ajax({
+            url: '/edit_examination/' + examinationId + '/',
+            method: 'POST',
+            data: $form.serialize(),  // Serialize form data for submission
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            success: function(response) {
+                if (response.status === 'success') {
+                    // Hide the modal
+                    $('#editExaminationModal').modal('hide');
+
+                    // Reset the form
+                    $form[0].reset();
+
+                    // Refresh the examination table to show the updated data
+                    fetchTablePage('examinations_page', currentExaminationPage);
+
+
+                } else {
+                   // Display error messages
+                   for (var field in response.errors) {
+                      var errorMessage = response.errors[field];
+                      $('#editExaminationModal input[name="' + field + '"]').after('<span class="error">' + errorMessage + '</span>');
+                   }
+                }
+            }
+        });
+    });
+
+    // Handle updating of a DogPlacement
+    // Function to open the Edit Placement Modal and populate it with data
+    function openPlacementEditModal(placementId) {
+        // Fetch the placement data using AJAX
+        $.ajax({
+            url: '/edit_placement/' + placementId + '/',
+            method: 'GET',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            success: function(response) {
+                // Populate the form fields with the placement details
+                // Parse the kennel string into a JavaScript object
+                var kennel = JSON.parse(response.kennel)[0];
+
+                // Extract the pk from the kennel object
+                var kennelId = kennel.pk;
+
+                // Populate the form fields with the placement details
+                $('#editPlacementModal select[name="kennel"]').val(kennelId);
+                $('#editPlacementModal input[name="entranceDate"]').val(response.entranceDate);
+                $('#editPlacementModal input[name="expirationDate"]').val(response.expirationDate);
+                $('#editPlacementModal input[name="placementReason"]').val(response.placementReason);
+
+                // Store the placement ID in the submit button for later reference
+                $('#editPlacementModal .edit-placement-confirm-btn').data('placement-id', placementId);
+
+                // Show the modal
+                $('#editPlacementModal').modal('show');
+            }
+        });
+    }
+
+    // Attach event listener to each Edit button in the placement table
+    $(document).on('click', '.edit-placement-btn', function() {
+        var placementId = $(this).data('placement-id');
+        openPlacementEditModal(placementId);
+    });
+
+    // Submit handler for Edit Placement Modal
+    $('#editPlacementModal .edit-placement-confirm-btn').click(function(e) {
+        e.preventDefault();
+
+        var placementId = $(this).data('placement-id');  // Retrieve the placement ID stored earlier
+        var $form = $('#editPlacementModal form');  // Get the form inside the modal
+
+        // Remove existing error spans
+        $('.error').remove();
+
+        // Send the updated placement data to the server via AJAX
+        $.ajax({
+            url: '/edit_placement/' + placementId + '/',
+            method: 'POST',
+            data: $form.serialize(),  // Serialize form data for submission
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            success: function(response) {
+                if (response.status === 'success') {
+                    // Hide the modal
+                    $('#editPlacementModal').modal('hide');
+
+                    // Reset the form
+                    $form[0].reset();
+
+                    // Refresh the placement table to show the updated data
+                    fetchTablePage('placements_page', currentPlacementPage);
+
+                } else {
+                   // Display error messages
+                   for (var field in response.errors) {
+                       var errorMessage = response.errors[field];
+
+                       // Get the element
+                       var $element = $('#editPlacementModal [name="' + field + '"]');
+
+                       // Check the tag name of the element
+                       switch ($element.prop('tagName')) {
+                           case 'SELECT':
+                               $element.after('<span class="error">' + errorMessage + '</span>');
+                               break;
+                           case 'INPUT':
+                               $element.after('<span class="error">' + errorMessage + '</span>');
+                               break;
+                           case 'TEXTAREA':
+                               $element.after('<span class="error">' + errorMessage + '</span>');
+                               break;
+                           default:
+                               console.log('Unknown field type: ' + $element.prop('tagName'));
+                               break;
+                       }
+                   }
+                }
+            }
+        });
+    });
+
+    // Handle updating of a Session (Observes)
+    // Function to open the Edit Session Modal and populate it with data
+    function openSessionEditModal(sessionId) {
+        // Fetch the session data using AJAX
+        $.ajax({
+            url: '/edit_session/' + sessionId + '/',
+            method: 'GET',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            success: function(response) {
+                // Populate the form fields with the session details
+                // Parse the camera string into a JavaScript object
+                var camera = JSON.parse(response.camera)[0];
+
+                // Extract the pk from the camera object
+                var cameraId = camera.pk;
+
+                // Populate the form fields with the session details
+                $('#editSessionModal select[name="camera"]').val(cameraId);
+                $('#editSessionModal input[name="sessionDate"]').val(response.sessionDate);
+                $('#editSessionModal textarea[name="comments"]').val(response.comments);
+
+                // Store the session ID in the submit button for later reference
+                $('#editSessionModal .edit-session-confirm-btn').data('session-id', sessionId);
+
+                // Show the modal
+                $('#editSessionModal').modal('show');
+            }
+        });
+    }
+
+    // Attach event listener to each Edit button in the session table
+    $(document).on('click', '.edit-session-btn', function() {
+        var sessionId = $(this).data('session-id');
+        openSessionEditModal(sessionId);
+    });
+
+    // Submit handler for Edit Session Modal
+    $('#editSessionModal .edit-session-confirm-btn').click(function(e) {
+        e.preventDefault();
+
+        var sessionId = $(this).data('session-id');  // Retrieve the session ID stored earlier
+        var $form = $('#editSessionModal form');  // Get the form inside the modal
+
+        // Remove existing error spans
+        $('.error').remove();
+
+        // Send the updated session data to the server via AJAX
+        $.ajax({
+            url: '/edit_session/' + sessionId + '/',
+            method: 'POST',
+            data: $form.serialize(),  // Serialize form data for submission
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            success: function(response) {
+                if (response.status === 'success') {
+                    // Hide the modal
+                    $('#editSessionModal').modal('hide');
+
+                    // Reset the form
+                    $form[0].reset();
+
+                    // Refresh the session table to show the updated data
+                    fetchTablePage('sessions_page', currentSessionPage);
+
+                } else {
+                   // Display error messages
+                   for (var field in response.errors) {
+                       var errorMessage = response.errors[field];
+
+                       // Get the element
+                       var $element = $('#editSessionModal [name="' + field + '"]');
+
+                       // Check the tag name of the element
+                       switch ($element.prop('tagName')) {
+                           case 'SELECT':
+                               $element.after('<span class="error">' + errorMessage + '</span>');
+                               break;
+                           case 'INPUT':
+                               $element.after('<span class="error">' + errorMessage + '</span>');
+                               break;
+                           case 'TEXTAREA':
+                               $element.after('<span class="error">' + errorMessage + '</span>');
+                               break;
+                           default:
+                               console.log('Unknown field type: ' + $element.prop('tagName'));
+                               break;
+                       }
+                   }
+                }
+            }
+        });
+    });
+
+    // Disable all error messages after closing modals
+    $('#editSessionModal, #editTreatmentModal, #editExaminationModal, #editPlacementModal').on('hidden.bs.modal', function () {
+        $('.error').remove();
+    });
 
 });
