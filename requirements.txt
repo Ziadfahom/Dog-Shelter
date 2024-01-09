@@ -30,3 +30,4 @@ urllib3==1.26.16
 
 django-filter~=23.2
 openpyxl~=3.1.2
+django-datetime-widget
