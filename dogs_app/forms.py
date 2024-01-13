@@ -268,6 +268,16 @@ class OwnerForm(forms.ModelForm):
     class Meta:
         model = Owner
         fields = ['firstName', 'lastName', 'ownerID', 'ownerAddress', 'city', 'phoneNum', 'cellphoneNum', 'comments']
+        labels = {
+            'firstName': 'First Name',
+            'lastName': 'Last Name',
+            'ownerID': 'Owner ID',
+            'ownerAddress': 'Owner Address',
+            'city': 'City',
+            'phoneNum': 'Phone Number',
+            'cellphoneNum': 'Cellphone Number',
+            'comments': 'Comments',
+        }
         widgets = {
             'firstName': forms.TextInput(attrs={'class': 'form-control'}),
             'lastName': forms.TextInput(attrs={'class': 'form-control'}),

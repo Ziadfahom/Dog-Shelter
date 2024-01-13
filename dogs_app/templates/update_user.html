@@ -116,39 +116,7 @@
         </div>
     </div>
 
-    <!-- Image Modal -->
-    <div
-      class="modal fade"
-      id="imageModal"
-      tabindex="-1"
-      role="dialog"
-      aria-labelledby="exampleModalLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button
-              type="button"
-              class="close d-flex align-items-center justify-content-center"
-              data-bs-dismiss="modal"
-              aria-label="Close"
-            >
-              <span aria-hidden="true" class="icon-close"></span>
-            </button>
-          </div>
-          <div class="row no-gutters">
-            <div class="col-md-12 d-flex">
-              <div class="modal-body p-5 d-flex align-items-center">
-                <div class="text w-100 text-center">
-                    <img id="modal_image" src="" class="img-fluid rounded mx-auto d-block">
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+{% include 'modals/global/__image_modal.html' with modal_id="imageModal" img_id="modal_image" %}
 
 {% endblock %}
 

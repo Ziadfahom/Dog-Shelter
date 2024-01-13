@@ -356,50 +356,8 @@
         </div>
     </div>
 
-    <!-- Dog Owner Modal -->
-    <div class="modal fade" id="ownerModal">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-
-                <!-- Modal Header -->
-                <div class="modal-header">
-                    <h3 class="modal-title center-container">{{ dog_record.owner.firstName }} {{ dog_record.owner.lastName }}</h3>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-
-                <!-- Modal Body -->
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="card">
-                                <ul class="list-group list-group-flush">
-                                    {% if dog_record.owner %}
-                                        <li class="list-group-item"><strong>Owner ID:</strong> {{ dog_record.owner.ownerID }}</li>
-                                        <li class="list-group-item"><strong>Address:</strong> {{ dog_record.owner.ownerAddress }}, {{ dog_record.owner.city }}</li>
-                                        <li class="list-group-item"><strong>Phone:</strong> {{ dog_record.owner.phoneNum }}</li>
-                                        <li class="list-group-item"><strong>Cellphone:</strong> {{ dog_record.owner.cellphoneNum }}</li>
-                                        <li class="list-group-item"><strong>Comments:</strong> {{ dog_record.owner.comments }}</li>
-                                    {% else %}
-                                        <li class="list-group-item">No owner details available.</li>
-                                    {% endif %}
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Modal Footer -->
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary edit-owner-btn" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Edit this Owner" data-owner-id="{{ dog_record.owner.ownerSerialNum }}">Edit Owner Details</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
     <!-- Edit Owner Modal -->
-    <div class="modal fade" id="editOwnerModal" tabindex="-1" aria-labelledby="editOwnerModalLabel" aria-hidden="true">
+    {% comment %} <div class="modal fade" id="editOwnerModal" tabindex="-1" aria-labelledby="editOwnerModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header text-center bg-primary">
@@ -491,26 +449,27 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> {% endcomment %}
 
-<!-- Modals -->
+<!-- Delete Modals -->
 {% include 'modals/dogs/common/__delete_modal.html' with modal_id='deleteTreatmentModal' title='Treatment' label_id='deleteTreatmentModalLabel' button_id='confirmTreatmentDeleteBtn' %}
 {% include 'modals/dogs/common/__delete_modal.html' with modal_id='deleteSessionModal' title='Session' label_id='deleteSessionModalLabel' button_id='confirmSessionDeleteBtn' %}
 {% include 'modals/dogs/common/__delete_modal.html' with modal_id='deletePlacementModal' title='Placement' label_id='deletePlacementModalLabel' button_id='confirmPlacementDeleteBtn' %}
 {% include 'modals/dogs/common/__delete_modal.html' with modal_id='deleteExaminationModal' title='Examination' label_id='deleteExaminationModalLabel' button_id='confirmExaminationDeleteBtn' %}
 
-{% include 'modals/dogs/treatments/__add_modal.html' %}
-{% include 'modals/dogs/treatments/__edit_modal.html' %}
+<!-- Add & Edit Modals -->
+{% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='addExaminationModal' title='Add New Examination' label_id='addExaminationtModalLabel' button_title='Examination' modal_form=examination_form form_name="examination_form" %}
+{% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='editExaminationModal' title='Edit Examination' label_id='editExaminationModalLabel' button_title='Examination' modal_form=examination_form form_name="examination_form" %}
+{% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='addPlacementModal' title='Add New Kennel Placement' label_id='addPlacementModalLabel' button_title='Placement' modal_form=placement_form form_name="placement_form" %}
+{% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='editPlacementModal' title='Edit Placement' label_id='editPlacementModalLabel' button_title='Placement' modal_form=placement_form form_name="placement_form" %}
+{% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='editSessionModal' title='Edit Session' label_id='editSessionModalLabel' button_title='Session' modal_form=session_form form_name="session_form" %}
+{% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='addSessionModal' title='Add New Camera Session' label_id='addSessionModalLabel' button_title='Session' modal_form=session_form form_name="session_form" %}
+{% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='addTreatmentModal' title='Add New Treatment' label_id='addTreatmentModalLabel' button_title='Treatment' modal_form=treatment_form form_name="treatment_form" %}
+{% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='editTreatmentModal' title='Edit Treatment' label_id='editTreatmentModalLabel' button_title='Treatment' modal_form=treatment_form form_name="treatment_form" %}
 
-{% include 'modals/dogs/sessions/__add_modal.html' %}
-{% include 'modals/dogs/sessions/__edit_modal.html' %}
-
-{% include 'modals/dogs/kennel/__add_modal.html' %}
-{% include 'modals/dogs/kennel/__edit_modal.html' %}
-
-{% include 'modals/dogs/exams/__add_modal.html' %}
-{% include 'modals/dogs/exams/__edit_modal.html' %}
-
+<!-- Dog Owner Modals -->
+{% include 'modals/dogs/common/__dog_owner_modal.html' with dog_record=dog_record %}
+{% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='editOwnerModal' title='Edit Owner' label_id='editOwnerModalLabel' button_title='Owner' modal_form=owner form_name="owner_form" %}
 {% endblock %}
 
 <!-- Declare a variable for displaying the dog's image, to be used in the following external JavaScript file -->

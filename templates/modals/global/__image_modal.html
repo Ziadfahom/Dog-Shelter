@@ -1,0 +1,40 @@
+<!-- Image Modal -->
+<div
+  class="modal fade"
+  id="{{ modal_id }}"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="imageModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button
+          type="button"
+          class="close d-flex align-items-center justify-content-center"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        >
+          <span aria-hidden="true" class="icon-close"></span>
+        </button>
+      </div>
+      <div class="row no-gutters">
+        <div class="">
+            <h4 id="{{ title_id }}" class="modal-title text-center w-100"></h4>
+        </div>
+        <div class="col-md-12 d-flex">
+          <div class="modal-body p-5 d-flex align-items-center">
+            <div class="text w-100 text-center">
+              <img
+                id="{{ img_id }}"
+                src=""
+                class="img-fluid rounded mx-auto d-block"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
