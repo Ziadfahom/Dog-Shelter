@@ -218,6 +218,12 @@ class TreatmentForm(forms.ModelForm):
     class Meta:
         model = Treatment
         fields = ['treatmentName', 'treatmentDate', 'treatedBy', 'comments']
+        labels = {
+            'treatmentName': 'Treatment Name',
+            'treatmentDate': 'Treatment Date',
+            'treatedBy': 'Treated By',
+            'comments': 'Comments',
+        }
         widgets = {
             'treatmentName': forms.TextInput(attrs={'class': 'form-control'}),
             'treatmentDate': forms.DateInput(attrs={'class': 'form-control',
@@ -234,6 +240,15 @@ class EntranceExaminationForm(forms.ModelForm):
     class Meta:
         model = EntranceExamination
         fields = ['examinationDate', 'examinedBy', 'results', 'dogWeight', 'dogTemperature', 'dogPulse', 'comments']
+        labels = {
+            'examinationDate': 'Examination Date',
+            'examinedBy': 'Examined By',
+            'results': 'Results',
+            'dogWeight': 'Dog Weight',
+            'dogTemperature': 'Dog Temperature',
+            'dogPulse': 'Dog Pulse',
+            'comments': 'Comments',
+        }
         widgets = {
             'examinationDate': forms.DateInput(attrs={'class': 'form-control',
                                                       'type': 'text',
@@ -270,6 +285,12 @@ class DogPlacementForm(forms.ModelForm):
     class Meta:
         model = DogPlacement
         fields = ['kennel', 'entranceDate', 'expirationDate', 'placementReason']
+        labels = {
+            'kennel': 'kennel',
+            'entranceDate': 'Entrance Date',
+            'expirationDate': 'Expiration Date',
+            'placementReason': 'Placement Reason',
+        }
         widgets = {
             'kennel': forms.Select(attrs={'class': 'form-control'}),
             'entranceDate': forms.DateInput(attrs={'class': 'form-control',
@@ -289,6 +310,11 @@ class ObservesForm(forms.ModelForm):
     class Meta:
         model = Observes
         fields = ['sessionDate', 'camera', 'comments']
+        labels = {
+            'camera' : "Camera",
+            'comments': "Comments",
+            'sessionDate': 'Session Date'
+        }
         widgets = {
             'sessionDate': forms.DateInput(attrs={'class': 'form-control',
                                                   'type': 'text',

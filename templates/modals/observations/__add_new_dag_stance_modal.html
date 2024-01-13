@@ -1,0 +1,55 @@
+<div
+  class="modal fade"
+  id="addDogStanceModal"
+  data-backdrop="static"
+  data-keyboard="false"
+  tabindex="-1"
+  aria-labelledby="staticBackdropLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog" style="max-width:600px">
+    <div class="modal-content">
+      <div class="modal-body px-4">
+        <div class="text-dark d-inline-block ml-auto">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="py-3 w-100">
+            {% comment %} Header {% endcomment %}
+            <h5 class="text-dark fw-bold text-uppercase">Add a New Dog Stance</h5>
+            <hr>
+
+            {% comment %} Content {% endcomment %}
+            <form id="dogStanceForm">
+                <!-- CSRF Token -->
+                {% csrf_token %}
+
+                <!-- Hidden input to hold the Observation ID Field -->
+                <input type="hidden" id="observation_id" name="observation_id">
+
+                <!-- Time Field -->
+                {{ stance_form.stanceStartTime.label_tag }}
+                <input class="form-control" type="text" id="timepicker" name="stanceStartTime" placeholder="Select Time">
+
+
+                <!-- Dog Stance Field -->
+                {{ stance_form.dogStance.label_tag }}
+                {{ stance_form.dogStance }}
+
+                <!-- Dog Location Field -->
+                {{ stance_form.dogLocation.label_tag }}
+                {{ stance_form.dogLocation }}
+            </form>
+            
+            {% comment %} Footer {% endcomment %}
+            <br>
+            <hr>
+            <div class="text-right mt-4">
+                <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success px-4" id="saveDogStanceBtn">Save</button>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
