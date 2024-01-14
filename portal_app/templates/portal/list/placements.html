@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load render_table from django_tables2 %}
+{% load static %}
+
+{% block head %}
+    <title>DogsWatch | Placements</title>
+{% endblock %}
+
+{% block content %}
+
+<div class="container mt-2 mb-2">
+    <div class="row align-items-center">
+
+        <!-- Home Button -->
+        <div class="col-md-4 d-flex justify-content-start">
+            <a href="{% url 'dogs_app:home' %}" class="btn btn-secondary"><i class="bi bi-house-door"></i> Home</a>
+        </div>
+
+        <!-- Title -->
+        <div class="col-md-4 d-flex justify-content-center">
+            <h1 class="text-center display-4">Dog-Kennel Placements</h1>
+        </div>
+
+        <!-- Empty column for alignment -->
+        <div class="col-md-4"></div>
+    </div>
+
+    <div class="row mb-2 mt-4">
+
+        <!-- Navigate Button -->
+        <div class="col-md-4 d-flex justify-content-start">
+            <div class="dropdown">
+                <button class="btn btn-info dropdown-toggle px-4" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                    Dog-Kennel Placements
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    <li><a class="dropdown-item" href="{% url 'portal_app:list-kennels' %}">Kennels</a></li>
+                    <li><a class="dropdown-item active" href="{% url 'portal_app:list-placements' %}">Dog-Kennel Placements</a></li>
+                    <li><a class="dropdown-item" href="{% url 'portal_app:list-cameras' %}">Cameras</a></li>
+                    <li><a class="dropdown-item" href="{% url 'portal_app:list-observes' %}">Camera Sessions</a></li>
+                    <li><a class="dropdown-item" href="{% url 'portal_app:list-observations' %}">Observations</a></li>
+                    <li><a class="dropdown-item" href="{% url 'portal_app:list-stances' %}">Stances</a></li>
+                    <li><a class="dropdown-item" href="{% url 'portal_app:list-treatments' %}">Treatments</a></li>
+                    <li><a class="dropdown-item" href="{% url 'portal_app:list-examinations' %}">Examinations</a></li>
+                    <li><a class="dropdown-item" href="{% url 'portal_app:list-owners' %}">Dog Owners</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="col-md-4 d-flex justify-content-center">
+            <form method="get" action="." class="d-flex col-md-12">
+                <input type="text" class="form-control" name="search" value="{{ search_query }}" placeholder="Search Placements...">
+                <button class="btn btn-outline-primary ms-2" type="submit">Search</button>
+                <a href="{% url 'portal_app:list-placements' %}" class="btn btn-outline-dark ms-2">Clear</a>
+            </form>
+        </div>
+
+
+        <!-- Add New Button -->
+        <div class="col-md-4 d-flex justify-content-end">
+            <a href="{% url 'portal_app:add-placement' %}" class="btn btn-success"><i class="bi bi-plus-circle"></i> New Placement</a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <!-- Render table with Bootstrap class -->
+            <!-- Check if table is empty -->
+            {% if table.page.object_list %}
+                <!-- Render table with Bootstrap class -->
+                {% render_table table %}
+            {% else %}
+                <!-- Display a custom message if the table is empty -->
+                <div class="alert alert-info" role="alert">
+                    <p>No placements found.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

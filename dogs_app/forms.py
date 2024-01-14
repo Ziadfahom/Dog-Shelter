@@ -1,11 +1,10 @@
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth.models import User
-from django.forms import DateTimeInput
 from django.utils import timezone
 from django.core.validators import RegexValidator
 from django import forms
-from .models import Dog, Owner, Profile, Treatment, EntranceExamination,\
-    Observation, DogPlacement, Kennel, Observes, DogStance, News
+from .models import (Dog, Owner, Profile, Treatment, EntranceExamination,
+                     Observation, DogPlacement, Kennel, Observes, DogStance, News, Camera)
 from django.core.exceptions import ValidationError
 from datetime import date
 
@@ -14,12 +13,14 @@ from datetime import date
 class LoginForm(forms.Form):
     username = forms.CharField(max_length=100)
     password = forms.CharField(max_length=100, widget=forms.PasswordInput)
-    
+
+
 class NewsForm(forms.ModelForm):
     class Meta:
         model = News
         fields = '__all__'
-    
+
+
 class SignUpForm(UserCreationForm):
 
     # Input fields
@@ -119,10 +120,10 @@ class AddDogForm(forms.ModelForm):
                                                                           "class": "form-control"}),
                                     label="Last Date Given a Kong")
     owner = forms.ModelChoiceField(queryset=Owner.objects.all(),
-                                            required=False,
-                                            widget=forms.widgets.Select(attrs={"placeholder": "Dog's Owner",
-                                                                               "class": "form-control"}),
-                                            label="Dog's Owner")
+                                   required=False,
+                                   widget=forms.widgets.Select(attrs={"placeholder": "Dog's Owner",
+                                                                      "class": "form-control"}),
+                                   label="Dog's Owner")
 
     class Meta:
         model = Dog
@@ -241,8 +242,8 @@ class EntranceExaminationForm(forms.ModelForm):
                                                       'readonly': 'readonly'}),
             'examinedBy': forms.TextInput(attrs={'class': 'form-control'}),
             'results': forms.TextInput(attrs={'class': 'form-control'}),
-            'dogWeight': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0-99'}),
-            'dogTemperature': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0-99'}),
+            'dogWeight': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0-200'}),
+            'dogTemperature': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0-200'}),
             'dogPulse': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0-200'}),
             'comments': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
         }
@@ -263,6 +264,53 @@ class OwnerForm(forms.ModelForm):
             'cellphoneNum': forms.TextInput(attrs={'class': 'form-control'}),
             'comments': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
+
+
+# Form for Camera
+class CameraForm(forms.ModelForm):
+    class Meta:
+        model = Camera
+        fields = ['camID']
+
+        widgets = {
+            'camID': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+
+# Form for adding new Kennel
+class KennelForm(forms.ModelForm):
+    kennelNum = forms.CharField(required=True,
+                                error_messages={'required': 'Kennel Number cannot be empty'},
+                                widget=forms.widgets.TextInput(attrs={"placeholder": "Kennel Number",
+                                                                      "class": "form-control"}),
+                                label="Kennel Number")
+    kennelImage = forms.ImageField(required=False,
+                                   widget=forms.widgets.ClearableFileInput(attrs={"class": "form-control"}),
+                                   label="Kennel Image",
+                                   help_text="Upload the kennel's image here.")
+
+    class Meta:
+        model = Kennel
+        fields = '__all__'
+
+
+# Form for editing a Kennel
+class KennelEditForm(forms.ModelForm):
+    # Disable editing Kennel Number
+    kennelNum = forms.CharField(required=True,
+                                error_messages={'required': 'Kennel Number cannot be empty'},
+                                widget=forms.widgets.TextInput(attrs={"placeholder": "Kennel Number",
+                                                                      "class": "form-control"}),
+                                label="Kennel Number",
+                                disabled=True)
+    kennelImage = forms.ImageField(required=False,
+                                   widget=forms.widgets.ClearableFileInput(attrs={"class": "form-control"}),
+                                   label="Kennel Image",
+                                   help_text="Upload the kennel's image here.")
+
+    class Meta:
+        model = Kennel
+        fields = '__all__'
 
 
 # Form for adding new Dog Placements (in Kennels)
@@ -329,3 +377,232 @@ class DogStanceForm(forms.ModelForm):
             'dogStance': forms.Select(attrs={'class': 'form-control'}),
             'dogLocation': forms.Select(attrs={'class': 'form-control'})
         }
+
+
+# Form for Treatments in Portal
+class TreatmentPortalForm(forms.ModelForm):
+    treatmentName = forms.CharField(required=True,
+                                    max_length=50,
+                                    error_messages={'required': 'Treatment Name cannot be empty'},
+                                    widget=forms.widgets.TextInput(attrs={"placeholder": "Treatment Name",
+                                                                          "class": "form-control"}),
+                                    label="Treatment Name")
+    treatmentDate = forms.DateField(required=False,
+                                    widget=forms.widgets.DateInput(format='%Y-%m-%d',
+                                                                   attrs={"type": "date",
+                                                                          "placeholder": "Date of Treatment",
+                                                                          "class": "form-control"}),
+                                    label="Date of Treatment",
+                                    initial=timezone.now().date())
+    treatedBy = forms.CharField(required=True,
+                                max_length=50,
+                                error_messages={'required': '"Treated By" cannot be empty'},
+                                widget=forms.widgets.TextInput(attrs={"placeholder": "Treated By",
+                                                                      "class": "form-control"}),
+                                label="Treated By")
+    comments = forms.CharField(required=False,
+                               max_length=250,
+                               widget=forms.widgets.Textarea(attrs={"placeholder": "Comments",
+                                                                    "class": "form-control",
+                                                                    "rows": 3}),
+                               label="Comments")
+    dog = forms.ModelChoiceField(queryset=Dog.objects.all(),
+                                 required=True,
+                                 widget=forms.widgets.Select(attrs={"placeholder": "Dog",
+                                                                    "class": "form-control"}),
+                                 label="Dog")
+
+    class Meta:
+        model = Treatment
+        fields = '__all__'
+
+
+# Form for Examinations in Portal
+class ExaminationPortalForm(forms.ModelForm):
+    examinationDate = forms.DateField(required=True,
+                                      widget=forms.widgets.DateInput(format='%Y-%m-%d',
+                                                                     attrs={"type": "date",
+                                                                            "placeholder": "Date of Examination",
+                                                                            "class": "form-control"}),
+                                      label="Date of Examination",
+                                      initial=timezone.now().date())
+    examinedBy = forms.CharField(required=True,
+                                 max_length=50,
+                                 error_messages={'required': '"Examined By" cannot be empty'},
+                                 widget=forms.widgets.TextInput(attrs={"placeholder": "Examined By",
+                                                                       "class": "form-control"}),
+                                 label="Examined By")
+    results = forms.CharField(required=False,
+                              max_length=100,
+                              widget=forms.widgets.Textarea(attrs={"placeholder": "Results",
+                                                                   "class": "form-control",
+                                                                   "rows": 2}),
+                              label="Results")
+    dogWeight = forms.DecimalField(required=False,
+                                   widget=forms.widgets.NumberInput(attrs={"placeholder": "Weight",
+                                                                           "class": "form-control",
+                                                                           "min": 0,
+                                                                           "max": 250}),
+                                   label="Weight")
+    dogTemperature = forms.DecimalField(required=False,
+                                        widget=forms.widgets.NumberInput(attrs={"placeholder": "Temperature",
+                                                                                "class": "form-control",
+                                                                                "min": 0,
+                                                                                "max": 250}),
+                                        label="Temperature")
+    dogPulse = forms.DecimalField(required=False,
+                                  widget=forms.widgets.NumberInput(attrs={"placeholder": "Pulse",
+                                                                          "class": "form-control",
+                                                                          "min": 0,
+                                                                          "max": 250}),
+                                  label="Pulse")
+    comments = forms.CharField(required=False,
+                               max_length=250,
+                               widget=forms.widgets.Textarea(attrs={"placeholder": "Comments",
+                                                                    "class": "form-control",
+                                                                    "rows": 3}),
+                               label="Comments")
+    dog = forms.ModelChoiceField(queryset=Dog.objects.all(),
+                                 required=True,
+                                 widget=forms.widgets.Select(attrs={"placeholder": "Dog",
+                                                                    "class": "form-control"}),
+                                 label="Dog")
+
+    class Meta:
+        model = EntranceExamination
+        fields = '__all__'
+
+
+# Dog Placement Form in Portal
+class PlacementPortalForm(forms.ModelForm):
+    dog = forms.ModelChoiceField(queryset=Dog.objects.all(),
+                                 required=True,
+                                 widget=forms.widgets.Select(attrs={"placeholder": "Dog",
+                                                                    "class": "form-control"}),
+                                 label="Dog")
+    kennel = forms.ModelChoiceField(queryset=Kennel.objects.all(),
+                                    required=True,
+                                    widget=forms.widgets.Select(attrs={"placeholder": "Kennel",
+                                                                       "class": "form-control"}),
+                                    label="Kennel")
+    entranceDate = forms.DateField(required=True,
+                                   widget=forms.widgets.DateInput(format='%Y-%m-%d',
+                                                                  attrs={"type": "date",
+                                                                         "placeholder": "Date of Entrance",
+                                                                         "class": "form-control"}),
+                                   label="Date of Entrance",
+                                   initial=timezone.now().date())
+    expirationDate = forms.DateField(required=False,
+                                     widget=forms.widgets.DateInput(format='%Y-%m-%d',
+                                                                    attrs={"type": "date",
+                                                                           "placeholder": "Date of Expiration",
+                                                                           "class": "form-control"}),
+                                     label="Date of Expiration")
+    placementReason = forms.CharField(required=False,
+                                      max_length=75,
+                                      widget=forms.widgets.Textarea(attrs={"placeholder": "Placement Reason",
+                                                                           "class": "form-control",
+                                                                           "rows": 2}),
+                                      label="Placement Reason")
+
+    class Meta:
+        model = DogPlacement
+        fields = '__all__'
+
+
+# Session (Observes) Form in Portal
+class ObservesPortalForm(forms.ModelForm):
+    dog = forms.ModelChoiceField(queryset=Dog.objects.all(),
+                                 required=True,
+                                 widget=forms.widgets.Select(attrs={"placeholder": "Dog",
+                                                                    "class": "form-control"}),
+                                 label="Dog")
+    camera = forms.ModelChoiceField(queryset=Camera.objects.all(),
+                                    required=True,
+                                    widget=forms.widgets.Select(attrs={"placeholder": "Camera",
+                                                                       "class": "form-control"}),
+                                    label="Camera")
+    sessionDate = forms.DateField(required=True,
+                                  widget=forms.widgets.DateInput(format='%Y-%m-%d',
+                                                                 attrs={"type": "date",
+                                                                        "placeholder": "Session Start Date",
+                                                                        "class": "form-control"}),
+                                  label="Session Start Date",
+                                  initial=timezone.now().date())
+    comments = forms.CharField(required=False,
+                               max_length=200,
+                               widget=forms.widgets.Textarea(attrs={"placeholder": "Comments",
+                                                                    "class": "form-control",
+                                                                    "rows": 4}),
+                               label="Comments")
+
+    class Meta:
+        model = Observes
+        fields = '__all__'
+
+
+# Observation Form in Portal
+class ObservationPortalForm(forms.ModelForm):
+    observes = forms.ModelChoiceField(queryset=Observes.objects.all(),
+                                      required=True,
+                                      widget=forms.widgets.Select(attrs={"placeholder": "Session",
+                                                                         "class": "form-control"}),
+                                      label="Session")
+    obsDateTime = forms.DateTimeField(required=True,
+                                      widget=forms.widgets.DateTimeInput(format='%Y-%m-%d %H:%M:%S',
+                                                                         attrs={"type": "datetime",
+                                                                                "placeholder": "Start Date and Time",
+                                                                                "class": "form-control"}),
+                                      label="Start Date and Time",
+                                      initial=timezone.now()
+                                      )
+    sessionDurationInMins = forms.IntegerField(required=True,
+                                               widget=forms.widgets.NumberInput(attrs={"placeholder": "Duration (mins)",
+                                                                                       "class": "form-control"}),
+                                               label="Duration (mins)",
+                                               initial=2,
+                                               min_value=0)
+    isKong = forms.ChoiceField(choices=Observation.IS_KONG_CHOICES,
+                               required=False,
+                               widget=forms.widgets.Select(attrs={"placeholder": "With Kong?",
+                                                                  "class": "form-control"}),
+                               label="With Kong?")
+    jsonFile = forms.FileField(required=False,
+                               widget=forms.widgets.FileInput(attrs={"class": "form-control-file"}),
+                               label="JSON File")
+    rawVideo = forms.FileField(required=False,
+                               widget=forms.widgets.FileInput(attrs={"class": "form-control-file"}),
+                               label="Video File")
+
+    class Meta:
+        model = Observation
+        fields = ['observes', 'obsDateTime', 'sessionDurationInMins', 'isKong', 'jsonFile', 'rawVideo']
+
+
+# DogStance Form in Portal
+class DogStancePortalForm(forms.ModelForm):
+    observation = forms.ModelChoiceField(queryset=Observation.objects.all(),
+                                         required=True,
+                                         widget=forms.widgets.Select(attrs={"placeholder": "Observation",
+                                                                            "class": "form-control"}),
+                                         label="Observation")
+    stanceStartTime = forms.TimeField(required=True,
+                                      widget=forms.widgets.TimeInput(format='%H:%M:%S',
+                                                                     attrs={"placeholder": "Start Time in the Video",
+                                                                            "class": "form-control"}),
+                                      label="Start Time in the Video",
+                                      initial='00:00:00')
+    dogStance = forms.ChoiceField(choices=DogStance.DOG_STANCE_CHOICES,
+                                  required=True,
+                                  widget=forms.widgets.Select(attrs={"placeholder": "Stance",
+                                                                     "class": "form-control"}),
+                                  label="Stance")
+    dogLocation = forms.ChoiceField(choices=DogStance.DOG_LOCATION_CHOICES,
+                                    required=False,
+                                    widget=forms.widgets.Select(attrs={"placeholder": "Location",
+                                                                       "class": "form-control"}),
+                                    label="Location")
+
+    class Meta:
+        model = DogStance
+        fields = ['observation', 'stanceStartTime', 'dogStance', 'dogLocation']

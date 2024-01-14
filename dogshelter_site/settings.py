@@ -36,6 +36,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'dogs_app.apps.DogsAppConfig',
+    'portal_app.apps.PortalAppConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -49,6 +50,7 @@ INSTALLED_APPS = [
     'crispy_bootstrap5',
     'django_filters',           # For advanced filtering of data
     'datetimewidget',           # For selecting DateTime in forms
+    'django_tables2',           # For better looking tables
 ]
 
 MIDDLEWARE = [
@@ -139,6 +141,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
     os.path.join(BASE_DIR, 'dogs_app', 'static'),
+    os.path.join(BASE_DIR, 'portal_app', 'static'),
 ]
 
 # Default primary key field type
@@ -190,4 +193,11 @@ LOGGING = {
         'handlers': ['console'],
         'level': 'DEBUG',
     },
+}
+
+DJANGO_TABLES2_TABLE_ATTRS = {
+   'class': 'table table-hover table-bordered table-striped border-dark',
+   'thead': {
+       'class': 'table-primary border-dark',
+   },
 }

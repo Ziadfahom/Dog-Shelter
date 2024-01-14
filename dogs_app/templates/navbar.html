@@ -32,7 +32,7 @@
                 aria-haspopup="true"
                 aria-expanded="false"
               >
-                DashBoard
+                Dashboard
               </span>
 
               <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -47,6 +47,10 @@
                 <a href="{% url 'dogs_app:view_news' %}" class="dropdown-item">
                   <strong>News</strong>
                   <span>Find thouands of articles about Dogs naturing.</span>
+                </a>
+                <a href="{% url 'portal_app:list-kennels' %}" class="dropdown-item">
+                  <strong>Control Panel</strong>
+                  <span>Manage all website data.</span>
                 </a>
               </div>
             </div>

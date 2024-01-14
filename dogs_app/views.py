@@ -1,7 +1,6 @@
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 
-from django.views.decorators.csrf import csrf_exempt
 from openpyxl import Workbook, load_workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
@@ -30,10 +29,6 @@ from django.db import IntegrityError, transaction
 from io import BytesIO
 from .serializers import DogSerializer
 from django.views.decorators.http import require_POST
-
-
-
-
 
 # Location of the default User profile picture if they don't have a picture
 DEFAULT_IMAGE_SOURCE = '/profile_pictures/default.jpg'

@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+    <title>DogsWatch | New Camera</title>
+    <link rel="stylesheet" href="{% static 'portal_app/css/simple_styles.css' %}">
+{% endblock %}
+
+
+{% block content %}
+
+    <!-- Form Container -->
+    <div class="container mb-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-7 col-md-10">
+                <!-- Back Button -->
+                <div class="container mt-3">
+                    <div class="row">
+                        <div class="col-12">
+                            <a href="{% url 'portal_app:list-cameras' %}" class="btn btn-secondary mb-3">Back</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form -->
+                <div class="form-container">
+                    <h2>Add a New Camera</h2>
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <button type="submit" class="btn btn-primary w-100">Submit</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
