@@ -795,4 +795,131 @@ $('#editOwnerModal .edit-owner-confirm-btn').attr('data-owner-id', ownerId);
         $('.error').remove();
     });
 
+
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const chartContainer = document.getElementById('chart-data');
+    const heatmapData = JSON.parse(chartContainer.getAttribute('data-heatmap'));
+
+    // Calculate the number of unique months in the heatmap data
+    const months = new Set(heatmapData.map(item => item[1]));
+    const numberOfMonths = months.size;
+    const rowHeight = numberOfMonths <= 4 ? 50 : 25;
+
+    // Calculate the total height
+    const totalHeight = numberOfMonths * rowHeight + 150;
+
+    // Calculate the number of unique days in the heatmap data
+    const days = new Set(heatmapData.map(item => item[0]));
+    const numberOfDays = days.size;
+
+    // Determine width values
+    const extraNarrowWidth = 250; // for less than 5 days
+    const narrowWidth = 600;      // for 10 days or less
+    const wideWidth = 1200;        // for more than 10 days
+
+    // Determine the width based on the number of days
+    let totalWidth;
+    if (numberOfDays < 5) {
+        totalWidth = extraNarrowWidth;
+    } else if (numberOfDays <= 10) {
+        totalWidth = narrowWidth;
+    } else {
+        totalWidth = wideWidth;
+    }
+
+    // Set the height and width of the chart container
+    chartContainer.style.height = totalHeight + 'px';
+    chartContainer.style.width = totalWidth + 'px';
+
+
+    Highcharts.chart('chart-data', {
+        chart: {
+            type: 'heatmap',
+            marginTop: 80,
+            marginBottom: 80,
+            plotBorderWidth: 1,
+        },
+        title: {
+            text: 'Observations Heatmap for 2024',
+            style: {
+                fontWeight: 'bold',
+                fontSize: '20px',
+            }
+        },
+        xAxis: {
+            categories: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'], // Days of the month
+            title: {
+                text: 'Day in the Month',
+                style: {
+                    fontWeight: 'bold',
+                    fontSize: '15px',
+                }
+            },
+            labels: {
+                style: {
+                    fontWeight: 'bold'
+                }
+            },
+        },
+        yAxis: {
+            categories: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+            reversed: true,
+            title: {
+                text: 'Month in the Year',
+                style: {
+                    fontWeight: 'bold',
+                    fontSize: '15px',
+                }
+            },
+            labels: {
+                style: {
+                    fontSize: '15px',
+                    fontWeight: 'bold'
+                }
+            },
+        },
+        colorAxis: {
+            min: 0,
+            minColor: '#FFFFFF',
+            maxColor: Highcharts.getOptions().colors[0],
+            stops: [
+                [0, '#FF0000'], // Red for zero
+                [0.5, '#FFFF00'], // Yellow for middle values
+                [1, '#00FF00'] // Green for high values
+            ]
+        },
+        legend: {
+            align: 'bottom',
+            layout: 'horizontal',
+            margin: 0,
+            verticalAlign: 'bottom',
+            y: 25,
+            symbolHeight: 280
+        },
+        tooltip: {
+            formatter: function () {
+                return 'Count: <b>' + this.point.value + '</b>';
+            }
+        },
+        series: [{
+            name: 'Observations per day',
+            borderWidth: 1,
+            data: heatmapData,
+            borderColor: '#000000',
+            dataLabels: {
+                enabled: true,
+                color: '#000000',
+                style: {
+                    textOutline: false,
+                    fontWeight: 'bold',
+                    fontSize: '15px'
+                }
+            }
+        }],
+        credits: {
+            enabled: false,
+        }
+    });
 });

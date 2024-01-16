@@ -1,6 +1,8 @@
 import json
-from datetime import datetime
+from collections import defaultdict
+from datetime import datetime, time
 
+from django.utils.timezone import localtime
 from openpyxl import Workbook, load_workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
@@ -229,6 +231,59 @@ def dog_record_view(request, pk):
             'observers__observation_set__dogstance_set',  # For DogStances related to Observations
         ).get(dogID=pk)
 
+        # Handle displaying the summarization for the dog below the picture
+        # Find the oldest observation date
+        oldest_observation = Observation.objects.filter(
+            observes__dog=dog_record
+        ).order_by('obsDateTime').first()
+
+        # Adjust the start date to the earliest observation if available
+        if oldest_observation:
+            first_date = localtime(oldest_observation.obsDateTime).date()
+        else:
+            first_date = date.today()
+
+        last_date = date.today()
+
+        # Transforming observation data for Highcharts heatmap
+        # Find the range of years
+        first_year = first_date.year
+        last_year = last_date.year
+
+        # Prepare the heatmap data for each year
+        yearly_heatmap_data = {}
+
+        for year in range(first_year, last_year + 1):
+
+            # Prepare the summarization dictionary
+            observation_summary = defaultdict(int)
+            start_date = date(year, 1, 1) if year != first_year else first_date
+            end_date = date(year, 12, 31) if year != last_year else last_date
+
+            for single_date in (start_date + timedelta(n) for n in range((end_date - start_date).days + 1)):
+                # Define the start and end of the day for single_date
+                start_of_day = timezone.make_aware(datetime.combine(single_date, time.min))
+                end_of_day = timezone.make_aware(datetime.combine(single_date, time.max))
+
+                # Count observations for each date, using __date for comparison
+                count = Observation.objects.filter(
+                    observes__dog=dog_record,
+                    obsDateTime__range=(start_of_day, end_of_day)
+                ).count()
+
+                observation_summary[single_date] = count
+
+            # Transforming observation data for Highcharts
+            heatmap_data = []
+            for current_date, current_count in observation_summary.items():
+                if current_date.year == year:
+                    day = current_date.day - 1
+                    month = current_date.month - 1
+                    heatmap_data.append([day, month, current_count])
+
+            yearly_heatmap_data[year] = heatmap_data
+
+
         # Initialize Treatment/Examination/Placement/Session(Observes) form when adding new entries
         treatment_form = TreatmentForm(request.POST or None)
         examination_form = EntranceExaminationForm(request.POST or None)
@@ -407,6 +462,7 @@ def dog_record_view(request, pk):
             'examination_form': examination_form,
             'placement_form': placement_form,
             'session_form': session_form,
+            'heatmap_data': yearly_heatmap_data.get(2023, [])
         }
 
         return render(request, 'dog_record.html', context=context)

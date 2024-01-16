@@ -401,3 +401,9 @@ textarea {
 .error {
    color: red;
 }
+
+.heatmap-styles {
+    margin-left: auto;  /* Adjust as needed */
+    margin-right: auto; /* Adjust as needed */
+}
+
