@@ -459,13 +459,16 @@
 
 <!-- Add & Edit Modals -->
 {% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='addExaminationModal' title='Add New Examination' label_id='addExaminationtModalLabel' button_title='Examination' modal_form=examination_form form_name="examination_form" %}
-{% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='editExaminationModal' title='Edit Examination' label_id='editExaminationModalLabel' button_title='Examination' modal_form=examination_form form_name="examination_form" %}
+{% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='editExaminationModal' title='Edit Examination' label_id='editExaminationModalLabel' button_title='Examination' modal_form=examination_form form_name="examination_form" is_edit=True button_classes='edit-examination-confirm-btn' %}
+
 {% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='addPlacementModal' title='Add New Kennel Placement' label_id='addPlacementModalLabel' button_title='Placement' modal_form=placement_form form_name="placement_form" %}
-{% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='editPlacementModal' title='Edit Placement' label_id='editPlacementModalLabel' button_title='Placement' modal_form=placement_form form_name="placement_form" %}
-{% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='editSessionModal' title='Edit Session' label_id='editSessionModalLabel' button_title='Session' modal_form=session_form form_name="session_form" %}
+{% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='editPlacementModal' title='Edit Placement' label_id='editPlacementModalLabel' button_title='Placement' modal_form=placement_form form_name="placement_form" is_edit=True button_classes='edit-placement-confirm-btn' %}
+
+{% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='editSessionModal' title='Edit Session' label_id='editSessionModalLabel' button_title='Session' modal_form=session_form form_name="session_form" is_edit=True button_classes='edit-session-confirm-btn' %}
 {% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='addSessionModal' title='Add New Camera Session' label_id='addSessionModalLabel' button_title='Session' modal_form=session_form form_name="session_form" %}
+
 {% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='addTreatmentModal' title='Add New Treatment' label_id='addTreatmentModalLabel' button_title='Treatment' modal_form=treatment_form form_name="treatment_form" %}
-{% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='editTreatmentModal' title='Edit Treatment' label_id='editTreatmentModalLabel' button_title='Treatment' modal_form=treatment_form form_name="treatment_form" %}
+{% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='editTreatmentModal' title='Edit Treatment' label_id='editTreatmentModalLabel' button_title='Treatment' modal_form=treatment_form form_name="treatment_form" is_edit=True button_classes='edit-treatment-confirm-btn' %}
 
 <!-- Dog Owner Modals -->
 {% include 'modals/dogs/common/__dog_owner_modal.html' with dog_record=dog_record %}
