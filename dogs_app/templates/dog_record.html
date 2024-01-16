@@ -472,7 +472,7 @@
 
 <!-- Dog Owner Modals -->
 {% include 'modals/dogs/common/__dog_owner_modal.html' with dog_record=dog_record %}
-{% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='editOwnerModal' title='Edit Owner' label_id='editOwnerModalLabel' button_title='Owner' modal_form=owner form_name="owner_form" %}
+{% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='editOwnerModal' title='Edit Owner' label_id='editOwnerModalLabel' button_title='Owner' modal_form=owner form_name="owner_form" is_edit=True button_classes='edit-owner-confirm-btn' %}
 {% endblock %}
 
 <!-- Declare a variable for displaying the dog's image, to be used in the following external JavaScript file -->
