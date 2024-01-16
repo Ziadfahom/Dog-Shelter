@@ -7,12 +7,14 @@ over each dog and display them in a separate row-->
 
 <!--The row is clickable (redirects to the dog's record page), and hovering over it
  shows a pointer cursor and displays a tooltip with the dog's thumbnail.-->
-<tr class="dog-row"
+<tr class="dog-row position-relative"
     data-href="{% url 'dogs_app:dog_record' dog.dogID %}"
     data-dogid="{{ dog.dogID }}"
     style="cursor: pointer;"
-    data-bs-toggle="tooltip" data-bs-html="true"
-    title="{% if dog.dogImage %}<img src='{{ dog.dogImage.url }}' alt='Thumbnail of {{ dog.dogName }}' style='max-width: 200px;'>{% else %}<img src='{% static 'dogs_app/img/default_dog.jpg' %}' alt='Default dog thumbnail'>{% endif %}">
+    data-bs-placement="top"
+    data-bs-toggle="tooltip"
+    data-bs-html="true"
+    title="{% if dog.dogImage %}<img src='{{ dog.dogImage.url }}' alt='Thumbnail of {{ dog.dogName }}' style='width: 100px;height:100px;'>{% else %}<img src='{% static 'dogs_app/img/default_dog.jpg' %}' alt='Default dog thumbnail'>{% endif %}">
     <td class="text-center">{{ dog.dogName|handle_none }}</td>
     <td class="text-center">{{ dog.dateOfArrival|date:"d/m/Y"|handle_none }}</td>
     <td class="text-center">

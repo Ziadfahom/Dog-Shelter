@@ -1,5 +1,9 @@
 {% load dog_filters %}
 
+<!-- Observation Head Things -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+
 <!-- Observation Row -->
 <tr id="observation-{{ observation.id }}">
     <!-- Cell with Flexbox -->
@@ -20,13 +24,15 @@
         {{ observation.sessionDurationInMins }}
     </td>
     <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Stances for this Observation">
-        {% if observation.isKong == "Y" %}
-            <input class="form-check-input" type="checkbox" style="transform: scale(1.5);" checked disabled>
-        {% elif observation.isKong == "N" %}
-            <input class="form-check-input" type="checkbox" style="transform: scale(1.5);" disabled>
-        {% else %}
-            -
-        {% endif %}
+        <div class="form-check">
+            {% if observation.isKong == "Y" %}
+                <input class="form-check-input" type="checkbox" style="transform: scale(1.5);" checked disabled>
+            {% elif observation.isKong == "N" %}
+                <input class="form-check-input" type="checkbox" style="transform: scale(1.5);" disabled>
+            {% else %}
+                -
+            {% endif %}
+        </div>
     </td>
     <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Stances for this Observation">
         {{ observation.jsonFile|handle_none }}
@@ -46,125 +52,72 @@
         </div>
     </td>
 </tr>
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
-<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
 
 <!-- New Expandable Row -->
-<tr class="collapse collapse-row" id="stances-{{ observation.id }}">
-    <td colspan="6">
-        <!-- Dog Stances table -->
-        <table class="table table-striped table-hover inner-table styled-table  border-secondary caption-top dog-stance-table">
-            <caption class="stances-caption">
-                <div class="caption-wrapper">
-                    <div class="text-center">
-                        Dog Stances for Observation: {{ observation.obsDateTime }}
+<tr class="collapse collapse-row bg-danger" id="stances-{{ observation.id }}">
+    <td colspan="12">
+        <div class="p-5">
+            <!-- Dog Stances table -->
+            <table class="table table-striped border-collapse table-hover inner-table styled-table caption-top border-dark dog-stance-table">
+                <caption class="stances-caption bg-dark">
+                    <div class="caption-wrapper">
+                        <div class="text-center">
+                            Dog Stances for Observation ({{ observation.obsDateTime }})
+                        </div>
+                        <button
+                            data-observation-id="{{ observation.id }}"
+                            style="padding: 6px 14px;" type="button"
+                            class="btn btn-light text-dark add-stance-btn"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="bottom"
+                            title="Add a new Dog Stance"
+                        >
+                            <i class="fas fa-plus" style="margin-right: 8px;"></i>
+                            <i class="fas fa-paw"></i>
+                        </button>
                     </div>
-                    <button data-observation-id="{{ observation.id }}" style="padding: 6px 14px;" type="button"
-                            class="btn btn-primary add-stance-btn" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Add a new Dog Stance">
-                        <i class="fas fa-plus" style="margin-right: 8px;"></i>
-                        <i class="fas fa-paw"></i>
-                    </button>
-                </div>
-            </caption>
-            <thead class="table-group-divider">
-                <tr class="table-primary border-primary">
-                    <th>Dog Stance Start Time</th>
-                    <th>Stance</th>
-                    <th>Location</th>
-                    <th>Edit/Delete</th>
-                </tr>
-            </thead>
-            <tbody class="table-group-divider">
-                {% for stance in observation.related_dog_stances %}
-                    <tr>
-                        <td>{{ stance.stanceStartTime|format_time_24hr }}</td>
-                        <td>{{ stance.get_dogStance_display }}</td>
-                        <td>{{ stance.get_dogLocation_display }}</td>
-                        <td>
-                            <div class="btn-group" role="group">
-                                <!-- Edit and Delete buttons -->
-                                <button type="button" class="btn btn-outline-info btn-sm edit-stance-btn" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Edit this Stance" data-stance-id="{{ stance.id }}" data-observation-id="{{ observation.id }}">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button type="button" class="btn btn-outline-danger btn-sm delete-stance-btn" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Delete this Stance" data-stance-id="{{ stance.id }}" data-observation-id="{{ observation.id }}">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </td>
+                </caption>
+                <thead class="table-group-divider">
+                    <tr class="table-dark">
+                        <th>Dog Stance Start Time</th>
+                        <th>Stance</th>
+                        <th>Location</th>
+                        <th>Edit/Delete</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody class="table-group-divider">
+                    {% for stance in observation.related_dog_stances %}
+                        <tr>
+                            <td>{{ stance.stanceStartTime|format_time_24hr }}</td>
+                            <td>{{ stance.get_dogStance_display }}</td>
+                            <td>{{ stance.get_dogLocation_display }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <!-- Edit and Delete buttons -->
+                                    <button type="button" class="btn btn-outline-info btn-sm edit-stance-btn" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Edit this Stance" data-stance-id="{{ stance.id }}" data-observation-id="{{ observation.id }}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger btn-sm delete-stance-btn" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Delete this Stance" data-stance-id="{{ stance.id }}" data-observation-id="{{ observation.id }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </td>
 </tr>
 
 <!-- Bootstrap Modal for Adding Dog Stance -->
-<div class="modal fade" id="addDogStanceModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Add a New Dog Stance</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="dogStanceForm">
-                    <!-- CSRF Token -->
-                    {% csrf_token %}
-
-                    <!-- Hidden input to hold the Observation ID Field -->
-                    <input type="hidden" id="observation_id" name="observation_id">
-
-                    <!-- Time Field -->
-                    {{ stance_form.stanceStartTime.label_tag }}
-                    <input class="form-control" type="text" id="timepicker" name="stanceStartTime" placeholder="Select Time">
-
-
-                    <!-- Dog Stance Field -->
-                    {{ stance_form.dogStance.label_tag }}
-                    {{ stance_form.dogStance }}
-
-                    <!-- Dog Location Field -->
-                    {{ stance_form.dogLocation.label_tag }}
-                    {{ stance_form.dogLocation }}
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="saveDogStanceBtn">Save</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal for displaying errors -->
-<div class="modal fade" tabindex="-1" id="errorModal">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-body text-center">
-                <button type="button" class="btn-close float-end" data-bs-dismiss="modal" aria-label="Close"></button>
-                <p id="errorText" class="text-danger font-weight-bold"></p>
-            </div>
-        </div>
-    </div>
-</div>
+{% include 'modals/observations/__add_new_dag_stance_modal.html' %}
 
 <!-- "Delete Observation" Confirmation Modal -->
-<div class="modal fade" id="deleteObservationModal" tabindex="-1" aria-labelledby="deleteObservationModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="deleteObservationModalLabel">Confirm Observation Deletion</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        Are you sure you want to delete this Observation? This action cannot be undone.
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-danger" id="confirmObservationDeleteBtn">Delete</button>
-      </div>
-    </div>
-  </div>
-</div>
+{% include 'modals/observations/__delete_observation_modal.html' %}
+
+<!-- "Delete Dog Stance" Confirmation Modal -->
+{% include 'modals/observations/__delete_dog_stance_modal.html' %}
 
 <!-- Toast Notification for Success -->
 <div aria-live="polite" aria-atomic="true" class="position-relative">
@@ -181,21 +134,14 @@
     </div>
 </div>
 
-<!-- "Delete Dog Stance" Confirmation Modal -->
-<div class="modal fade" id="deleteStanceModal" tabindex="-1" aria-labelledby="deleteStanceModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="deleteStanceModalLabel">Confirm Stance Deletion</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        Are you sure you want to delete this Dog Stance? This action cannot be undone.
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-danger" id="confirmStanceDeleteBtn">Delete</button>
-      </div>
+<!-- Modal for displaying errors -->
+<div class="modal fade" tabindex="-1" id="errorModal">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <button type="button" class="btn-close float-end" data-bs-dismiss="modal" aria-label="Close"></button>
+                <p id="errorText" class="text-danger font-weight-bold"></p>
+            </div>
+        </div>
     </div>
-  </div>
 </div>

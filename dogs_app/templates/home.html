@@ -178,7 +178,7 @@
                 <h3>{{ news.title }}</h3>
               </div>
               <div class="solu_description">
-                <p>{{ news.content }}</p>
+                <p>{{ news.content|truncatechars:150|slice:":150" }}</p>
               </div>
             </div>
 

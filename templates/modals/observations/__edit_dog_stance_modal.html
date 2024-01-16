@@ -1,0 +1,78 @@
+{% load date_filters %}
+<div
+  class="modal fade"
+  id="editStanceModal"
+  data-backdrop="static"
+  data-keyboard="false"
+  tabindex="-1"
+  aria-labelledby="staticBackdropLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog" style="max-width:600px">
+    <div class="modal-content">
+      <div class="modal-body px-4">
+        <div class="text-dark d-inline-block ml-auto">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="py-3 w-100">
+            {% comment %} Header {% endcomment %}
+            <h5 class="text-dark fw-bold text-uppercase" id="editObservationModalLabel">Edit Stance</h5>
+            <hr>
+
+            {% comment %} Content {% endcomment %}
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body" style="padding-bottom: 0;">
+                    {% if stance_form.stanceStartTime.errors %}
+                        <div class="form-error-row">
+                            <span class="text-danger form-error">{{ stance_form.stanceStartTime.errors }}</span>
+                        </div>
+                    {% endif %}
+                    <div class="form-row">
+                        <label for="timepicker">Stance Start Time:</label>
+                        <input class="form-control" type="text" id="timepicker" name="stanceStartTime" value="{{ stance_form.stanceStartTime.value|format_time }}">
+                    </div>
+
+                    {% if stance_form.dogStance.errors %}
+                        <div class="form-error-row">
+                            <span class="text-danger form-error">{{ stance_form.dogStance.errors }}</span>
+                        </div>
+                    {% endif %}
+                    <div class="form-row">
+                        <label for="currentStance">Stance:</label>
+                        <select id="currentStance" class="form-control" name="{{ stance_form.dogStance.name }}">
+                            {% for value, display in stance_form.dogStance.field.choices %}
+                                <option value="{{ value }}" {% if stance_form.dogStance.value == value %}selected{% endif %}>{{ display }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    {% if stance_form.dogLocation.errors %}
+                        <div class="form-error-row">
+                            <span class="text-danger form-error">{{ stance_form.dogLocation.errors }}</span>
+                        </div>
+                    {% endif %}
+                    <div class="form-row">
+                        <label for="dogLocation">Location:</label>
+                        <select id="dogLocation" class="form-control" name="{{ stance_form.dogLocation.name }}">
+                            {% for value, display in stance_form.dogLocation.field.choices %}
+                                <option value="{{ value }}" {% if stance_form.dogLocation.value == value %}selected{% endif %}>{{ display }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                {% comment %} Footer {% endcomment %}
+                <br>
+                <hr>
+                <div class="text-right mt-4">
+                    <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success px-4">Save</button>
+                </div>
+            </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

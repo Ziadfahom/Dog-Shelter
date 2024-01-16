@@ -2,271 +2,85 @@
 {% load static %}
 {% load date_filters %}
 
-{% block content %}
+{% block head %}
+    <title>DogsWatch | View Dog Observation</title>
     <link href="{% static 'dogs_app/css/view_observations.css' %}" rel="stylesheet">
     <!-- DateTime styling -->
     <link href="{% static 'dogs_app/css/_datetime_picker.css' %}" rel="stylesheet">
-
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+{% endblock %}
 
-    <!-- Header -->
-    <div class="header">
-        <button onclick="goBackWithParam()" class="btn btn-secondary back-button top-buttons"><i class="fas fa-arrow-left"></i> Back</button>
+{% block content %}
+    <div class="container-fluid p-5 mt-5">
+        <div class="col-md-12 mx-auto">
+            <div class="card shadowed">
+                <div class="card-header bg-dark py-4 text-white d-flex align-items-center justify-content-between">
+                    <!-- Back button on the left -->
+                    <button onclick="goBackWithParam()" class="btn btn-light" title="Go Back">
+                        <span class="icon-arrow_back text-dark"></span>
+                    </button>
 
-        <div class="header-title">
-            <h4>All Observations For Session: </h4>
-            <h4 class="session-instance">{{ session_instance }}</h4>
-        </div>
+                    <!-- Dog's name centered -->
+                    <h6 class="card-title m-2 flex-grow-1 text-center" style="padding-left: 3rem;">
+                        All Observations For Session ({{ session_instance }})
+                    </h6>
 
-        <a class="btn  btn-success btn-add-new new-observation top-buttons" href="#" data-bs-toggle="modal" data-bs-target="#newObservationModal">
-            <i class="fas fa-plus"></i> Add
-        </a>
-    </div>
-
-    <!-- Observations Table -->
-    <div class="observations-table-container">
-        <div id="observations-success-alert" class="alert alert-success alert-dismissible fade show" role="alert" style="display:none;">
-            <strong>Success!</strong> Observation has been successfully added.
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        <table id="observations-table" class="table table-striped table-hover table-bordered border-secondary styled-table">
-            <thead class="table-group-divider">
-                <tr class="table-success border-success">
-                    <th>Date & Time</th>
-                    <th>Duration (Mins)</th>
-                    <th>Kong</th>
-                    <th>JSON File</th>
-                    <th>Video</th>
-                    <th>Edit/Delete</th>
-                </tr>
-            </thead>
-            <tbody class="table-group-divider" id="divider">
-                {% for observation in paginated_observations %}
-                    {% include '_observation_row.html' %}
-                {% empty %}
-                    <tr>
-                        <td colspan="7">No observations found.</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <!-- Pagination -->
-        {% include '_observations_pagination.html' %}
-
-    </div>
-
-
-    <!-- Add New Observation Modal -->
-    <div class="modal fade" id="newObservationModal" tabindex="-1" aria-labelledby="newObservationModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header text-center bg-primary">
-                    <h3 class="modal-title w-100" id="newObservationModalLabel">Add New Observation</h3>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <a class="btn add-dog-btn text-white" href="#" data-bs-toggle="modal" data-bs-target="#newObservationModal">
+                        <i class="bi bi-plus-circle-fill mr-1"></i> New Oservation
+                    </a>
                 </div>
-                <form method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    <div class="modal-body" style="padding-bottom: 0;">
-                        {% if observation_form.obsDateTime.errors %}
-                            <div class="form-error-row">
-                                <span class="text-danger form-error">{{ observation_form.obsDateTime.errors }}</span>
-                            </div>
-                        {% endif %}
-                        <div class="form-row">
-                            <label for="datetimepicker">Observation Date/Time:</label>
-                            <input type="text" id="datetimepicker" class="form-control" name="{{ observation_form.obsDateTime.name }}" value="{{ observation_form.obsDateTime.value }}">
-                        </div>
-                        {% if observation_form.sessionDurationInMins.errors %}
-                            <div class="form-error-row">
-                                <span class="text-danger form-error">{{ observation_form.sessionDurationInMins.errors }}</span>
-                            </div>
-                        {% endif %}
-                        <div class="form-row">
-                            <label for="sessionDuration">Session Duration (Minutes):</label>
-                            <input type="number" id="sessionDuration" class="form-control" name="{{ observation_form.sessionDurationInMins.name }}" value="{{ observation_form.sessionDurationInMins.value }}">
-                        </div>
-                        {% if observation_form.isKong.errors %}
-                            <div class="form-error-row">
-                                <span class="text-danger form-error">{{ observation_form.isKong.errors }}</span>
-                            </div>
-                        {% endif %}
-                        <div class="form-row">
-                            <label for="kong-status">Kong Toy Used:</label>
-                            <select id="kong-status" class="form-control" name="{{ observation_form.isKong.name }}">
-                                {% for value, display in observation_form.isKong.field.choices %}
-                                    <option value="{{ value }}" {% if observation_form.isKong.value == value %}selected{% endif %}>{{ display }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        {% if observation_form.jsonFile.errors %}
-                            <div class="form-error-row">
-                                <span class="text-danger form-error">{{ observation_form.jsonFile.errors }}</span>
-                            </div>
-                        {% endif %}
-                        <div class="form-row">
-                            <label for="json-upload">Upload JSON File:</label>
-                            <input type="file" id="json-upload" class="form-control-file" name="{{ observation_form.jsonFile.name }}" value="{{ observation_form.jsonFile.value }}">
-                        </div>
-                        {% if observation_form.rawVideo.errors %}
-                            <div class="form-error-row">
-                                <span class="text-danger form-error">{{ observation_form.rawVideo.errors }}</span>
-                            </div>
-                        {% endif %}
-                        <div class="form-row">
-                            <label for="video-upload">Upload Raw Video:</label>
-                            <input type="file" id="video-upload" class="file_multi_video" name="{{ observation_form.rawVideo.name }}" value="{{ observation_form.rawVideo.value }}">
-                            <label for="video_here">Video Preview:</label>
-                            <video width="400" controls>
-                                <source src="mov_bbb.mp4" id="video_here">
-                                  Your browser does not support HTML5 video.
-                            </video>
-                        </div>
-                    </div>
 
-                    <div class="modal-footer" style="padding-top: 0;">
-
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Save</button>
+                <!-- Observations Table -->
+                <div class="observations-table-container">
+                    <div id="observations-success-alert" class="alert alert-success alert-dismissible fade show" role="alert" style="display:none;">
+                        <strong>Success!</strong> Observation has been successfully added.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
-                </form>
+                    <table id="observations-table" class="table table-striped table-hover table-bordered border-secondary styled-table">
+                        <thead class="table-group-divider table-dark">
+                            <tr class="">
+                                <th>Date & Time</th>
+                                <th>Duration (Mins)</th>
+                                <th>Kong</th>
+                                <th>JSON File</th>
+                                <th>Video</th>
+                                <th>Edit/Delete</th>
+                            </tr>
+                        </thead>
+                        <tbody class="table-group-divider" id="divider">
+                            {% for observation in paginated_observations %}
+                                {% include '_observation_row.html' %}
+                            {% empty %} 
+                                <tr class="">
+                                    <td colspan="7">No observations found.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <!-- Pagination -->
+                    {% include '_observations_pagination.html' %}
+
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Edit Observation Modal -->
-    <div class="modal fade" id="editObservationModal" tabindex="-1" aria-labelledby="editObservationModalLabel" aria-hidden="true">
-       <div class="modal-dialog">
-           <div class="modal-content">
-               <div class="modal-header text-center bg-primary">
-                   <h3 class="modal-title w-100" id="editObservationModalLabel">Edit Observation</h3>
-                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-               </div>
-               <form method="post" enctype="multipart/form-data">
-                   {% csrf_token %}
-                   <div class="modal-body" style="padding-bottom: 0;">
-                        {% if observation_form.obsDateTime.errors %}
-                            <div class="form-error-row">
-                                <span class="text-danger form-error">{{ observation_form.obsDateTime.errors }}</span>
-                            </div>
-                        {% endif %}
-                        <div class="form-row">
-                            <label for="datetimepicker">Observation Date/Time:</label>
-                            <input type="text" id="datetimepicker" class="form-control" name="{{ observation_form.obsDateTime.name }}" value="{{ observation_form.obsDateTime.value|format_datetime }}">
-                        </div>
-                        {% if observation_form.sessionDurationInMins.errors %}
-                            <div class="form-error-row">
-                                <span class="text-danger form-error">{{ observation_form.sessionDurationInMins.errors }}</span>
-                            </div>
-                        {% endif %}
-                        <div class="form-row">
-                            <label for="sessionDuration">Session Duration (Minutes):</label>
-                            <input type="number" id="sessionDuration" class="form-control" name="{{ observation_form.sessionDurationInMins.name }}" value="{{ observation_form.sessionDurationInMins.value }}">
-                        </div>
-                        {% if observation_form.isKong.errors %}
-                            <div class="form-error-row">
-                                <span class="text-danger form-error">{{ observation_form.isKong.errors }}</span>
-                            </div>
-                        {% endif %}
-                        <div class="form-row">
-                            <label for="kong-status">Kong Toy Used:</label>
-                            <select id="kong-status" class="form-control" name="{{ observation_form.isKong.name }}">
-                                {% for value, display in observation_form.isKong.field.choices %}
-                                    <option value="{{ value }}" {% if observation_form.isKong.value == value %}selected{% endif %}>{{ display }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        {% if observation_form.jsonFile.errors %}
-                            <div class="form-error-row">
-                                <span class="text-danger form-error">{{ observation_form.jsonFile.errors }}</span>
-                            </div>
-                        {% endif %}
-                        <div class="form-row">
-                            <label for="json-upload">Upload JSON File:</label>
-                            <input type="file" id="json-upload" class="form-control-file" name="{{ observation_form.jsonFile.name }}" value="{{ observation_form.jsonFile.value }}">
-                        </div>
-                        {% if observation_form.rawVideo.errors %}
-                            <div class="form-error-row">
-                                <span class="text-danger form-error">{{ observation_form.rawVideo.errors }}</span>
-                            </div>
-                        {% endif %}
-                        <div class="form-row">
-                            <label for="video-upload">Upload Raw Video:</label>
-                            <input type="file" id="video-upload" class="form-control-file" name="{{ observation_form.rawVideo.name }}" value="{{ observation_form.rawVideo.value }}">
-                        </div>
-                   </div>
-                   <div class="modal-footer" style="padding-top: 0;">
-                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                      <button type="submit" class="btn btn-primary">Save</button>
-                   </div>
-               </form>
-           </div>
-       </div>
-    </div>
+<!-- Edit Dog Stance Modal -->
+{% include 'modals/observations/__edit_dog_stance_modal.html' %}
 
-    <!-- Edit Dog Stance Modal -->
-    <div class="modal fade" id="editStanceModal" tabindex="-1" aria-labelledby="editStanceModalLabel" aria-hidden="true">
-       <div class="modal-dialog">
-           <div class="modal-content">
-               <div class="modal-header text-center bg-primary">
-                   <h3 class="modal-title w-100" id="editObservationModalLabel">Edit Stance</h3>
-                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-               </div>
-               <form method="post" enctype="multipart/form-data">
-                   {% csrf_token %}
-                   <div class="modal-body" style="padding-bottom: 0;">
+<!-- Edit Dog Stance Modal -->
+{% include 'modals/observations/__edit_observation_modal.html' %}
 
-                        {% if stance_form.stanceStartTime.errors %}
-                            <div class="form-error-row">
-                                <span class="text-danger form-error">{{ stance_form.stanceStartTime.errors }}</span>
-                            </div>
-                        {% endif %}
-                        <div class="form-row">
-                         <label for="timepicker">Stance Start Time:</label>
-                         <input class="form-control" type="text" id="timepicker" name="stanceStartTime" value="{{ stance_form.stanceStartTime.value|format_time }}">
-                        </div>
+<!-- Add New Observation Modal -->
+{% include 'modals/observations/__add_observation_modal.html' %}
+
+{% endblock %}
 
 
-                        {% if stance_form.dogStance.errors %}
-                            <div class="form-error-row">
-                                <span class="text-danger form-error">{{ stance_form.dogStance.errors }}</span>
-                            </div>
-                        {% endif %}
-                        <div class="form-row">
-                            <label for="currentStance">Stance:</label>
-                            <select id="currentStance" class="form-control" name="{{ stance_form.dogStance.name }}">
-                                {% for value, display in stance_form.dogStance.field.choices %}
-                                    <option value="{{ value }}" {% if stance_form.dogStance.value == value %}selected{% endif %}>{{ display }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        {% if stance_form.dogLocation.errors %}
-                            <div class="form-error-row">
-                                <span class="text-danger form-error">{{ stance_form.dogLocation.errors }}</span>
-                            </div>
-                        {% endif %}
-                        <div class="form-row">
-                            <label for="dogLocation">Location:</label>
-                            <select id="dogLocation" class="form-control" name="{{ stance_form.dogLocation.name }}">
-                                {% for value, display in stance_form.dogLocation.field.choices %}
-                                    <option value="{{ value }}" {% if stance_form.dogLocation.value == value %}selected{% endif %}>{{ display }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                   </div>
-                   <div class="modal-footer" style="padding-top: 0;">
-                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                      <button type="submit" class="btn btn-primary">Save</button>
-                   </div>
-               </form>
-           </div>
-       </div>
-    </div>
-
+{% block script %}
     <!-- Ensure Back Button takes user back to appropriate dog_record page with Sessions open and scrolled down to -->
     <script type="text/javascript">
         const dogId = "{{ session_instance.dog.dogID }}";
@@ -285,5 +99,4 @@
             $source.parent()[0].load();
           });
     </script>
-
 {% endblock %}

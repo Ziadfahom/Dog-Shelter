@@ -1,0 +1,50 @@
+<div
+  class="modal fade"
+  id="ownerModal"
+  data-backdrop="static"
+  data-keyboard="false"
+  tabindex="-1"
+  aria-labelledby="staticBackdropLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog" style="max-width:600px">
+    <div class="modal-content">
+      <div class="modal-body px-4">
+        <div class="text-dark d-inline-block ml-auto">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="py-3 w-100">
+            {% comment %} Header {% endcomment %}
+            <h5 class="text-dark fw-bold text-uppercase">{{ dog_record.owner.firstName }} {{ dog_record.owner.lastName }}</h5>
+            <hr>
+
+            {% comment %} Content {% endcomment %}
+            <div class="">
+                <div class="">
+                    <ul class="list-group list-group-flush">
+                        {% if dog_record.owner %}
+                            <li class="list-group-item"><strong>Owner ID:</strong> {{ dog_record.owner.ownerID }}</li>
+                            <li class="list-group-item"><strong>Address:</strong> {{ dog_record.owner.ownerAddress }}, {{ dog_record.owner.city }}</li>
+                            <li class="list-group-item"><strong>Phone:</strong> {{ dog_record.owner.phoneNum }}</li>
+                            <li class="list-group-item"><strong>Cellphone:</strong> {{ dog_record.owner.cellphoneNum }}</li>
+                            <li class="list-group-item"><strong>Comments:</strong> {{ dog_record.owner.comments }}</li>
+                        {% else %}
+                            <li class="list-group-item">No owner details available.</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+
+            {% comment %} Footer {% endcomment %}
+            <br>
+            <hr>
+            <div class="d-flex justify-content-end mt-2 gap-2">
+                <button type="button" class="btn btn-outline-primary edit-owner-btn" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Edit this Owner" data-owner-id="{{ dog_record.owner.ownerSerialNum }}">Edit Owner</button>
+                <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

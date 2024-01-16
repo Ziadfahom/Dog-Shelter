@@ -1,38 +1,25 @@
-asgiref==3.7.1
-boto3==1.26.156
-botocore==1.29.156
-crispy-bootstrap5==0.7
-Django==4.2.1
-django-appconf==1.0.5
-django-crispy-forms==2.0
-django-extensions==3.2.3
-django-imagekit==4.1.0
-django-storages==1.13.2
-django-widget-tweaks==1.4.12
-Faker==18.11.2
-jmespath==1.0.1
-mysql==0.0.3
-mysql-connector==2.2.9
-mysql-connector-python==8.0.33
-mysqlclient==2.1.1
-pilkit==2.0
-Pillow==9.5.0
-protobuf==3.20.3
-python-dateutil==2.8.2
-python-decouple==3.8
-pytz==2023.3
-s3transfer==0.6.1
-six==1.16.0
-sorl-thumbnail==12.9.0
-sqlparse==0.4.4
-tzdata==2023.3
-urllib3==1.26.16
+<div
+  class="modal fade"
+  id="newObservationModal"
+  data-backdrop="static"
+  data-keyboard="false"
+  tabindex="-1"
+  aria-labelledby="staticBackdropLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog" style="max-width:600px">
+    <div class="modal-content">
+      <div class="modal-body px-4">
+        <div class="text-dark d-inline-block ml-auto">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
 
-django-filter~=23.2
-openpyxl~=3.1.2
-django-datetime-widget
+        <div class="py-3 w-100">
+            {% comment %} Header {% endcomment %}
+            <h5 class="text-dark fw-bold text-uppercase" id="newObservationModalLabel">Add New Observation</h5>
+            <hr>
 
-
+            {% comment %} Content {% endcomment %}
             <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="modal-body" style="padding-bottom: 0;">
@@ -103,3 +90,8 @@ django-datetime-widget
                     <button type="submit" class="btn btn-success px-4">Save</button>
                 </div>
             </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
