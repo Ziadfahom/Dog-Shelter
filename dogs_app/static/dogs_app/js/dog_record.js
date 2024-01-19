@@ -798,128 +798,235 @@ $('#editOwnerModal .edit-owner-confirm-btn').attr('data-owner-id', ownerId);
 
 });
 
+
+// Load Summary Heatmap Chart
 document.addEventListener('DOMContentLoaded', function() {
     const chartContainer = document.getElementById('chart-data');
-    const heatmapData = JSON.parse(chartContainer.getAttribute('data-heatmap'));
+    const allHeatmapData = JSON.parse(chartContainer.getAttribute('data-daily-heatmap'));
+    const yearSelector = document.getElementById('year-selector');
+    const weeklyHeatmapData = JSON.parse(chartContainer.getAttribute('data-weekly-heatmap'));
+    const granularitySelector = document.getElementById('granularity-selector');
 
-    // Calculate the number of unique months in the heatmap data
-    const months = new Set(heatmapData.map(item => item[1]));
-    const numberOfMonths = months.size;
-    const rowHeight = numberOfMonths <= 4 ? 50 : 25;
+    // Populate year dropdown and set default selection
+    const defaultYear = Object.keys(allHeatmapData).pop(); // Gets the last (most recent) year
+    Object.keys(allHeatmapData).forEach(year => {
+        const option = document.createElement('option');
+        option.value = year;
+        option.text = year;
+        yearSelector.appendChild(option);
+        if (year === defaultYear) {
+            yearSelector.value = year; // Set default selection
+        }
+    });
 
-    // Calculate the total height
-    const totalHeight = numberOfMonths * rowHeight + 150;
-
-    // Calculate the number of unique days in the heatmap data
-    const days = new Set(heatmapData.map(item => item[0]));
-    const numberOfDays = days.size;
-
-    // Determine width values
-    const extraNarrowWidth = 250; // for less than 5 days
-    const narrowWidth = 600;      // for 10 days or less
-    const wideWidth = 1200;        // for more than 10 days
-
-    // Determine the width based on the number of days
-    let totalWidth;
-    if (numberOfDays < 5) {
-        totalWidth = extraNarrowWidth;
-    } else if (numberOfDays <= 10) {
-        totalWidth = narrowWidth;
-    } else {
-        totalWidth = wideWidth;
+    // Function to create a full grid of days and months for a year with zero counts
+    function createFullYearGrid(year, firstDate, lastDate) {
+        const isLeapYear = new Date(year, 1, 29).getMonth() === 1;
+        const daysInMonth = [31, isLeapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        const grid = [];
+        for (let month = 0; month < 12; month++) {
+            for (let day = 0; day < daysInMonth[month]; day++) {
+                const currentDate = new Date(year, month, day + 1);
+                if (currentDate >= firstDate && currentDate <= lastDate) {
+                grid.push([day, month, 0]); // Day, Month, Count
+            }
+            }
+        }
+        return grid;
     }
 
-    // Set the height and width of the chart container
-    chartContainer.style.height = totalHeight + 'px';
-    chartContainer.style.width = totalWidth + 'px';
+    // Function to process weekly heatmap data
+    function processWeeklyData(weeklyData) {
+        // Transform weekly data to fit heatmap structure of: [weekNumber, count]
+        return weeklyData.map(data => {
+            const weekNumber = data[0];
+            const count = data[1];
+            // Convert week number to month and week-in-month
+            const date = new Date(new Date().getFullYear(), 0, (weekNumber * 7) + 1);
+            const month = date.getMonth();
+            const weekInMonth = Math.ceil(date.getDate() / 7) - 1;
+            return [weekInMonth, month, count]; // Week-in-month, Month, Count
+        });
+    }
 
 
-    Highcharts.chart('chart-data', {
-        chart: {
-            type: 'heatmap',
-            marginTop: 80,
-            marginBottom: 80,
-            plotBorderWidth: 1,
-        },
-        title: {
-            text: 'Observations Heatmap for 2024',
-            style: {
-                fontWeight: 'bold',
-                fontSize: '20px',
-            }
-        },
-        xAxis: {
-            categories: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'], // Days of the month
-            title: {
-                text: 'Day in the Month',
-                style: {
-                    fontWeight: 'bold',
-                    fontSize: '15px',
-                }
-            },
-            labels: {
-                style: {
-                    fontWeight: 'bold'
-                }
-            },
-        },
-        yAxis: {
-            categories: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-            reversed: true,
-            title: {
-                text: 'Month in the Year',
-                style: {
-                    fontWeight: 'bold',
-                    fontSize: '15px',
-                }
-            },
-            labels: {
-                style: {
-                    fontSize: '15px',
-                    fontWeight: 'bold'
-                }
-            },
-        },
-        colorAxis: {
-            min: 0,
-            minColor: '#FFFFFF',
-            maxColor: Highcharts.getOptions().colors[0],
-            stops: [
-                [0, '#FF0000'], // Red for zero
-                [0.5, '#FFFF00'], // Yellow for middle values
-                [1, '#00FF00'] // Green for high values
-            ]
-        },
-        legend: {
-            align: 'bottom',
-            layout: 'horizontal',
-            margin: 0,
-            verticalAlign: 'bottom',
-            y: 25,
-            symbolHeight: 280
-        },
-        tooltip: {
-            formatter: function () {
-                return 'Count: <b>' + this.point.value + '</b>';
-            }
-        },
-        series: [{
-            name: 'Observations per day',
-            borderWidth: 1,
-            data: heatmapData,
-            borderColor: '#000000',
-            dataLabels: {
-                enabled: true,
-                color: '#000000',
-                style: {
-                    textOutline: false,
-                    fontWeight: 'bold',
-                    fontSize: '15px'
-                }
-            }
-        }],
-        credits: {
-            enabled: false,
+
+    // Function to draw heatmap
+    function drawHeatmap(year, granularity = 'daily') {
+        // Parse first and last dates
+        const firstDate = new Date(chartContainer.getAttribute('data-first-date'));
+        const lastDate = new Date(chartContainer.getAttribute('data-last-date'));
+        // Get the heatmap data for the selected year
+        let heatmapData, xAxisCategories, tooltipFormatter;
+        let yAxisCategories = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        let xAxisMax;
+        if (granularity === 'daily') {
+        heatmapData = allHeatmapData[year];
+        xAxisCategories = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'];
+        tooltipFormatter = function () {
+            return 'Date: <b>' + yAxisCategories[this.point.y] + ' ' + (this.point.x + 1) + '</b><br>Count: <b>' + this.point.value + '</b>';
+        };
+        } else if (granularity === 'weekly') {
+            heatmapData = processWeeklyData(weeklyHeatmapData[year]);
+            xAxisCategories = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
+            xAxisMax = Math.max(...heatmapData.map(data => data[0]));
+            tooltipFormatter = function () {
+                return 'Week: <b>' + (this.point.x + 1) + '</b> of ' + yAxisCategories[this.point.y] + '<br>Count: <b>' + this.point.value + '</b>';
+            };
         }
+
+        // Create a full grid for the year with zeros
+        let fullYearGrid = createFullYearGrid(year, firstDate, lastDate);
+
+         // Update the grid with actual counts from heatmapData
+        heatmapData.forEach(data => {
+            const day = data[0];
+            const month = data[1];
+            const count = data[2];
+            const index = fullYearGrid.findIndex(d => d[0] === day && d[1] === month);
+            if (index !== -1) {
+                fullYearGrid[index][2] = count;
+            }
+        });
+
+        // Use the updated full year grid for the heatmap
+        heatmapData = fullYearGrid;
+
+        // Calculate the number of unique months in the heatmap data
+        const months = new Set(heatmapData.map(item => item[1]));
+        const numberOfMonths = months.size;
+        const rowHeight = numberOfMonths <= 4 ? 50 : 25;
+
+        // Calculate the total height
+        const totalHeight = numberOfMonths * rowHeight + 150;
+
+        // Calculate the number of unique days in the heatmap data
+        const days = new Set(heatmapData.map(item => item[0]));
+        const numberOfDays = days.size;
+
+        // Determine width values
+        const extraNarrowWidth = 250; // for less than 5 days
+        const narrowWidth = 600;      // for 10 days or less
+        const wideWidth = 1200;        // for more than 10 days
+
+        // Determine the width based on the number of days
+        let totalWidth;
+        if (numberOfDays < 5) {
+            totalWidth = extraNarrowWidth;
+        } else if (numberOfDays <= 10) {
+            totalWidth = narrowWidth;
+        } else {
+            totalWidth = wideWidth;
+        }
+
+        // Set the height and width of the chart container
+        chartContainer.style.height = totalHeight + 'px';
+        chartContainer.style.width = totalWidth + 'px';
+
+        // Highcharts chart configuration
+        Highcharts.chart('chart-data', {
+            chart: {
+                type: 'heatmap',
+                marginTop: 80,
+                marginBottom: 80,
+                plotBorderWidth: 1,
+            },
+            title: {
+                text: 'Observations Overview for ' + year,
+                style: {
+                    fontWeight: 'bold',
+                    fontSize: '20px',
+                }
+            },
+            xAxis: {
+                categories: xAxisCategories,
+                title: {
+                    text: granularity === 'daily' ? 'Day in the Month' : 'Week in the Month',
+                    style: {
+                        fontWeight: 'bold',
+                        fontSize: '15px',
+                    }
+                },
+                labels: {
+                    style: {
+                        fontWeight: 'bold'
+                    }
+                },
+                max: xAxisMax
+            },
+            yAxis: {
+                categories: yAxisCategories,
+                reversed: true,
+                title: {
+                    text: 'Month',
+                    style: {
+                        fontWeight: 'bold',
+                        fontSize: '15px',
+                    }
+                },
+                labels: {
+                    style: {
+                        fontSize: '15px',
+                        fontWeight: 'bold'
+                    }
+                },
+            },
+            colorAxis: {
+                min: 0,
+                minColor: '#FFFFFF',
+                maxColor: Highcharts.getOptions().colors[0],
+                stops: [
+                    [0, '#FF0000'], // Red for zero
+                    [0.5, '#FFFF00'], // Yellow for middle values
+                    [1, '#00FF00'] // Green for high values
+                ]
+            },
+            legend: {
+                align: 'bottom',
+                layout: 'horizontal',
+                margin: 0,
+                verticalAlign: 'bottom',
+                y: 25,
+                symbolHeight: 280
+            },
+            tooltip: {
+                formatter: tooltipFormatter,
+            },
+            series: [{
+                name: granularity === 'daily' ? 'Observations per day' : 'Observations per week',
+                borderWidth: 1,
+                data: heatmapData,
+                borderColor: '#000000',
+                dataLabels: {
+                    enabled: true,
+                    color: '#000000',
+                    style: {
+                        textOutline: false,
+                        fontWeight: 'bold',
+                        fontSize: '15px'
+                    }
+                }
+            }],
+            credits: {
+                enabled: false,
+            }
+        });
+    }
+
+    // Initial draw for the default year (latest year) and by "daily" granularity
+    drawHeatmap(defaultYear, 'daily');
+
+    // Event listener for year selector
+    yearSelector.addEventListener('change', function() {
+        const selectedYear = this.value;
+        const selectedGranularity = granularitySelector.value;
+        drawHeatmap(selectedYear, selectedGranularity);
+    });
+
+    // Event listener for granularity selector
+    granularitySelector.addEventListener('change', function() {
+        const selectedYear = yearSelector.value;
+        const selectedGranularity = this.value;
+        drawHeatmap(selectedYear, selectedGranularity);
     });
 });

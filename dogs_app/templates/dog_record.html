@@ -126,14 +126,30 @@
                     </table>
 
                     <hr>
+                    <!-- Container for dropdown elements -->
+                    <div class="dropdown-container">
+                        <!-- First dropdown group -->
+                        <div class="dropdown-group">
+                            <label for="year-selector" class="form-label">Year:</label>
+                            <select id="year-selector" class="year-dropdown">
+                                <!-- Options will be populated dynamically using JavaScript -->
+                            </select>
+                        </div>
+                        <!-- Second dropdown group -->
+                        <div class="dropdown-group">
+                            <label for="granularity-selector" class="form-label">Granularity:</label>
+                            <select id="granularity-selector" class="granularity-dropdown">
+                                <option value="daily" selected>Daily</option>
+                                <option value="weekly">Weekly</option>
+                            </select>
+                        </div>
+                    </div>
                     <br>
-                    <!-- Summary Chart -->
-                    <div id="chart-data" data-heatmap="{{ heatmap_data|safe }}" class="heatmap-styles"></div>
+                    <!-- Summary Heatmap Chart -->
+                    <div id="chart-data" data-daily-heatmap='{{ daily_heatmap_data|safe }}' data-weekly-heatmap='{{ weekly_heatmap_data|safe }}' data-first-date='{{ heatmap_first_date|safe }}' data-last-date='{{ heatmap_last_date|safe }}' class="heatmap-styles"></div>
                     <br>
                     <hr>
 
-
-                    <hr>
                     <!-- Expand/Collapse All Button -->
                     <div class="d-flex justify-content-end">
                         <button id="toggleTables" class="btn btn-dark btn-sm">

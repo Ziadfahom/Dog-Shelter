@@ -301,7 +301,7 @@ class Observation(models.Model):
 
     # References the Observes instance
     observes = models.ForeignKey('Observes', on_delete=models.SET_NULL, null=True, verbose_name='Session')
-    obsDateTime = models.DateTimeField(default=timezone.now, verbose_name='Starting Date and Time')
+    obsDateTime = models.DateTimeField(default=timezone.now, verbose_name='Starting Date and Time', db_index=True)
     sessionDurationInMins = models.PositiveIntegerField(default=2,
                                                         validators=[MinValueValidator(0)], verbose_name='Session Duration (mins)')
     isKong = models.CharField(max_length=1, choices=IS_KONG_CHOICES, blank=True, null=True, default='N', verbose_name='Kong')

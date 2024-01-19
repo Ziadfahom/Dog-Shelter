@@ -407,3 +407,14 @@ textarea {
     margin-right: auto; /* Adjust as needed */
 }
 
+.dropdown-container {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+/* Individual dropdown group styling */
+.dropdown-group {
+    margin-right: 20px;
+}
+

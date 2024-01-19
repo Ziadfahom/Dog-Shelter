@@ -1,14 +1,15 @@
 import json
-from collections import defaultdict
+from collections import defaultdict, Counter
 from datetime import datetime, time
 
+from django.utils.dateparse import parse_datetime
 from django.utils.timezone import localtime
 from openpyxl import Workbook, load_workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Func, DateField
 from django.db.models import Value, CharField, Count, Q
-from django.db.models.functions import Concat
+from django.db.models.functions import Concat, TruncDate, ExtractMonth, TruncDay
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout, get_user_model, update_session_auth_hash
 from django.contrib.auth.models import Group
@@ -141,7 +142,7 @@ def login_user_view(request):
             return redirect('dogs_app:home')
     else:
         form = LoginForm()
-    return render(request, 'account/login.html', {'form': form})    
+    return render(request, 'account/login.html', {'form': form})
 
 # User Registration view for new users
 def register_user_view(request):
@@ -245,44 +246,54 @@ def dog_record_view(request, pk):
 
         last_date = date.today()
 
-        # Transforming observation data for Highcharts heatmap
-        # Find the range of years
-        first_year = first_date.year
-        last_year = last_date.year
+        # Prepare the heatmap data for each year, by days
+        daily_heatmap_data = {}
+        # Initialize dictionary for weekly heatmap data
+        weekly_heatmap_data = defaultdict(lambda: defaultdict(int))
 
-        # Prepare the heatmap data for each year
-        yearly_heatmap_data = {}
+        # Fetch all observations for the dog in one query
+        # Fetch all observations for the dog in UTC
+        local_tz = pytz.timezone('Asia/Jerusalem')
+        utc_first_date = timezone.make_aware(datetime.combine(first_date, time.min), local_tz).astimezone(pytz.utc)
+        utc_last_date = timezone.make_aware(datetime.combine(last_date, time.max), local_tz).astimezone(pytz.utc)
 
-        for year in range(first_year, last_year + 1):
+        # Fetch observations in UTC
+        observations = Observation.objects.filter(
+            observes__dog=dog_record,
+            obsDateTime__range=(utc_first_date, utc_last_date)
+        )
 
-            # Prepare the summarization dictionary
-            observation_summary = defaultdict(int)
-            start_date = date(year, 1, 1) if year != first_year else first_date
-            end_date = date(year, 12, 31) if year != last_year else last_date
+        # Convert obsDateTime to local timezone and count occurrences per day followed by per week
+        observation_counts = defaultdict(int)
+        for obs in observations:
+            local_date = timezone.localtime(obs.obsDateTime, local_tz).date()
+            observation_counts[local_date] += 1
 
-            for single_date in (start_date + timedelta(n) for n in range((end_date - start_date).days + 1)):
-                # Define the start and end of the day for single_date
-                start_of_day = timezone.make_aware(datetime.combine(single_date, time.min))
-                end_of_day = timezone.make_aware(datetime.combine(single_date, time.max))
+            # Count occurrences per week
+            year, week, _ = local_date.isocalendar()
 
-                # Count observations for each date, using __date for comparison
-                count = Observation.objects.filter(
-                    observes__dog=dog_record,
-                    obsDateTime__range=(start_of_day, end_of_day)
-                ).count()
+            weekly_heatmap_data[year][week] += 1
 
-                observation_summary[single_date] = count
+        # Count occurrences per day
+        observation_counts = Counter(
+            timezone.localtime(obs.obsDateTime, local_tz).date() for obs in observations
+        )
 
-            # Transforming observation data for Highcharts
+        for year in range(first_date.year, last_date.year + 1):
             heatmap_data = []
-            for current_date, current_count in observation_summary.items():
-                if current_date.year == year:
-                    day = current_date.day - 1
-                    month = current_date.month - 1
-                    heatmap_data.append([day, month, current_count])
+            for single_date, count in observation_counts.items():
+                if single_date.year == year:
+                    day = single_date.day - 1
+                    month = single_date.month - 1
+                    heatmap_data.append([day, month, count])
 
-            yearly_heatmap_data[year] = heatmap_data
+            daily_heatmap_data[year] = heatmap_data
 
+        # Convert weekly data to the required format
+        formatted_weekly_data = {}
+        for year, weeks in weekly_heatmap_data.items():
+            heatmap_data = [[week - 1, count] for week, count in weeks.items()]
+            formatted_weekly_data[year] = heatmap_data
 
         # Initialize Treatment/Examination/Placement/Session(Observes) form when adding new entries
         treatment_form = TreatmentForm(request.POST or None)
@@ -462,9 +473,11 @@ def dog_record_view(request, pk):
             'examination_form': examination_form,
             'placement_form': placement_form,
             'session_form': session_form,
-            'heatmap_data': yearly_heatmap_data.get(2023, [])
+            'daily_heatmap_data': json.dumps(daily_heatmap_data),
+            'weekly_heatmap_data': json.dumps(formatted_weekly_data),
+            'heatmap_first_date': json.dumps(first_date.isoformat()),
+            'heatmap_last_date': json.dumps(last_date.isoformat()),
         }
-
         return render(request, 'dog_record.html', context=context)
 
     # User is NOT logged in --> send them to login page
@@ -1967,7 +1980,7 @@ def import_dogs_json(request):
                 # Start the transaction block
                 with transaction.atomic():
                     # Iterate through each dog in the data
-                    for dog_info in data:
+                    for index, dog_info in enumerate(data):
                         try:
                             # Remove dogID from the data, hold the rest of the associated entities
                             dog_info.pop('dogID', None)
@@ -2013,88 +2026,153 @@ def import_dogs_json(request):
                             new_dog.save()
 
                             # Handle 'treatment' field
+                            treatment_count = 0  # Initialize counter for treatments
                             for treatment_info in treatments_info:
-                                treatment_info.pop('treatmentID', None)
-                                new_treatment = Treatment(**treatment_info, dog=new_dog)
-                                new_treatment.full_clean()  # Validate the treatment data
-                                new_treatment.save()
+                                treatment_count += 1
+                                try:
+                                    treatment_info.pop('treatmentID', None)
+                                    new_treatment = Treatment(**treatment_info, dog=new_dog)
+                                    new_treatment.full_clean()  # Validate the treatment data
+                                    new_treatment.save()
+                                except ValidationError as e:
+                                    error_details = "; ".join([f"{field}: {', '.join(err_msgs)}" for field, err_msgs in
+                                                               e.message_dict.items()])
+                                    error_message = (f"Dog #{index + 1}, Treatment #{treatment_count},"
+                                                     f" Details: {error_details}")
+                                    raise ValueError(error_message)
 
                             # Handle 'entranceExamination' field
+                            examination_count = 0  # Initialize counter for examinations
                             for examination_info in examinations_info:
-                                examination_info.pop('examinationID', None)
-                                new_examination = EntranceExamination(**examination_info, dog=new_dog)
-                                new_examination.full_clean()
-                                new_examination.save()
+                                examination_count += 1
+                                try:
+                                    examination_info.pop('examinationID', None)
+                                    new_examination = EntranceExamination(**examination_info, dog=new_dog)
+                                    new_examination.full_clean()
+                                    new_examination.save()
+                                except ValidationError as e:
+                                    error_details = "; ".join([f"{field}: {', '.join(err_msgs)}" for field, err_msgs in
+                                                               e.message_dict.items()])
+                                    error_message = (f"Dog #{index + 1}, Examination #{examination_count},"
+                                                     f" Details: {error_details}")
+                                    raise ValueError(error_message)
 
                             # Handle 'dogPlacement' field
+                            dogPlacement_count = 0  # Initialize counter for placements
                             for dogPlacement_info in dogPlacements_info:
-                                kennel_num = dogPlacement_info.pop('kennelNum', None)
-                                kennel_image = dogPlacement_info.pop('kennelImage', None)
+                                dogPlacement_count += 1
+                                try:
+                                    kennel_num = dogPlacement_info.pop('kennelNum', None)
+                                    kennel_image = dogPlacement_info.pop('kennelImage', None)
 
-                                kennel = None
+                                    kennel = None
 
-                                if kennel_num:
-                                    kennel, created = Kennel.objects.get_or_create(
-                                        kennelNum=kennel_num,
-                                        defaults={'kennelImage': kennel_image}
-                                    )
+                                    if kennel_num:
+                                        kennel, created = Kennel.objects.get_or_create(
+                                            kennelNum=kennel_num,
+                                            defaults={'kennelImage': kennel_image}
+                                        )
 
-                                    if not created:
-                                        # If kennel already exists, update the kennel info
-                                        kennel.kennelImage = kennel_image
-                                        kennel.save()
+                                        if not created:
+                                            # If kennel already exists, update the kennel info
+                                            kennel.kennelImage = kennel_image
+                                            kennel.save()
 
-                                new_dogPlacement = DogPlacement(**dogPlacement_info, dog=new_dog, kennel=kennel)
-                                new_dogPlacement.full_clean()
-                                new_dogPlacement.save()
+                                    new_dogPlacement = DogPlacement(**dogPlacement_info, dog=new_dog, kennel=kennel)
+                                    new_dogPlacement.full_clean()
+                                    new_dogPlacement.save()
+                                except ValidationError as e:
+                                    error_details = "; ".join([f"{field}: {', '.join(err_msgs)}" for field, err_msgs in
+                                                               e.message_dict.items()])
+                                    error_message = (f"Dog #{index + 1}, DogPlacement #{dogPlacement_count},"
+                                                     f" Details: {error_details}")
+                                    raise ValueError(error_message)
 
                             # Handle 'observes' field
+                            observes_count = 0  # Initialize counter for Observes
                             for observes_data in observes_info:
-                                camID = observes_data.pop('camID', None)
-                                observations_info = observes_data.pop('observations', [])
+                                observes_count += 1
+                                try:
+                                    camID = observes_data.pop('camID', None)
+                                    observations_info = observes_data.pop('observations', [])
 
-                                # Default 'sessionDate' to today if not provided
-                                if not observes_data.get('sessionDate'):
-                                    observes_data['sessionDate'] = timezone.now().date().isoformat()
+                                    # Default 'sessionDate' to today if not provided
+                                    if not observes_data.get('sessionDate'):
+                                        observes_data['sessionDate'] = timezone.now().date().isoformat()
 
-                                camera = None
-                                if camID:
-                                    camera, created = Camera.objects.get_or_create(camID=camID)
+                                    camera = None
+                                    if camID:
+                                        camera, created = Camera.objects.get_or_create(camID=camID)
 
-                                new_observes = Observes(**observes_data, dog=new_dog, camera=camera)
-                                new_observes.full_clean()
-                                new_observes.save()
+                                    new_observes = Observes(**observes_data, dog=new_dog, camera=camera)
+                                    new_observes.full_clean()
+                                    new_observes.save()
+                                except ValidationError as e:
+                                    error_details = "; ".join([f"{field}: {', '.join(err_msgs)}" for field, err_msgs in
+                                                               e.message_dict.items()])
+                                    error_message = (f"Dog #{index + 1}, Observes(Session) #{observes_count},"
+                                                     f" Details: {error_details}")
+                                    raise ValueError(error_message)
 
                                 # Handle 'observation' field
+                                observation_count = 0  # Initialize counter for Observation
                                 for observation_data in observations_info:
+                                    observation_count += 1
+                                    try:
+                                        obs_date_str = observation_data.get('obsDateTime')
 
-                                    # Default 'obsDateTime' to today if not provided
-                                    if not observation_data.get('obsDateTime'):
-                                        observation_data['obsDateTime'] = timezone.now().date().isoformat()
+                                        # Check if obsDateTime is a string that needs parsing
+                                        if obs_date_str:
+                                            # Parse the string to a naive datetime object
+                                            naive_datetime = parse_datetime(obs_date_str)
+                                            if naive_datetime and not timezone.is_aware(naive_datetime):
+                                                # Localize the naive datetime
+                                                local_tz = pytz.timezone('Asia/Jerusalem')
+                                                aware_datetime = local_tz.localize(naive_datetime)
+                                                observation_data['obsDateTime'] = aware_datetime
+                                        else:
+                                            # Default 'obsDateTime' to now if not provided
+                                            observation_data['obsDateTime'] = timezone.now()
 
-                                    dogStances_info = observation_data.pop('dogStances', [])
+                                        dogStances_info = observation_data.pop('dogStances', [])
 
-                                    new_observation = Observation(**observation_data, observes=new_observes)
-                                    new_observation.full_clean()
-                                    new_observation.save()
+                                        new_observation = Observation(**observation_data, observes=new_observes)
+                                        new_observation.full_clean()
+                                        new_observation.save()
+                                    except ValidationError as e:
+                                        error_details = "; ".join(
+                                            [f"{field}: {', '.join(err_msgs)}" for field, err_msgs in
+                                             e.message_dict.items()])
+                                        error_message = (f"Dog #{index + 1}, Observation #{observation_count},"
+                                                         f" Details: {error_details}")
+                                        raise ValueError(error_message)
 
                                     # Handle 'dogStance' field
+                                    dogStance_count = 0  # Initialize counter for dogStance
                                     for dogStance_data in dogStances_info:
-
-                                        new_dogStance = DogStance(**dogStance_data, observation=new_observation)
-                                        new_dogStance.full_clean()
-                                        new_dogStance.save()
+                                        dogStance_count += 1
+                                        try:
+                                            new_dogStance = DogStance(**dogStance_data, observation=new_observation)
+                                            new_dogStance.full_clean()
+                                            new_dogStance.save()
+                                        except ValidationError as e:
+                                            error_details = "; ".join(
+                                                [f"{field}: {', '.join(err_msgs)}" for field, err_msgs in
+                                                 e.message_dict.items()])
+                                            error_message = (f"Dog #{index + 1}, dogStance #{dogStance_count},"
+                                                             f" Details: {error_details}")
+                                            raise ValueError(error_message)
 
                         except ValidationError as e:
                             # Handling specific field validation errors
                             error_details = "\n".join(
                                 [f"Field '{k}': {', '.join(v)}" for k, v in e.message_dict.items()])
-                            error_message = f"Dog #{dog_count}, {error_details}"
+                            error_message = f"Dog #{index + 1} (JSON Line: {index + 1}), {error_details}"
                             raise ValueError(error_message)
 
                         except IntegrityError as e:
                             # Handling unique constraint violations like chipNum uniqueness
-                            error_message = f"Dog #{dog_count}, {str(e)}"
+                            error_message = f"Dog #{index + 1} (JSON Line: {index + 1}), {str(e)}"
                             raise ValueError(error_message)
 
                         dog_count += 1  # Increment after each successful processing
