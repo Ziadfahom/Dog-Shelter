@@ -10,7 +10,7 @@
 
 {% block content %}
     <div class="container-fluid mt-5 p-5">
-        <div class="col-md-10 mx-auto">
+        <div class="col-md-11 mx-auto">
             <div class="card shadowed">
                 <div class="card-header bg-dark text-white d-flex align-items-center justify-content-between">
                     <!-- Back button on the left -->
@@ -125,29 +125,54 @@
                         </tbody>
                     </table>
 
-                    <hr>
-                    <!-- Container for dropdown elements -->
-                    <div class="dropdown-container">
-                        <!-- First dropdown group -->
-                        <div class="dropdown-group">
-                            <label for="year-selector" class="form-label">Year:</label>
-                            <select id="year-selector" class="year-dropdown">
-                                <!-- Options will be populated dynamically using JavaScript -->
-                            </select>
-                        </div>
-                        <!-- Second dropdown group -->
-                        <div class="dropdown-group">
-                            <label for="granularity-selector" class="form-label">Granularity:</label>
-                            <select id="granularity-selector" class="granularity-dropdown">
-                                <option value="daily" selected>Daily</option>
-                                <option value="weekly">Weekly</option>
-                            </select>
-                        </div>
+                    <!-- View Sample Video Button -->
+                    <div class="sample-button-group">
+                        <a  class="btn btn-dark" target="_blank">Sample Video</a>
                     </div>
-                    <br>
-                    <!-- Summary Heatmap Chart -->
-                    <div id="chart-data" data-daily-heatmap='{{ daily_heatmap_data|safe }}' data-weekly-heatmap='{{ weekly_heatmap_data|safe }}' data-first-date='{{ heatmap_first_date|safe }}' data-last-date='{{ heatmap_last_date|safe }}' class="heatmap-styles"></div>
-                    <br>
+
+                    <hr>
+                    <div class="chart-outer-border">
+                        <!-- Container for dropdown elements -->
+                        <div class="dropdown-container">
+                            <!-- First dropdown group -->
+                            <div class="dropdown-group">
+                                <label for="year-selector" class="form-label year-label">Year:</label>
+                                <select id="year-selector" class="year-dropdown">
+                                    <!-- Options will be populated dynamically using JavaScript -->
+                                </select>
+                            </div>
+                            <!-- Second dropdown group -->
+                            <div class="dropdown-group">
+                                <label for="granularity-selector" class="form-label granularity-label">Granularity:</label>
+                                <select id="granularity-selector" class="granularity-dropdown">
+                                    <option value="daily" selected>Daily</option>
+                                    <option value="weekly">Weekly</option>
+                                </select>
+                            </div>
+
+                            <div class="form-check form-switch">
+                                <!-- Change the checkbox color to black -->
+                                <label class="form-check-label" for="detailed-check-box">Detailed Icons</label>
+                                <input class="form-check-input" type="checkbox" id="detailed-check-box">
+                            </div>
+                        </div>
+                        <br>
+                        <!-- Summary Heatmap Chart -->
+                        <div id="chart-data" data-daily-heatmap='{{ daily_heatmap_data|safe }}' data-weekly-heatmap='{{ weekly_heatmap_data|safe }}' data-first-date='{{ heatmap_first_date|safe }}' data-last-date='{{ heatmap_last_date|safe }}' data-first-weekly-date='{{ heatmap_first_weekly_date|safe }}' class="heatmap-styles"></div>
+                        <div id="heatmap-legend">
+                            <div class="color-gradient-legend">
+                                <span class="low-count"></span> - Low Count (Few Observations)
+                                <span class="medium-count"></span> - Medium Count (Moderate Observations)
+                                <span class="high-count"></span> - High Count (Many Observations)
+                            </div>
+                            <div class="symbol-legend" id="icons-legend" style="display: none;">
+                                <span>🦴 - Enrichment Toy Used</span>
+                                <span>🚫 - No Enrichment Toy Used</span>
+                            </div>
+                        </div>
+
+                        <br>
+                    </div>
                     <hr>
 
                     <!-- Expand/Collapse All Button -->

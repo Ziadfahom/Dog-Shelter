@@ -1,5 +1,5 @@
 import re
-from dogs_app.models import Observation, Observes
+from dogs_app.models import Observation, Observes, Dog
 
 
 # Fetch the dog ID from the session ID
@@ -9,6 +9,14 @@ def get_dog_id_from_session_id(session_id):
         dog_id = observes_obj.dog.dogID
         return dog_id
     except (Observation.DoesNotExist, AttributeError):
+        return None
+
+# Fetch the dog's name from the dog ID
+def get_dog_name_from_dog_id(dog_id):
+    try:
+        dog_name = Dog.objects.get(dogID=dog_id).dogName
+        return dog_name
+    except (Dog.DoesNotExist, AttributeError):
         return None
 
 
@@ -28,14 +36,14 @@ def breadcrumb_processor(request):
     if re.search(r'/dog/(\d+)', url_path):
         dog_id = re.search(r'/dog/(\d+)', url_path).group(1)
         breadcrumbs.append({"name": "Dogs", "url": "/dogs/"})
-        breadcrumbs.append({"name": "Dog", "url": f"/dog/{dog_id}"})
+        breadcrumbs.append({"name": get_dog_name_from_dog_id(dog_id), "url": f"/dog/{dog_id}"})
 
     if session_id:
         session_id = session_id.group(1)
         dog_id = get_dog_id_from_session_id(session_id)
         if dog_id:
             breadcrumbs.append({"name": "Dogs", "url": "/dogs/"})
-            breadcrumbs.append({"name": "Dog", "url": f"/dog/{dog_id}"})
+            breadcrumbs.append({"name": get_dog_name_from_dog_id(dog_id), "url": f"/dog/{dog_id}"})
             breadcrumbs.append({"name": "Observations", "url": f"/observations/{session_id}"})
 
     if 'details/' in url_path:

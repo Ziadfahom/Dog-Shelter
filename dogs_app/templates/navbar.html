@@ -18,6 +18,7 @@
 
     <div class="collapse navbar-collapse py-3 py-lg-0" id="ftco-nav">
       <ul class="navbar-nav ms-md-auto">
+
         <li class="nav-item active me-4">
           <a href="{% url 'dogs_app:home' %}" class="nav-link">Home</a>
         </li>
@@ -38,19 +39,15 @@
               <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                 <a href="{% url 'dogs_app:view_dogs' %}" class="dropdown-item">
                   <strong>Dogs</strong>
-                  <span>Explore From the List of thouands of Dogs.</span>
+                  <span>Explore Our Shelter</span>
                 </a>
                 <a href="{% url 'dogs_app:graphs' %}" class="dropdown-item">
                   <strong>Graphs</strong>
-                  <span>Explore From the List of thouands of Dogs.</span>
+                  <span>An Insight Into Our Dynamic Stats</span>
                 </a>
                 <a href="{% url 'dogs_app:view_news' %}" class="dropdown-item">
                   <strong>News</strong>
-                  <span>Find thouands of articles about Dogs naturing.</span>
-                </a>
-                <a href="{% url 'portal_app:list-kennels' %}" class="dropdown-item">
-                  <strong>Control Panel</strong>
-                  <span>Manage all website data.</span>
+                  <span>Find Out Our Latest Updates</span>
                 </a>
               </div>
             </div>
@@ -73,16 +70,19 @@
               <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                 <a href="{% url 'dogs_app:view_users' %}" class="dropdown-item">
                   <strong>Users</strong>
-                  <span>Explore all the user.</span>
+                  <span>Manage All Website Accounts</span>
                 </a>
                 <a href="{% url 'dogs_app:add_news' %}" class="dropdown-item">
-                  <strong>News</strong>
-                  <span>Create News for all the users.</span>
+                  <strong>Add News</strong>
+                  <span>Create News For The Homepage</span>
                 </a>
-
+                <a href="{% url 'portal_app:list-kennels' %}" class="dropdown-item">
+                    <strong>Control Panel</strong>
+                    <span>Manage All Website Information</span>
+                </a>
                 <a href="{% url 'admin:index' %}" class="dropdown-item">
-                  <strong>Admin Panel</strong>
-                  <span>Admin Panel To control the whole applicaiton.</span>
+                  <strong>Site Administration</strong>
+                  <span>Basic Data Manipulation</span>
                 </a>
               </div>
             </div>
@@ -107,7 +107,7 @@
                   <strong>Manage Profile</strong>
                 </a>
                 <a href="{% url 'dogs_app:change_password' %}" class="dropdown-item">
-                  <strong>Change Password</strong>
+                  <strong>Reset Password</strong>
                 </a>
                 <a href="{% url 'dogs_app:logout' %}" class="dropdown-item">
                   <strong>Logout</strong>

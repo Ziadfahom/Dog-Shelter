@@ -806,6 +806,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const yearSelector = document.getElementById('year-selector');
     const weeklyHeatmapData = JSON.parse(chartContainer.getAttribute('data-weekly-heatmap'));
     const granularitySelector = document.getElementById('granularity-selector');
+    const iconsSelector = document.getElementById('detailed-check-box');
+
 
     // Populate year dropdown and set default selection
     const defaultYear = Object.keys(allHeatmapData).pop(); // Gets the last (most recent) year
@@ -820,63 +822,165 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Function to create a full grid of days and months for a year with zero counts
-    function createFullYearGrid(year, firstDate, lastDate) {
+    function createFullYearGrid(year, firstDate, lastDate, granularity) {
         const isLeapYear = new Date(year, 1, 29).getMonth() === 1;
         const daysInMonth = [31, isLeapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
         const grid = [];
         for (let month = 0; month < 12; month++) {
-            for (let day = 0; day < daysInMonth[month]; day++) {
-                const currentDate = new Date(year, month, day + 1);
-                if (currentDate >= firstDate && currentDate <= lastDate) {
-                grid.push([day, month, 0]); // Day, Month, Count
+            if (granularity === 'daily') {
+                for (let day = 0; day < daysInMonth[month]; day++) {
+                    const currentDate = new Date(year, month, day + 1);
+                    if (currentDate >= firstDate && currentDate <= lastDate) {
+                        grid.push([day, month, 0, 0]); // Day, Month, Count, isKong Count
+                    }
+                }
             }
+            else if (granularity === 'weekly') {
+                for (let week = 0; week < 5; week++) {
+                    const currentDateStart = new Date(year, month, (week * 7) + 1);
+                    const currentDateEnd = new Date(year, month, (week * 7) + 7);
+                    if (currentDateEnd >= firstDate && currentDateStart <= lastDate) {
+                        if (isLeapYear && month === 1 && week === 4) {
+                            // Do Not Add 5th week for leap years
+                            break;
+                        }
+                        grid.push([week, month, 0, 0]); // Week, Month, Count, isKong Count
+                    }
+                }
             }
         }
         return grid;
     }
 
-    // Function to process weekly heatmap data
-    function processWeeklyData(weeklyData) {
-        // Transform weekly data to fit heatmap structure of: [weekNumber, count]
-        return weeklyData.map(data => {
-            const weekNumber = data[0];
-            const count = data[1];
-            // Convert week number to month and week-in-month
-            const date = new Date(new Date().getFullYear(), 0, (weekNumber * 7) + 1);
-            const month = date.getMonth();
-            const weekInMonth = Math.ceil(date.getDate() / 7) - 1;
-            return [weekInMonth, month, count]; // Week-in-month, Month, Count
-        });
+
+    // Function to display a message when there is no data
+    function displayNoDataMessage() {
+        document.getElementById('heatmap-legend').innerHTML = '';
+        chartContainer.style.height = '100px';
+        chartContainer.style.width = '100%';
+        chartContainer.style.display = 'flex';
+        chartContainer.style.justifyContent = 'center';
+        chartContainer.style.alignItems = 'center';
+        chartContainer.style.textAlign = 'center';
+        // Check if allHeatmapData is an empty dictionary
+        if (yearSelector.options.length === 1 && allHeatmapData[yearSelector.value].length === 0) {
+            chartContainer.innerHTML = '<div class="no-data-message">No data available for this dog.</div>';
+        }
+        else if (yearSelector.options.length > 1 && allHeatmapData[yearSelector.value].length === 0) {
+                    chartContainer.innerHTML = '<div class="no-data-message">No data recorded for the selected year.</div>';
+        }
+
     }
-
-
 
     // Function to draw heatmap
     function drawHeatmap(year, granularity = 'daily') {
         // Parse first and last dates
         const firstDate = new Date(chartContainer.getAttribute('data-first-date'));
         const lastDate = new Date(chartContainer.getAttribute('data-last-date'));
+
+        // Check if there is no data for the selected year
+        if (!allHeatmapData[year] || allHeatmapData[year].length === 0) {
+            displayNoDataMessage();
+            return; // Exit the function if no data is available
+        }
+
         // Get the heatmap data for the selected year
-        let heatmapData, xAxisCategories, tooltipFormatter;
+        let heatmapData, xAxisCategories, tooltipFormatter, dataLabelsFormatter;
         let yAxisCategories = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-        let xAxisMax;
         if (granularity === 'daily') {
-        heatmapData = allHeatmapData[year];
-        xAxisCategories = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'];
-        tooltipFormatter = function () {
-            return 'Date: <b>' + yAxisCategories[this.point.y] + ' ' + (this.point.x + 1) + '</b><br>Count: <b>' + this.point.value + '</b>';
-        };
-        } else if (granularity === 'weekly') {
-            heatmapData = processWeeklyData(weeklyHeatmapData[year]);
-            xAxisCategories = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
-            xAxisMax = Math.max(...heatmapData.map(data => data[0]));
+            heatmapData = allHeatmapData[year];
+            xAxisCategories = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'];
+
+            // Set up the tooltip and data labels for the daily granularity
             tooltipFormatter = function () {
-                return 'Week: <b>' + (this.point.x + 1) + '</b> of ' + yAxisCategories[this.point.y] + '<br>Count: <b>' + this.point.value + '</b>';
+                const day = this.point.x;
+                const month = this.point.y;
+                const isKongCount = isKongMapping[`${day}-${month}`] || 0; // Access isKong count from the mapping
+                return 'Date: <b>' + yAxisCategories[this.point.y] + ' ' + (this.point.x + 1) + ', ' + (year) + '</b><br>' +
+                               'Total Observations: <b>' + this.point.value + '</b><br>' +
+                               'Observations With Toy: <b>' + isKongCount + '</b>';
+            };
+
+            dataLabelsFormatter = function () {
+                const day = this.point.x;
+                const month = this.point.y;
+                const count = this.point.value;
+                const isKongCount = isKongMapping[`${day}-${month}`] || 0; // Access isKong count from the mapping
+                const showIcons = iconsSelector.checked; // Detailed icons checkbox
+                const icon = isKongCount > 0 ? '🦴' : '🚫'; // Dog icon for isKong, X icon otherwise
+                let dataLabel = '';
+
+                // Check if the user wants to see detailed icons
+                if (showIcons) {
+                    // Display the count with icons
+                    dataLabel = count > 0 ? (icon + '' + count) : count;
+                    dataLabel = '<span style="line-height: 1; vertical-align: middle;">' + dataLabel + '</span>'
+                } else {
+                    // Display only the count without icons
+                    dataLabel = '<span style="line-height: 1; vertical-align: middle;">' + count + '</span>';
+                }
+
+                return dataLabel;
+            };
+        } else if (granularity === 'weekly') {
+            heatmapData = weeklyHeatmapData[year];
+            xAxisCategories = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
+
+            // Set up the tooltip and data labels for the weekly granularity
+            tooltipFormatter = function () {
+                const week = this.point.x;
+                const month = this.point.y;
+                const isKongCount = isKongWeeklyMapping[`${week}-${month}`] || 0; // Access isKong count from the mapping
+                return '<b>Week ' + (this.point.x + 1) + '</b> of ' + yAxisCategories[this.point.y] + ', ' + (year) + '<br>' +
+                               'Total Observations: <b>' + this.point.value + '</b><br>' +
+                               'Observations With Toy: <b>' + isKongCount + '</b><br>' +
+                               'Observations Without Toy: <b>' + (this.point.value - isKongCount) + '</b>';
+            };
+
+            dataLabelsFormatter = function () {
+                const week = this.point.x;
+                const month = this.point.y;
+                const count = this.point.value;
+                const isKongCount = isKongWeeklyMapping[`${week}-${month}`] || 0; // Access isKong count from the mapping
+                const showIcons = iconsSelector.checked; // Detailed icons checkbox
+                // Return the count and the detailed icons on the right side of the cell
+                let textRight = '';
+                let dataLabel = '';
+
+                if (showIcons) {
+                    if (count === 0) {
+                        dataLabel = '<span style="display: inline-block; text-align: left; padding-right: 8rem; margin-left: 4px;">' + count + '</span>';
+                        ;
+                    } else if (count === isKongCount) {
+                        textRight = ' [🦴' + isKongCount.toString().italics() + ']';
+                        dataLabel = '<span style="display: inline-block; width: 50%; text-align: left; padding-right: 3rem; margin-left: -1rem;">' + count + '</span>' +
+                            '<span style="display: inline-block; width: 50%; text-align: right; padding-left: 2rem;">' + textRight + '</span>';
+
+                    } else if (isKongCount === 0) {
+                        textRight = ' [🚫' + count.toString().italics() + ']';
+                        dataLabel = '<span style="display: inline-block; width: 50%; text-align: left; padding-right: 3rem; margin-left: -1rem;">' + count + '</span>' +
+                            '<span style="display: inline-block; width: 50%; text-align: right; padding-left: 2rem;">' + textRight + '</span>';
+                    } else {
+                        textRight = '[🦴' + isKongCount.toString().italics() + '|🚫' + (count - isKongCount).toString().italics() + ']';
+                        dataLabel = '<span style="display: inline-block; width: 50%; text-align: left; padding-right: 2rem; margin-left: -2px;">' + count + '</span>' +
+                            '<span style="display: inline-block; width: 50%; text-align: right; padding-left: 1rem;">' + textRight + '</span>';
+                    }
+                } else {
+                    dataLabel = '<span>' + count + '</span>';
+                }
+
+                // Return a string of HTML with two spans, one aligned left and the other right
+                return dataLabel;
+
             };
         }
 
         // Create a full grid for the year with zeros
-        let fullYearGrid = createFullYearGrid(year, firstDate, lastDate);
+        let fullYearGrid = createFullYearGrid(year, firstDate, lastDate, granularity);
+
+        // Create a mapping for isKong counts for the daily granularity and the weekly
+        const isKongMapping = {};
+        const isKongWeeklyMapping = {};
 
          // Update the grid with actual counts from heatmapData
         heatmapData.forEach(data => {
@@ -884,18 +988,27 @@ document.addEventListener('DOMContentLoaded', function() {
             const month = data[1];
             const count = data[2];
             const index = fullYearGrid.findIndex(d => d[0] === day && d[1] === month);
-            if (index !== -1) {
-                fullYearGrid[index][2] = count;
+            if (granularity === 'daily') {
+                isKongMapping[`${day}-${month}`] = data[3];
+                if (index !== -1) {
+                    fullYearGrid[index][2] = count;
+                }
+            }
+            else if (granularity === 'weekly') {
+                isKongWeeklyMapping[`${day}-${month}`] = data[3];
+                if (index !== -1) {
+                    fullYearGrid[index][2] = count;
+                }
             }
         });
 
         // Use the updated full year grid for the heatmap
         heatmapData = fullYearGrid;
 
-        // Calculate the number of unique months in the heatmap data
+        // Calculate the number of unique months in the heatmap data, and set the row height
         const months = new Set(heatmapData.map(item => item[1]));
         const numberOfMonths = months.size;
-        const rowHeight = numberOfMonths <= 4 ? 50 : 25;
+        const rowHeight = numberOfMonths <= 4 ? 35 : 25;
 
         // Calculate the total height
         const totalHeight = numberOfMonths * rowHeight + 150;
@@ -905,13 +1018,16 @@ document.addEventListener('DOMContentLoaded', function() {
         const numberOfDays = days.size;
 
         // Determine width values
-        const extraNarrowWidth = 250; // for less than 5 days
-        const narrowWidth = 600;      // for 10 days or less
-        const wideWidth = 1200;        // for more than 10 days
+        const weeklyWidth = 1200;       // for weekly granularity
+        const extraNarrowWidth = 550;  // for less than 5 days
+        const narrowWidth = 600;       // for 10 days or less
+        const wideWidth = 1350;        // for more than 10 days
 
         // Determine the width based on the number of days
         let totalWidth;
-        if (numberOfDays < 5) {
+        if (granularity === 'weekly') {
+            totalWidth = weeklyWidth;
+        } else if (numberOfDays < 5) {
             totalWidth = extraNarrowWidth;
         } else if (numberOfDays <= 10) {
             totalWidth = narrowWidth;
@@ -929,13 +1045,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 type: 'heatmap',
                 marginTop: 80,
                 marginBottom: 80,
-                plotBorderWidth: 1,
+                plotBorderWidth: 2,
+                plotBorderColor: '#000000',
+                plotBackgroundColor: '#F5F5F5',
             },
             title: {
-                text: 'Observations Overview for ' + year,
+                text: 'Observations Overview for ' + year + ' (' + granularity[0].toUpperCase() + granularity.slice(1) + ')',
                 style: {
                     fontWeight: 'bold',
-                    fontSize: '20px',
+                    fontSize: '25px',
                 }
             },
             xAxis: {
@@ -949,10 +1067,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 labels: {
                     style: {
-                        fontWeight: 'bold'
+                        fontWeight: 'bold',
+                        fontSize: '15px'
                     }
-                },
-                max: xAxisMax
+                }
             },
             yAxis: {
                 categories: yAxisCategories,
@@ -966,8 +1084,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 labels: {
                     style: {
-                        fontSize: '15px',
-                        fontWeight: 'bold'
+                        fontWeight: 'bold',
+                        fontSize: '15px'
                     }
                 },
             },
@@ -984,26 +1102,35 @@ document.addEventListener('DOMContentLoaded', function() {
             legend: {
                 align: 'bottom',
                 layout: 'horizontal',
-                margin: 0,
+                margin: 100,
                 verticalAlign: 'bottom',
-                y: 25,
-                symbolHeight: 280
+                y: 20,
+                x: 115,
+                symbolHeight: 280,
             },
             tooltip: {
                 formatter: tooltipFormatter,
+                outside: true,
+                style: {
+                    fontSize: '18px'
+                }
             },
             series: [{
                 name: granularity === 'daily' ? 'Observations per day' : 'Observations per week',
-                borderWidth: 1,
+                borderWidth: granularity === 'daily' ? 1 : 2,
                 data: heatmapData,
                 borderColor: '#000000',
                 dataLabels: {
                     enabled: true,
                     color: '#000000',
+                    useHTML: true,
+                    formatter: dataLabelsFormatter,
                     style: {
-                        textOutline: false,
+                        textOutline: 'none',
                         fontWeight: 'bold',
-                        fontSize: '15px'
+                        fontSize: '15px',
+                        width: '100%',
+                        whiteSpace: 'nowrap',
                     }
                 }
             }],
@@ -1014,7 +1141,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Initial draw for the default year (latest year) and by "daily" granularity
-    drawHeatmap(defaultYear, 'daily');
+    if (!allHeatmapData[defaultYear] || allHeatmapData[defaultYear].length === 0) {
+        displayNoDataMessage();
+    } else {
+        drawHeatmap(defaultYear, 'daily');
+    }
 
     // Event listener for year selector
     yearSelector.addEventListener('change', function() {
@@ -1029,4 +1160,18 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedGranularity = this.value;
         drawHeatmap(selectedYear, selectedGranularity);
     });
+
+    // Event listener for the Icons checkbox
+    iconsSelector.addEventListener('change', function() {
+        const selectedYear = yearSelector.value;
+        const selectedGranularity = granularitySelector.value;
+        const iconsLegend = document.getElementById('icons-legend');
+        if (this.checked) {
+            iconsLegend.style.display = 'block';
+        } else {
+            iconsLegend.style.display = 'none';
+        }
+        drawHeatmap(selectedYear, selectedGranularity);
+    });
+
 });

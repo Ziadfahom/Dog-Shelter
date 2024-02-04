@@ -415,6 +415,93 @@ textarea {
 
 /* Individual dropdown group styling */
 .dropdown-group {
-    margin-right: 20px;
+    margin-right: 0;
 }
+
+.year-label {
+    margin-right: -2rem;
+    margin-left: 4rem;
+}
+
+.granularity-label {
+    margin-right: 1rem;
+    margin-left: 3rem;
+}
+
+.dropdown-group select {
+    margin-right: 0;
+    margin-left: -3rem;
+}
+
+.chart-outer-border {
+    border: 2px solid #343a40;
+    border-radius: 7px;
+    box-shadow: 0px 0px 5px rgba(52, 58, 64, 0.5);
+    padding: 20px;
+    margin: 5px;
+}
+
+
+#heatmap-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+}
+
+.color-gradient-legend, .symbol-legend {
+    display: flex;
+    align-items: center; /* Aligns items vertically in the middle */
+    gap: 15px; /* Space between each item in a legend row */
+}
+
+.color-gradient-legend span, .symbol-legend span {
+    margin-right: 1px; /* Space to the right of each color square or symbol */
+}
+
+.color-gradient-legend span {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 1px solid #000;
+    vertical-align: middle;
+}
+
+
+.low-count {
+    background-color: #FF0000;
+}
+
+.medium-count {
+    background-color: #FFFF00;
+}
+
+.high-count {
+    background-color: #00FF00;
+}
+
+#detailed-check-box {
+    transform: scale(1.8);
+    cursor: pointer;
+    margin-left: 3rem;
+    margin-right: 1.5rem;
+    background-color: black;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='white'/%3e%3c/svg%3e");
+}
+
+#detailed-check-box:focus {
+    border-color: rgba(255, 255, 255, 0.5);
+    outline: 0;
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+    background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='white'/></svg>");
+}
+
+#detailed-check-box:checked {
+    background-color: #4CAF50; /* Green background for checked state */
+    border: none;
+    background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='white'/></svg>"); /* White circle for checked state */
+}
+
+
+
 

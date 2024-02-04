@@ -1,4 +1,5 @@
 import json
+import math
 from collections import defaultdict, Counter
 from datetime import datetime, time
 
@@ -244,12 +245,18 @@ def dog_record_view(request, pk):
         else:
             first_date = date.today()
 
+        # Get the first day of that month for the weekly map
+        first_weekly_date = first_date.replace(day=1)
+
         last_date = date.today()
 
         # Prepare the heatmap data for each year, by days
         daily_heatmap_data = {}
+        # Initialize dictionary for isKong counts
+        kong_daily_counts = defaultdict(int)
+
         # Initialize dictionary for weekly heatmap data
-        weekly_heatmap_data = defaultdict(lambda: defaultdict(int))
+        weekly_heatmap_data = defaultdict(lambda: defaultdict(lambda: [0, 0]))  # [total count, kong count]
 
         # Fetch all observations for the dog in one query
         # Fetch all observations for the dog in UTC
@@ -268,11 +275,8 @@ def dog_record_view(request, pk):
         for obs in observations:
             local_date = timezone.localtime(obs.obsDateTime, local_tz).date()
             observation_counts[local_date] += 1
-
-            # Count occurrences per week
-            year, week, _ = local_date.isocalendar()
-
-            weekly_heatmap_data[year][week] += 1
+            if obs.isKong == 'Y':
+                kong_daily_counts[local_date] += 1
 
         # Count occurrences per day
         observation_counts = Counter(
@@ -285,15 +289,27 @@ def dog_record_view(request, pk):
                 if single_date.year == year:
                     day = single_date.day - 1
                     month = single_date.month - 1
-                    heatmap_data.append([day, month, count])
+                    kong_count = kong_daily_counts[single_date]
+                    heatmap_data.append([day, month, count, kong_count])
 
             daily_heatmap_data[year] = heatmap_data
 
-        # Convert weekly data to the required format
-        formatted_weekly_data = {}
-        for year, weeks in weekly_heatmap_data.items():
-            heatmap_data = [[week - 1, count] for week, count in weeks.items()]
-            formatted_weekly_data[year] = heatmap_data
+        # Iterate over the daily heatmap data to aggregate into weekly data
+        for year, daily_data in daily_heatmap_data.items():
+            for day, month, total_count, kong_count in daily_data:
+                # Calculate week number (1-5) within the month
+                week_number = math.ceil((day + 1) / 7) - 1
+
+                # Aggregate counts by week
+                weekly_key = (week_number, month)
+                weekly_heatmap_data[year][weekly_key][0] += total_count
+                weekly_heatmap_data[year][weekly_key][1] += kong_count
+
+        # Convert to the required format [[week, month, total_count, kong_count], ...]
+        formatted_weekly_heatmap_data = {
+            year: [[week, month] + counts for (week, month), counts in data.items()]
+            for year, data in weekly_heatmap_data.items()
+        }
 
         # Initialize Treatment/Examination/Placement/Session(Observes) form when adding new entries
         treatment_form = TreatmentForm(request.POST or None)
@@ -474,9 +490,10 @@ def dog_record_view(request, pk):
             'placement_form': placement_form,
             'session_form': session_form,
             'daily_heatmap_data': json.dumps(daily_heatmap_data),
-            'weekly_heatmap_data': json.dumps(formatted_weekly_data),
+            'weekly_heatmap_data': json.dumps(formatted_weekly_heatmap_data),
             'heatmap_first_date': json.dumps(first_date.isoformat()),
             'heatmap_last_date': json.dumps(last_date.isoformat()),
+            'heatmap_first_weekly_date': json.dumps(first_weekly_date.isoformat()),
         }
         return render(request, 'dog_record.html', context=context)
 
