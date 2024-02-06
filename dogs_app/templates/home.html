@@ -1,23 +1,28 @@
-{% extends 'base.html' %} {% load dog_filters %} {% load static %} 
+{% extends 'base.html' %}
+{% load dog_filters %}
+{% load static %}
 
-{% block head %}
+{% block head  %}
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet"> <!-- Import Playfair Display font -->
   <link href="{% static 'dogs_app/css/home.css' %}" rel="stylesheet" />
 {% endblock %} 
 
-{% block breadcrumb %}{% endblock %}
+{% block breadcrumb %}
+{% endblock %}
 
-<div class="container-fluid">
+<div class="container-fluid" >
   {% block content %}
   <div class="hero__section row py-large">
     <div class="col-12 col-lg-6 p-5">
-      <h1 class="font-weight-bold text-xl text-white" style="">
+      <h1 class="font-weight-bold text-xl text-white" style="font-family: 'Playfair Display', serif;"> <!-- Apply Playfair Display font -->
         JOIN THE PACK!
       </h1>
-        <p class="text-white pt-2">Welcome to DogsWatch, the canine observatory at the heart of Lod, where technology and compassion unite for canine care. With {{ total_dogs }} dogs currently calling this home and {{ toy_treatment_dogs }} engaged in our toy treatment program, our shelter is a vibrant community of recovery and discovery.</p>
+      <p class="text-white pt-2" style="font-family: 'Playfair Display', serif;"> <!-- Apply Playfair Display font -->
+        Welcome to DogsWatch, the canine observatory at the heart of Lod, where technology and compassion unite for canine care. With {{ total_dogs }} dogs currently calling this home and {{ toy_treatment_dogs }} engaged in our toy treatment program, our shelter is a vibrant community of recovery and discovery.
+      </p>
+        <p class="text-white pt-2" style="font-family: 'Playfair Display', serif;">Our innovative AI system doesn't just watch; it understands, tracking each dog's behavior, health, and happiness. These insights light the way to personalized care and help potential adopters find their perfect match.</p>
 
-        <p class="text-white pt-2">Our innovative AI system doesn't just watch; it understands, tracking each dog's behavior, health, and happiness. These insights light the way to personalized care and help potential adopters find their perfect match.</p>
-
-        <p class="text-white pt-2">Explore the life-changing journeys of our dogs through interactive graphs and real-time data. DogWatch isn't just a shelter; it's a new beginning for our four-legged friends, and we invite you to be part of their story.</p>
+        <p class="text-white pt-2" style="font-family: 'Playfair Display', serif;">Explore the life-changing journeys of our dogs through interactive graphs and real-time data. DogWatch isn't just a shelter; it's a new beginning for our four-legged friends, and we invite you to be part of their story.</p>
 
       <div class="buttons py-3">
         {% if user.is_authenticated %}
@@ -71,8 +76,9 @@
         {% endif %}
       </div>
     </div>
+  </div>
 
-    <div class="row">
+    <div class="row" style="background-color: #FFC971;"> <!--color light orange-->
       {% for news in news_items %}
         <div class="col-12 col-md-6 p-0 relative">
           <div class="solution_cards_box pb-3">
@@ -195,7 +201,6 @@
           </div>
         </div>
       {% endfor %}
-    </div>
   <div>
   {% endblock %}
 </div>
