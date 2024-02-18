@@ -34,5 +34,20 @@
             </div>
         </div>
     </div>
+
+    <!-- Flatpickr for Time field -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            flatpickr("#id_stanceStartTime", {
+                enableTime: true,
+                noCalendar: true,
+                dateFormat: "H:i:S",
+                time_24hr: true,
+                minuteIncrement: 1,
+                enableSeconds: true,
+                allowInput: true
+            });
+        });
+    </script>
 {% endblock %}
 

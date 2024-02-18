@@ -34,4 +34,21 @@
             </div>
         </div>
     </div>
+
+    <!-- Flatpickr for DateTime field -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            flatpickr("#id_obsDateTime", {
+                enableTime: true,
+                dateFormat: "Y-m-d H:i:S",
+                time_24hr: true,
+                allowInput: true,
+                defaultDate: new Date().setSeconds(0, 0),
+                plugins: [new confirmDatePlugin({
+                    confirmText: "Confirm",
+                })]
+            });
+        });
+    </script>
+
 {% endblock %}

@@ -11,13 +11,23 @@ from dogs_app.forms import (OwnerForm, CameraForm, KennelForm, KennelEditForm, T
                             ExaminationPortalForm, PlacementPortalForm, ObservesPortalForm,
                             ObservationPortalForm, DogStancePortalForm)
 from dogs_app.models import (Owner, Camera, Kennel, Treatment, EntranceExamination,
-                             DogPlacement, Observes, Observation, DogStance)
+                             DogPlacement, Observes, Observation, DogStance, Branch)
 from portal_app.tables import (OwnerTable, CameraTable, KennelTable, TreatmentTable, ExaminationTable,
                                DogPlacementTable, ObservesTable, ObservationTable, DogStanceTable)
 
 
+# Helper function to get the user's current branch object (Israel/Italy)
+def get_current_branch(request):
+    # Get the current Branch (Israel/Italy)
+    branch_name = request.session.get('branch', 'Israel')  # Default to Israel
+    branch = Branch.objects.get(branchName=branch_name)  # Get the branch object
+
+    return branch
+
+
 # Display a list of all Owners
 def owner_list_portal(request):
+    branch = get_current_branch(request)
     # Check if user is logged in
     if request.user.is_authenticated:
         # Capture the search term
@@ -25,7 +35,7 @@ def owner_list_portal(request):
         # Split the search query into individual terms
         search_terms = search_query.split()
         # Initialize the base query
-        queryset = Owner.objects.all()
+        queryset = Owner.objects.filter(branch=branch)
 
         # Apply filters for each search term across all relevant fields
         for term in search_terms:
@@ -50,19 +60,24 @@ def owner_list_portal(request):
 
 # Handle adding a new Owner
 def add_owner_portal(request):
+    branch = get_current_branch(request)
     if request.user.is_authenticated:
         if request.method == 'POST':
             form = OwnerForm(request.POST)
             if form.is_valid():
-                # Save the form
                 try:
-                    form.save()
+                    # Create Owner instance but don't save to DB yet
+                    owner_instance = form.save(commit=False)
+                    # Assign the current branch to the owner
+                    owner_instance.branch = branch
+                    # Save the owner instance to the database
+                    owner_instance.save()
                     messages.success(request, "Owner added successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while adding Owner: {str(e)}")
                 return redirect('portal_app:list-owners')
             else:
-                messages.error(request, "Invalid form data.")
+                messages.error(request, "Invalid form data. Please correct the listed errors.")
                 return render(request, 'portal/add/owner.html', {'form': form})
         else:
             form = OwnerForm()
@@ -120,7 +135,7 @@ def edit_owner_portal(request, pk):
                 return HttpResponseRedirect(reverse('portal_app:list-owners')
                                             + '?page=' + page + '&sort=' + sort + '&search=' + search)
             else:
-                messages.error(request, "Invalid form data.")
+                messages.error(request, "Invalid form data. Please correct the listed errors.")
         else:
             form = OwnerForm(instance=owner)
         # Render the edit page with the captured parameters
@@ -134,13 +149,24 @@ def edit_owner_portal(request, pk):
 
 # Display a list of all Cameras
 def camera_list_portal(request):
+    branch = get_current_branch(request)
+
     # Check if user is logged in
     if request.user.is_authenticated:
+
         # Capture the search term
         search_query = request.GET.get('search', '')
-        queryset = Camera.objects.filter(
-            Q(camID__icontains=search_query)
-        )
+        # Split the search query into individual terms
+        search_terms = search_query.split()
+        # Initialize the base query
+        queryset = Camera.objects.filter(branch=branch)
+
+        # Apply filters for each search term across all relevant fields
+        for term in search_terms:
+            queryset = queryset.filter(
+                Q(camID__icontains=term)
+            )
+
         table = CameraTable(queryset, request=request)
         RequestConfig(request, paginate={"per_page": 10}).configure(table)
         return render(request, 'portal/list/cameras.html', {'table': table, 'search_query': search_query})
@@ -152,19 +178,24 @@ def camera_list_portal(request):
 
 # Handle adding a new Camera
 def add_camera_portal(request):
+    branch = get_current_branch(request)
     if request.user.is_authenticated:
         if request.method == 'POST':
             form = CameraForm(request.POST)
             if form.is_valid():
-                # Save the form
                 try:
-                    form.save()
+                    # Create Camera instance but don't save to DB yet
+                    camera_instance = form.save(commit=False)
+                    # Assign the current branch to the Camera
+                    camera_instance.branch = branch
+                    # Save the kennel instance to the database
+                    camera_instance.save()
                     messages.success(request, "Camera added successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while adding Camera: {str(e)}")
                 return redirect('portal_app:list-cameras')
             else:
-                messages.error(request, "Invalid form data.")
+                messages.error(request, "Invalid form data. Please correct the listed errors.")
                 return render(request, 'portal/add/camera.html', {'form': form})
         else:
             form = CameraForm()
@@ -201,8 +232,44 @@ def delete_camera_portal(request, pk):
         return redirect('dogs_app:home')
 
 
+# Handle editing a Camera
+def edit_camera_portal(request, pk):
+    if request.user.is_authenticated:
+        # Capture the 'page' and 'sort' and 'search' GET parameters
+        page = request.GET.get('page', '1')
+        sort = request.GET.get('sort', '')
+        search = request.GET.get('search', '')
+        camera = get_object_or_404(Camera, pk=pk)
+
+        if request.method == 'POST':
+
+            form = CameraForm(request.POST, request.FILES, instance=camera)
+            if form.is_valid():
+                # Save the form
+                try:
+                    form.save()
+                    messages.success(request, "Camera updated successfully.")
+                except Exception as e:
+                    messages.error(request, f"Error occurred while updating Camera: {str(e)}")
+                return HttpResponseRedirect(reverse('portal_app:list-cameras') + '?page=' + page
+                                            + '&sort=' + sort + '&search=' + search)
+            else:
+                messages.error(request, "Invalid form data. Please correct the listed errors.")
+        else:
+            form = CameraForm(instance=camera)
+        # Render the edit page with the captured parameters
+        return render(request,
+                      'portal/edit/camera.html',
+                      {'form': form, 'page': page, 'sort': sort, 'search': search})
+    else:
+        messages.error(request, "You must be logged in to edit a Camera.")
+        return redirect('dogs_app:home')
+
+
 # Display a list of all Kennels
 def kennel_list_portal(request):
+    branch = get_current_branch(request)
+
     # Check if user is logged in
     if request.user.is_authenticated:
         # Capture the search term
@@ -210,7 +277,7 @@ def kennel_list_portal(request):
         # Split the search query into individual terms
         search_terms = search_query.split()
         # Initialize the base query
-        queryset = Kennel.objects.all()
+        queryset = Kennel.objects.filter(branch=branch)
 
         # Apply filters for each search term across all relevant fields
         for term in search_terms:
@@ -231,19 +298,26 @@ def kennel_list_portal(request):
 
 # Handle adding a new Kennel
 def add_kennel_portal(request):
+    branch = get_current_branch(request)
+
     if request.user.is_authenticated:
         if request.method == 'POST':
             form = KennelForm(request.POST, request.FILES)
             if form.is_valid():
-                # Save the form
                 try:
-                    form.save()
+                    # Create Kennel instance but don't save to DB yet
+                    kennel_instance = form.save(commit=False)
+                    # Assign the current branch to the kennel
+                    kennel_instance.branch = branch
+                    # Save the kennel instance to the database
+                    kennel_instance.save()
                     messages.success(request, "Kennel added successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while adding Kennel: {str(e)}")
+                    return render(request, 'portal/add/kennel.html', {'form': form})
                 return redirect('portal_app:list-kennels')
             else:
-                messages.error(request, "Invalid form data.")
+                messages.error(request, "Invalid form data. Please correct the listed errors.")
                 return render(request, 'portal/add/kennel.html', {'form': form})
         else:
             form = KennelForm()
@@ -299,10 +373,14 @@ def edit_kennel_portal(request, pk):
                     messages.success(request, "Kennel updated successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while updating Kennel: {str(e)}")
+                    return render(request, 'portal/edit/kennel.html', {'form': form,
+                                                                       'page': page,
+                                                                       'sort': sort,
+                                                                       'search': search})
                 return HttpResponseRedirect(reverse('portal_app:list-kennels') + '?page=' + page
                                             + '&sort=' + sort + '&search=' + search)
             else:
-                messages.error(request, "Invalid form data.")
+                messages.error(request, "Invalid form data. Please correct the listed errors.")
         else:
             form = KennelEditForm(instance=kennel)
         # Render the edit page with the captured parameters
@@ -316,6 +394,7 @@ def edit_kennel_portal(request, pk):
 
 # Display a list of all Treatments
 def treatment_list_portal(request):
+    branch = get_current_branch(request)
     # Check if user is logged in
     if request.user.is_authenticated:
         # Capture the search term
@@ -323,7 +402,7 @@ def treatment_list_portal(request):
         # Split the search query into individual terms
         search_terms = search_query.split()
         # Initialize the base query
-        queryset = Treatment.objects.all()
+        queryset = Treatment.objects.filter(dog__branch=branch)
 
         # Apply filters for each search term across all relevant fields
         for term in search_terms:
@@ -357,7 +436,8 @@ def treatment_list_portal(request):
 
         table = TreatmentTable(queryset, request=request)
         RequestConfig(request, paginate={"per_page": 10}).configure(table)
-        return render(request, 'portal/list/treatments.html', {'table': table, 'search_query': search_query})
+        return render(request, 'portal/list/treatments.html', {'table': table,
+                                                               'search_query': search_query})
     else:
         # If user is not logged in/authenticated, show an error message and redirect to home.
         messages.error(request, "You Must Be Logged In To Access The Portal...")
@@ -368,7 +448,7 @@ def treatment_list_portal(request):
 def add_treatment_portal(request):
     if request.user.is_authenticated:
         if request.method == 'POST':
-            form = TreatmentPortalForm(request.POST)
+            form = TreatmentPortalForm(request.POST, request=request)
             if form.is_valid():
                 # Save the form
                 try:
@@ -376,12 +456,13 @@ def add_treatment_portal(request):
                     messages.success(request, "Treatment added successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while adding Treatment: {str(e)}")
+                    return render(request, 'portal/add/treatment.html', {'form': form})
                 return redirect('portal_app:list-treatments')
             else:
-                messages.error(request, "Invalid form data.")
+                messages.error(request, "Invalid form data. Please correct the listed errors.")
                 return render(request, 'portal/add/treatment.html', {'form': form})
         else:
-            form = TreatmentPortalForm()
+            form = TreatmentPortalForm(request=request)
         # Render the add page
         return render(request, 'portal/add/treatment.html', {'form': form})
     else:
@@ -425,7 +506,7 @@ def edit_treatment_portal(request, pk):
         treatment = get_object_or_404(Treatment, pk=pk)
 
         if request.method == 'POST':
-            form = TreatmentPortalForm(request.POST, instance=treatment)
+            form = TreatmentPortalForm(request.POST, instance=treatment, request=request)
             if form.is_valid():
                 # Save the form
                 try:
@@ -433,12 +514,14 @@ def edit_treatment_portal(request, pk):
                     messages.success(request, "Treatment updated successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while updating Treatment: {str(e)}")
+                    return render(request, 'portal/edit/treatment.html', {'form': form, 'page': page, 'sort': sort,
+                                                                          'search': search})
                 return HttpResponseRedirect(reverse('portal_app:list-treatments') + '?page=' + page
                                             + '&sort=' + sort + '&search=' + search)
             else:
-                messages.error(request, "Invalid form data.")
+                messages.error(request, "Invalid form data. Please correct the listed errors.")
         else:
-            form = TreatmentPortalForm(instance=treatment)
+            form = TreatmentPortalForm(instance=treatment, request=request)
         # Render the edit page with the captured parameters
         return render(request,
                       'portal/edit/treatment.html',
@@ -450,6 +533,7 @@ def edit_treatment_portal(request, pk):
 
 # Display a list of all Examinations
 def examination_list_portal(request):
+    branch = get_current_branch(request)
     # Check if user is logged in
     if request.user.is_authenticated:
         # Capture the search term
@@ -457,7 +541,7 @@ def examination_list_portal(request):
         # Split the search query into individual terms
         search_terms = search_query.split()
         # Initialize the base query
-        queryset = EntranceExamination.objects.all()
+        queryset = EntranceExamination.objects.filter(dog__branch=branch)
 
         # Apply filters for each search term across all relevant fields
         for term in search_terms:
@@ -507,7 +591,7 @@ def examination_list_portal(request):
 def add_examination_portal(request):
     if request.user.is_authenticated:
         if request.method == 'POST':
-            form = ExaminationPortalForm(request.POST)
+            form = ExaminationPortalForm(request.POST, request=request)
             if form.is_valid():
                 # Save the form
                 try:
@@ -515,12 +599,13 @@ def add_examination_portal(request):
                     messages.success(request, "Examination added successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while adding Examination: {str(e)}")
+                    return render(request, 'portal/add/examination.html', {'form': form})
                 return redirect('portal_app:list-examinations')
             else:
-                messages.error(request, "Invalid form data.")
+                messages.error(request, "Invalid form data. Please correct the listed errors.")
                 return render(request, 'portal/add/examination.html', {'form': form})
         else:
-            form = ExaminationPortalForm()
+            form = ExaminationPortalForm(request=request)
         # Render the add page
         return render(request, 'portal/add/examination.html', {'form': form})
     else:
@@ -564,7 +649,7 @@ def edit_examination_portal(request, pk):
         examination = get_object_or_404(EntranceExamination, pk=pk)
 
         if request.method == 'POST':
-            form = ExaminationPortalForm(request.POST, instance=examination)
+            form = ExaminationPortalForm(request.POST, instance=examination, request=request)
             if form.is_valid():
                 # Save the form
                 try:
@@ -572,12 +657,16 @@ def edit_examination_portal(request, pk):
                     messages.success(request, "Examination updated successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while updating Examination: {str(e)}")
+                    return render(request, 'portal/edit/examination.html', {'form': form,
+                                                                            'page': page,
+                                                                            'sort': sort,
+                                                                            'search': search})
                 return HttpResponseRedirect(reverse('portal_app:list-examinations') + '?page=' + page
                                             + '&sort=' + sort + '&search=' + search)
             else:
-                messages.error(request, "Invalid form data.")
+                messages.error(request, "Invalid form data. Please correct the listed errors.")
         else:
-            form = ExaminationPortalForm(instance=examination)
+            form = ExaminationPortalForm(instance=examination, request=request)
         # Render the edit page with the captured parameters
         return render(request,
                       'portal/edit/examination.html',
@@ -589,17 +678,18 @@ def edit_examination_portal(request, pk):
 
 # Display a list of all Dog Placements
 def placement_list_portal(request):
+    branch = get_current_branch(request)
+
     # Check if user is logged in
     if request.user.is_authenticated:
         search_query = request.GET.get('search', '')
         # Split the search query into individual terms
         search_terms = search_query.split()
         # Initialize the base query
-        queryset = DogPlacement.objects.all()
+        queryset = DogPlacement.objects.filter(kennel__branch=branch)
 
         # Apply filters for each search term across all relevant fields
         for term in search_terms:
-
             # Account for date searches
             if '/' in term:
                 date_parts = term.split('/')
@@ -613,14 +703,19 @@ def placement_list_portal(request):
                     queryset = queryset.filter(
                         Q(dog__dogName__icontains=term) |
                         Q(kennel__kennelNum__icontains=term) |
+                        Q(kennel__branch__branchName__icontains=term) |
                         Q(entranceDate__icontains=date_search) |
                         Q(expirationDate__icontains=date_search) |
                         Q(placementReason__icontains=term)
                     )
+            # If "branch" is in the search term, exclude it from the search
+            elif term.lower() == "branch":
+                continue
             else:
                 queryset = queryset.filter(
                     Q(dog__dogName__icontains=term) |
                     Q(kennel__kennelNum__icontains=term) |
+                    Q(kennel__branch__branchName__icontains=term) |
                     Q(entranceDate__icontains=term) |
                     Q(expirationDate__icontains=term) |
                     Q(placementReason__icontains=term)
@@ -648,7 +743,7 @@ def placement_list_portal(request):
 def add_placement_portal(request):
     if request.user.is_authenticated:
         if request.method == 'POST':
-            form = PlacementPortalForm(request.POST)
+            form = PlacementPortalForm(request.POST, request=request)
             if form.is_valid():
                 # Save the form
                 try:
@@ -656,12 +751,13 @@ def add_placement_portal(request):
                     messages.success(request, "Placement added successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while adding Placement: {str(e)}")
+                    return render(request, 'portal/add/placement.html', {'form': form})
                 return redirect('portal_app:list-placements')
             else:
-                messages.error(request, "Invalid form data.")
+                messages.error(request, "Invalid form data. Please correct the listed errors.")
                 return render(request, 'portal/add/placement.html', {'form': form})
         else:
-            form = PlacementPortalForm()
+            form = PlacementPortalForm(request=request)
         # Render the add page
         return render(request, 'portal/add/placement.html', {'form': form})
     else:
@@ -706,7 +802,7 @@ def edit_placement_portal(request, pk):
         placement = get_object_or_404(DogPlacement, pk=pk)
 
         if request.method == 'POST':
-            form = PlacementPortalForm(request.POST, instance=placement)
+            form = PlacementPortalForm(request.POST, instance=placement, request=request)
             if form.is_valid():
                 # Save the form
                 try:
@@ -714,12 +810,14 @@ def edit_placement_portal(request, pk):
                     messages.success(request, "Placement updated successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while updating Placement: {str(e)}")
+                    return render(request, 'portal/edit/placement.html', {'form': form, 'page': page, 'sort': sort,
+                                                                          'search': search})
                 return HttpResponseRedirect(reverse('portal_app:list-placements') + '?page=' + page
                                             + '&sort=' + sort + '&search=' + search)
             else:
-                messages.error(request, "Invalid form data.")
+                messages.error(request, "Invalid form data. Please correct the listed errors.")
         else:
-            form = PlacementPortalForm(instance=placement)
+            form = PlacementPortalForm(instance=placement, request=request)
         # Render the edit page with the captured parameters
         return render(request,
                       'portal/edit/placement.html',
@@ -731,6 +829,7 @@ def edit_placement_portal(request, pk):
 
 # Display a list of all Sessions (Observes)
 def observes_list_portal(request):
+    branch = get_current_branch(request)
     # Check if user is logged in
     if request.user.is_authenticated:
         # Capture the search term
@@ -738,7 +837,7 @@ def observes_list_portal(request):
         # Split the search query into individual terms
         search_terms = search_query.split()
         # Initialize the base query
-        queryset = Observes.objects.all()
+        queryset = Observes.objects.filter(dog__branch=branch)
 
         # Apply filters for each search term across all relevant fields
         for term in search_terms:
@@ -780,7 +879,7 @@ def observes_list_portal(request):
 def add_observes_portal(request):
     if request.user.is_authenticated:
         if request.method == 'POST':
-            form = ObservesPortalForm(request.POST)
+            form = ObservesPortalForm(request.POST, request=request)
             if form.is_valid():
                 # Save the form
                 try:
@@ -788,12 +887,13 @@ def add_observes_portal(request):
                     messages.success(request, "Session added successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while adding Session: {str(e)}")
+                    return render(request, 'portal/add/observes.html', {'form': form})
                 return redirect('portal_app:list-observes')
             else:
-                messages.error(request, "Invalid form data.")
+                messages.error(request, "Invalid form data. Please correct the listed errors.")
                 return render(request, 'portal/add/observes.html', {'form': form})
         else:
-            form = ObservesPortalForm()
+            form = ObservesPortalForm(request=request)
         # Render the add page
         return render(request, 'portal/add/observes.html', {'form': form})
     else:
@@ -837,7 +937,7 @@ def edit_observes_portal(request, pk):
         observes = get_object_or_404(Observes, pk=pk)
 
         if request.method == 'POST':
-            form = ObservesPortalForm(request.POST, instance=observes)
+            form = ObservesPortalForm(request.POST, instance=observes, request=request)
             if form.is_valid():
                 # Save the form
                 try:
@@ -845,12 +945,16 @@ def edit_observes_portal(request, pk):
                     messages.success(request, "Session updated successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while updating Session: {str(e)}")
+                    return render(request, 'portal/edit/observes.html', {'form': form,
+                                                                         'page': page,
+                                                                         'sort': sort,
+                                                                         'search': search})
                 return HttpResponseRedirect(reverse('portal_app:list-observes') + '?page=' + page
                                             + '&sort=' + sort + '&search=' + search)
             else:
-                messages.error(request, "Invalid form data.")
+                messages.error(request, "Invalid form data. Please correct the listed errors.")
         else:
-            form = ObservesPortalForm(instance=observes)
+            form = ObservesPortalForm(instance=observes, request=request)
         # Render the edit page with the captured parameters
         return render(request,
                       'portal/edit/observes.html',
@@ -862,6 +966,7 @@ def edit_observes_portal(request, pk):
 
 # Display a list of all Observations
 def observations_list_portal(request):
+    branch = get_current_branch(request)
     # Check if user is logged in
     if request.user.is_authenticated:
         # Capture the search term
@@ -869,7 +974,7 @@ def observations_list_portal(request):
         # Split the search query into individual terms
         search_terms = search_query.split()
         # Initialize the base query
-        queryset = Observation.objects.all()
+        queryset = Observation.objects.filter(observes__dog__branch=branch)
 
         # Apply filters for each search term across all relevant fields
         for term in search_terms:
@@ -919,7 +1024,7 @@ def observations_list_portal(request):
 def add_observation_portal(request):
     if request.user.is_authenticated:
         if request.method == 'POST':
-            form = ObservationPortalForm(request.POST)
+            form = ObservationPortalForm(request.POST, request=request)
             if form.is_valid():
                 # Save the form
                 try:
@@ -927,12 +1032,13 @@ def add_observation_portal(request):
                     messages.success(request, "Observation added successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while adding Observation: {str(e)}")
+                    return render(request, 'portal/add/observation.html', {'form': form})
                 return redirect('portal_app:list-observations')
             else:
-                messages.error(request, "Invalid form data.")
+                messages.error(request, "Invalid form data. Please correct the listed errors.")
                 return render(request, 'portal/add/observation.html', {'form': form})
         else:
-            form = ObservationPortalForm()
+            form = ObservationPortalForm(request=request)
         # Render the add page
         return render(request, 'portal/add/observation.html', {'form': form})
     else:
@@ -976,7 +1082,7 @@ def edit_observation_portal(request, pk):
         observation = get_object_or_404(Observation, pk=pk)
 
         if request.method == 'POST':
-            form = ObservationPortalForm(request.POST, instance=observation)
+            form = ObservationPortalForm(request.POST, instance=observation, request=request)
             if form.is_valid():
                 # Save the form
                 try:
@@ -984,12 +1090,16 @@ def edit_observation_portal(request, pk):
                     messages.success(request, "Observation updated successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while updating Observation: {str(e)}")
+                    return render(request, 'portal/edit/observation.html', {'form': form,
+                                                                            'page': page,
+                                                                            'sort': sort,
+                                                                            'search': search})
                 return HttpResponseRedirect(reverse('portal_app:list-observations') + '?page=' + page
                                             + '&sort=' + sort + '&search=' + search)
             else:
-                messages.error(request, "Invalid form data.")
+                messages.error(request, "Invalid form data. Please correct the listed errors.")
         else:
-            form = ObservationPortalForm(instance=observation)
+            form = ObservationPortalForm(instance=observation, request=request)
         # Render the edit page with the captured parameters
         return render(request,
                       'portal/edit/observation.html',
@@ -1001,6 +1111,7 @@ def edit_observation_portal(request, pk):
 
 # Display a list of all DogStances
 def stances_list_portal(request):
+    branch = get_current_branch(request)
     # Check if user is logged in
     if request.user.is_authenticated:
         # Capture the search term
@@ -1008,7 +1119,7 @@ def stances_list_portal(request):
         # Split the search query into individual terms
         search_terms = search_query.split()
         # Initialize the base query
-        queryset = DogStance.objects.all()
+        queryset = DogStance.objects.filter(observation__observes__dog__branch=branch)
 
         # Apply filters for each search term across all relevant fields
         for term in search_terms:
@@ -1055,7 +1166,7 @@ def stances_list_portal(request):
 def add_stance_portal(request):
     if request.user.is_authenticated:
         if request.method == 'POST':
-            form = DogStancePortalForm(request.POST)
+            form = DogStancePortalForm(request.POST, request=request)
             if form.is_valid():
                 # Save the form
                 try:
@@ -1063,12 +1174,13 @@ def add_stance_portal(request):
                     messages.success(request, "Stance added successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while adding Stance: {str(e)}")
+                    return render(request, 'portal/add/dogstance.html', {'form': form})
                 return redirect('portal_app:list-stances')
             else:
-                messages.error(request, "Invalid form data.")
+                messages.error(request, "Invalid form data. Please correct the listed errors.")
                 return render(request, 'portal/add/dogstance.html', {'form': form})
         else:
-            form = DogStancePortalForm()
+            form = DogStancePortalForm(request=request)
         # Render the add page
         return render(request, 'portal/add/dogstance.html', {'form': form})
     else:
@@ -1112,7 +1224,7 @@ def edit_stance_portal(request, pk):
         dogstance = get_object_or_404(DogStance, pk=pk)
 
         if request.method == 'POST':
-            form = DogStancePortalForm(request.POST, instance=dogstance)
+            form = DogStancePortalForm(request.POST, instance=dogstance, request=request)
             if form.is_valid():
                 # Save the form
                 try:
@@ -1120,12 +1232,20 @@ def edit_stance_portal(request, pk):
                     messages.success(request, "Stance updated successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while updating Stance: {str(e)}")
+                    return render(request, 'portal/edit/dogstance.html', {'form': form,
+                                                                          'page': page,
+                                                                          'sort': sort,
+                                                                          'search': search})
                 return HttpResponseRedirect(reverse('portal_app:list-stances') + '?page=' + page
                                             + '&sort=' + sort + '&search=' + search)
             else:
-                messages.error(request, "Invalid form data.")
+                messages.error(request, "Invalid form data. Please correct the listed errors.")
+                return render(request, 'portal/edit/dogstance.html', {'form': form,
+                                                                      'page': page,
+                                                                      'sort': sort,
+                                                                      'search': search})
         else:
-            form = DogStancePortalForm(instance=dogstance)
+            form = DogStancePortalForm(instance=dogstance, request=request)
         # Render the edit page with the captured parameters
         return render(request,
                       'portal/edit/dogstance.html',

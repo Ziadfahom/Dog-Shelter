@@ -47,8 +47,9 @@ class OwnerTable(tables.Table):
 
 # Camera Table
 class CameraTable(tables.Table):
-    # Add columns for deleting Camera
+    # Add columns for deleting and editing a Camera
     delete = tables.Column(empty_values=(), orderable=False)
+    edit = tables.Column(empty_values=(), orderable=False)
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
@@ -66,10 +67,20 @@ class CameraTable(tables.Table):
                                'to delete this camera?\');">Delete</a>', delete_url)
         return ''
 
+    def render_edit(self, record):
+        if self.request:
+            current_page = self.request.GET.get('page', '1')
+            current_sort = self.request.GET.get('sort', '')
+            current_search = self.request.GET.get('search', '')
+            edit_url = (reverse('portal_app:edit-camera',
+                                args=[record.pk]) + '?page=' + current_page
+                        + '&sort=' + current_sort + '&search=' + current_search)
+            return format_html('<a href="{}" class="btn btn-secondary">Edit</a>', edit_url)
+
     class Meta:
         model = Camera
         template_name = 'django_tables2/bootstrap.html'
-        fields = ('camID', 'delete')
+        fields = ('camID', 'edit', 'delete')
 
 
 # Kennel Table
@@ -147,7 +158,7 @@ class TreatmentTable(tables.Table):
         # Format date in DD/MM/YYYY format if it's not None
         if record.treatmentDate:
             return record.treatmentDate.strftime('%d/%m/%Y')
-        return ''
+        return '—'
 
     class Meta:
         model = Treatment
@@ -176,7 +187,7 @@ class ExaminationTable(tables.Table):
                           + '&sort=' + current_sort + '&search=' + current_search)
             return format_html('<a href="{}" class="btn btn-danger" onclick="return confirm(\'Are you sure you want '
                                'to delete this examination?\');">Delete</a>', delete_url)
-        return ''
+        return '—'
 
     def render_edit(self, record):
         if self.request:
@@ -193,7 +204,7 @@ class ExaminationTable(tables.Table):
         # Format date in DD/MM/YYYY format if it's not None
         if record.examinationDate:
             return record.examinationDate.strftime('%d/%m/%Y')
-        return ''
+        return '—'
 
     class Meta:
         model = EntranceExamination
@@ -245,19 +256,25 @@ class DogPlacementTable(tables.Table):
         # Format date in DD/MM/YYYY format if it's not None
         if record.entranceDate:
             return record.entranceDate.strftime('%d/%m/%Y')
-        return ''
+        return '—'
 
     def render_expirationDate(self, record):
         # Format date in DD/MM/YYYY format if it's not None
         if record.expirationDate:
             return record.expirationDate.strftime('%d/%m/%Y')
-        return ''
+        return '—'
+
+    def render_kennel(self, record):
+        if record.kennel:
+            return f"Kennel #{record.kennel.kennelNum}"
+        else:
+            return '—'
 
     class Meta:
         model = DogPlacement
         template_name = 'django_tables2/bootstrap.html'
         fields = ('dog', 'kennel', 'duration', 'entranceDate', 'expirationDate', 'placementReason', 'edit', 'delete')
-        order_by = '-entranceDate'
+        order_by = ['-entranceDate', 'expirationDate']
 
 
 # Session (Observes) Table
@@ -297,7 +314,13 @@ class ObservesTable(tables.Table):
         # Format date in DD/MM/YYYY format if it's not None
         if record.sessionDate:
             return record.sessionDate.strftime('%d/%m/%Y')
-        return ''
+        return '—'
+
+    def render_camera(self, record):
+        if record.camera:
+            return f"Camera #{record.camera.camID}"
+        else:
+            return '—'
 
     class Meta:
         model = Observes
@@ -348,7 +371,7 @@ class ObservationTable(tables.Table):
         if record.obsDateTime:
             return record.obsDateTime.strftime('%d/%m/%Y %H:%M:%S')
 
-        return ''
+        return '—'
 
     class Meta:
         model = Observation
@@ -394,7 +417,7 @@ class DogStanceTable(tables.Table):
         if record.stanceStartTime:
             return record.stanceStartTime.strftime('%H:%M:%S')
 
-        return ''
+        return '—'
 
     class Meta:
         model = DogStance

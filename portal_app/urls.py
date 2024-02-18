@@ -16,6 +16,7 @@ urlpatterns = [
     path('cameras/', views.camera_list_portal, name='list-cameras'),
     path('cameras/add/', views.add_camera_portal, name='add-camera'),
     path('cameras/delete/<int:pk>/', views.delete_camera_portal, name='delete-camera'),
+    path('cameras/edit/<int:pk>/', views.edit_camera_portal, name='edit-camera'),
 
     path('kennels/', views.kennel_list_portal, name='list-kennels'),
     path('kennels/add/', views.add_kennel_portal, name='add-kennel'),

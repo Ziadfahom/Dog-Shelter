@@ -25,7 +25,7 @@
                 <!-- Form -->
                 <div class="form-container">
                     <h2>Edit Examination</h2>
-                    <form method="post">
+                    <form method="post" novalidate>
                         {% csrf_token %}
                         {{ form.as_p }}
                         <button type="submit" class="btn btn-primary w-100">Save</button>

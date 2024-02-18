@@ -1,6 +1,0 @@
- ---------------- Tasks ----------------------
-
-
-1- Setup a host reloader
-2- setup the base.html and all setup files
-3- Look for desings for this website and confirm everythigns

@@ -388,7 +388,7 @@ $(document).ready(function() {
                 // Populate the form fields with the examination details
                 $('#editExaminationModal input[name="examinationDate"]').val(response.examinationDate);
                 $('#editExaminationModal input[name="examinedBy"]').val(response.examinedBy);
-                $('#editExaminationModal input[name="results"]').val(response.results);
+                $('#editExaminationModal textarea[name="results"]').val(response.results);
                 $('#editExaminationModal input[name="dogWeight"]').val(response.dogWeight);
                 $('#editExaminationModal input[name="dogTemperature"]').val(response.dogTemperature);
                 $('#editExaminationModal input[name="dogPulse"]').val(response.dogPulse);
@@ -468,7 +468,7 @@ $(document).ready(function() {
                 $('#editPlacementModal select[name="kennel"]').val(kennelId);
                 $('#editPlacementModal input[name="entranceDate"]').val(response.entranceDate);
                 $('#editPlacementModal input[name="expirationDate"]').val(response.expirationDate);
-                $('#editPlacementModal input[name="placementReason"]').val(response.placementReason);
+                $('#editPlacementModal textarea[name="placementReason"]').val(response.placementReason);
 
                 // Store the placement ID in the submit button for later reference
                 $('#editPlacementModal .edit-placement-confirm-btn').data('placement-id', placementId);
@@ -633,77 +633,6 @@ $(document).ready(function() {
         });
     });
 
-    // Handle updating of an Examination
-    // Function to open the Edit Examination Modal and populate it with data
-    function openExaminationEditModal(examinationId) {
-        // Fetch the examination data using AJAX
-        $.ajax({
-            url: '/edit_examination/' + examinationId + '/',
-            method: 'GET',
-            headers: { 'X-CSRFToken': getCookie('csrftoken') },
-            success: function(response) {
-                // Populate the form fields with the examination details
-                $('#editExaminationModal input[name="examinationDate"]').val(response.examinationDate);
-                $('#editExaminationModal input[name="examinedBy"]').val(response.examinedBy);
-                $('#editExaminationModal input[name="results"]').val(response.results);
-                $('#editExaminationModal input[name="dogWeight"]').val(response.dogWeight);
-                $('#editExaminationModal input[name="dogTemperature"]').val(response.dogTemperature);
-                $('#editExaminationModal input[name="dogPulse"]').val(response.dogPulse);
-                $('#editExaminationModal textarea[name="comments"]').val(response.comments);
-
-                // Store the examination ID in the submit button for later reference
-                $('#editExaminationModal .edit-examination-confirm-btn').data('examination-id', examinationId);
-
-                // Show the modal
-                $('#editExaminationModal').modal('show');
-            }
-        });
-    }
-
-    // Attach event listener to each Edit button in the examinations table
-    $(document).on('click', '.edit-examination-btn', function() {
-        var examinationId = $(this).data('examination-id');
-        openExaminationEditModal(examinationId);
-    });
-
-    // Submit handler for Edit Examination Modal
-    $('#editExaminationModal .edit-examination-confirm-btn').click(function(e) {
-        e.preventDefault();
-
-        var examinationId = $(this).data('examination-id');  // Retrieve the examination ID stored earlier
-        var $form = $('#editExaminationModal form');  // Get the form inside the modal
-
-        // Remove existing error spans
-        $('.error').remove();
-
-        // Send the updated examination data to the server via AJAX
-        $.ajax({
-            url: '/edit_examination/' + examinationId + '/',
-            method: 'POST',
-            data: $form.serialize(),  // Serialize form data for submission
-            headers: { 'X-CSRFToken': getCookie('csrftoken') },
-            success: function(response) {
-                if (response.status === 'success') {
-                    // Hide the modal
-                    $('#editExaminationModal').modal('hide');
-
-                    // Reset the form
-                    $form[0].reset();
-
-                    // Refresh the examination table to show the updated data
-                    fetchTablePage('examinations_page', currentExaminationPage);
-
-
-                } else {
-                   // Display error messages
-                   for (var field in response.errors) {
-                      var errorMessage = response.errors[field];
-                      $('#editExaminationModal input[name="' + field + '"]').after('<span class="error">' + errorMessage + '</span>');
-                   }
-                }
-            }
-        });
-    });
 
     // Handle updating of an Owner
     // Function to open the Edit Owner Modal and populate it with data
@@ -725,7 +654,7 @@ $(document).ready(function() {
                 $('#editOwnerModal textarea[name="comments"]').val(response.comments);
 
                 // Store the owner ID in the submit button for later reference
-$('#editOwnerModal .edit-owner-confirm-btn').attr('data-owner-id', ownerId);
+                $('#editOwnerModal .edit-owner-confirm-btn').attr('data-owner-id', ownerId);
 
                 // Show the modal
                 $('#editOwnerModal').modal('show');

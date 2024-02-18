@@ -24,9 +24,10 @@ var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggl
 flatpickr("#datetimepicker", {
     enableTime: true,
     clickOpens: true,
-    allowInput: false,
+    allowInput: true,
+    dateFormat: "Y-m-d H:i:S",
     timeZone: 'Asia/Jerusalem',
-    defaultDate: new Date(),
+    defaultDate: new Date().setSeconds(0, 0),
     plugins: [new confirmDatePlugin({
             confirmText: "Confirm",
     })]
@@ -134,7 +135,8 @@ $(document).ready(function() {
                  ('0' + (obsDateTime.getMonth() + 1)).slice(-2) + '-' +
                  ('0' + obsDateTime.getDate()).slice(-2) + ' ' +
                  ('0' + obsDateTime.getHours()).slice(-2) + ':' +
-                 ('0' + obsDateTime.getMinutes()).slice(-2);
+                 ('0' + obsDateTime.getMinutes()).slice(-2) + ':' +
+                 ('0' + obsDateTime.getSeconds()).slice(-2);
 
                   // Populate the form fields with the current observation data
                   $('#editObservationModal input[name="obsDateTime"]').val(formattedObsDateTime);

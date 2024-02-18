@@ -59,16 +59,30 @@ def validate_ownerID(value):
 
 
 class Owner(models.Model):
-    ownerSerialNum = models.AutoField(primary_key=True, verbose_name='Owner Serial Number')
-    firstName = models.CharField(max_length=50, verbose_name='First Name')
-    lastName = models.CharField(max_length=50, blank=True, null=True, verbose_name='Last Name')
+    ownerSerialNum = models.AutoField(primary_key=True,
+                                      verbose_name='Owner Serial Number')
+    firstName = models.CharField(max_length=50,
+                                 verbose_name='First Name')
+    lastName = models.CharField(max_length=50, blank=True, null=True,
+                                verbose_name='Last Name')
     # The actual ID number of the person
-    ownerID = models.CharField(max_length=9, blank=True, null=True, unique=True, validators=[validate_ownerID], verbose_name='ID Number')
-    ownerAddress = models.CharField(max_length=70, blank=True, null=True, verbose_name='Address')
-    city = models.CharField(max_length=50, blank=True, null=True, verbose_name='City')
-    phoneNum = models.CharField(max_length=9, blank=True, null=True, validators=[validate_phoneNum], verbose_name='Phone Number')
-    cellphoneNum = models.CharField(max_length=10, blank=True, null=True, validators=[validate_cellphoneNum], verbose_name='Cellphone Number')
-    comments = models.CharField(max_length=200, blank=True, null=True, verbose_name='Comments')
+    ownerID = models.CharField(max_length=9, blank=True, null=True, unique=True,
+                               validators=[validate_ownerID],
+                               verbose_name='ID Number')
+    ownerAddress = models.CharField(max_length=100, blank=True, null=True,
+                                    verbose_name='Address')
+    city = models.CharField(max_length=50, blank=True, null=True,
+                            verbose_name='City')
+    phoneNum = models.CharField(max_length=9, blank=True, null=True,
+                                validators=[validate_phoneNum],
+                                verbose_name='Phone Number')
+    cellphoneNum = models.CharField(max_length=10, blank=True, null=True,
+                                    validators=[validate_cellphoneNum],
+                                    verbose_name='Cellphone Number')
+    comments = models.CharField(max_length=250, blank=True, null=True,
+                                verbose_name='Comments')
+    branch = models.ForeignKey('Branch', on_delete=models.CASCADE,
+                               verbose_name='Branch')
 
     def __str__(self):
         if self.lastName is None:
@@ -80,7 +94,8 @@ class Owner(models.Model):
 class Dog(models.Model):
     GENDER_CHOICES = [
         ('M', 'Male'),
-        ('F', 'Female')
+        ('F', 'Female'),
+        ('', '-')
     ]
 
     IS_NEUTERED_CHOICES = [
@@ -99,7 +114,7 @@ class Dog(models.Model):
     chipNum = models.CharField(max_length=30, unique=True, blank=True, null=True)
     dogName = models.CharField(max_length=35)
     dateOfBirthEst = models.DateField(blank=True, null=True)
-    dateOfArrival = models.DateField(blank=True, null=True, default=timezone.now)
+    dateOfArrival = models.DateField(blank=True, null=True, default=timezone.localtime(timezone.now()).date())
     dateOfVaccination = models.DateField(blank=True, null=True)
     breed = models.CharField(max_length=30, blank=True, null=True)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True, null=True)
@@ -109,6 +124,7 @@ class Dog(models.Model):
     dogImage = models.ImageField(upload_to='dog_pictures', default=DEFAULT_DOG_IMAGE_SOURCE, null=True, blank=True)
     kongDateAdded = models.DateField(blank=True, null=True)
     owner = models.ForeignKey(Owner, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Owner')
+    branch = models.ForeignKey('Branch', on_delete=models.CASCADE, verbose_name='Branch')
 
     # Returns True if the Dog's profile picture is the default.jpg
     def is_default_image(self):
@@ -118,6 +134,10 @@ class Dog(models.Model):
 
     # For insuring dogImage is deleted if requested upon saving
     def save(self, *args, **kwargs):
+        # If chipNum is an empty string, set it to None
+        if self.chipNum == '':
+            self.chipNum = None
+
         self.full_clean()
 
         # Check if dogImage is being deleted (i.e., set to None)
@@ -130,32 +150,45 @@ class Dog(models.Model):
         return f"{self.dogName}"
 
     def clean(self):
-        if self.dateOfBirthEst and self.dateOfBirthEst > timezone.now().date():
+        if self.dateOfBirthEst and self.dateOfBirthEst > timezone.localtime(timezone.now()).date():
             raise ValidationError("dateOfBirthEst must be before or current date.")
+
+    class Meta:
+        unique_together = (('chipNum', 'branch'),)
 
 
 class Camera(models.Model):
-    camID = models.PositiveSmallIntegerField(primary_key=True, verbose_name='Camera ID')
+    camID = models.PositiveSmallIntegerField(verbose_name='Camera ID')
+    branch = models.ForeignKey('Branch', on_delete=models.CASCADE, verbose_name='Branch')
 
     def __str__(self):
-        return f"Camera #{self.camID}"
+        return f"Camera #{self.camID} - ({self.branch})"
 
     class Meta:
-        ordering = ['camID']
+        ordering = ['branch', 'camID']
+        unique_together = (('camID', 'branch'),)
+
+
+# Returns the current date in Jerusalem timezone
+def get_current_date_jerusalem():
+    # Set timezone to 'Asia/Jerusalem'
+    timezone.activate(pytz.timezone('Asia/Jerusalem'))
+    # Return current date in Jerusalem timezone
+    return timezone.localtime().date()
 
 
 class Observes(models.Model):
     dog = models.ForeignKey('Dog', on_delete=models.SET_NULL, null=True, related_name='observers', verbose_name='Dog')
     camera = models.ForeignKey('Camera', on_delete=models.SET_NULL, null=True, related_name='observes', verbose_name='Camera')
-    sessionDate = models.DateField(default=timezone.now, verbose_name='Session Start Date')
+    sessionDate = models.DateField(default=get_current_date_jerusalem, verbose_name='Session Start Date')
     comments = models.CharField(max_length=200, blank=True, null=True, verbose_name='Comments')
 
     # Handling cases where a dog or camera entities were deleted and are empty
     def __str__(self):
         dog_str = str(self.dog) if self.dog else "Unknown dog"
-        camera_str = str(self.camera) if self.camera else "Unknown camera"
+        camera_str = f"Camera #{self.camera.camID}" if self.camera else "Unknown camera"
         formatted_date = self.sessionDate.strftime("%d/%m/%Y")
-        return f"{camera_str} on {dog_str} on {formatted_date}"
+        return f"{camera_str} on {dog_str} ({formatted_date})"
 
     # To ensure both values are always given by a user before changes.
     # They can only be blank because of deletion of Dog or Camera entities
@@ -170,41 +203,64 @@ class Observes(models.Model):
 
 
 class Treatment(models.Model):
-    treatmentID = models.AutoField(primary_key=True, verbose_name='Treatment ID')
-    treatmentName = models.CharField(max_length=50, verbose_name='Treatment Name')
-    treatmentDate = models.DateField(blank=True, null=True, verbose_name='Date of Treatment')
-    treatedBy = models.CharField(max_length=50, verbose_name='Treated By')
-    comments = models.CharField(max_length=250, blank=True, null=True, verbose_name='Comments')
-    dog = models.ForeignKey('Dog', on_delete=models.CASCADE, verbose_name='Dog')
+    treatmentID = models.AutoField(primary_key=True,
+                                   verbose_name='Treatment ID')
+    treatmentName = models.CharField(max_length=50,
+                                     verbose_name='Treatment Name')
+    treatmentDate = models.DateField(blank=True, null=True,
+                                     verbose_name='Date of Treatment',
+                                     default=timezone.localtime(timezone.now()).date())
+    treatedBy = models.CharField(max_length=50,
+                                 verbose_name='Treated By')
+    comments = models.CharField(max_length=250, blank=True, null=True,
+                                verbose_name='Comments')
+    dog = models.ForeignKey('Dog', on_delete=models.CASCADE,
+                            verbose_name='Dog')
 
     def __str__(self):
-        return f"Treatment: '{self.treatmentName}' on {self.dog}, by {self.treatedBy}"
+        return f"'{self.treatmentName}' on {self.dog} (by {self.treatedBy})"
 
 
 class EntranceExamination(models.Model):
-    examinationID = models.AutoField(primary_key=True, verbose_name='Examination ID')
-    examinationDate = models.DateField(default=timezone.now, verbose_name='Examination Date')
-    examinedBy = models.CharField(max_length=50, verbose_name='Examined By')
-    results = models.CharField(max_length=100, blank=True, null=True, verbose_name='Results')
-    dogWeight = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True, verbose_name='Weight')
-    dogTemperature = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True, verbose_name='Temperature')
-    dogPulse = models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='Pulse')
-    comments = models.CharField(max_length=200, blank=True, null=True, verbose_name='Comments')
-    dog = models.ForeignKey('Dog', on_delete=models.CASCADE, verbose_name='Dog')
+    examinationID = models.AutoField(primary_key=True,
+                                     verbose_name='Examination ID')
+    examinationDate = models.DateField(default=timezone.localtime(timezone.now()).date(),
+                                       verbose_name='Examination Date')
+    examinedBy = models.CharField(max_length=50,
+                                  verbose_name='Examined By')
+    results = models.CharField(max_length=150, blank=True, null=True,
+                               verbose_name='Results')
+    dogWeight = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True,
+                                    verbose_name='Weight',
+                                    validators=[MinValueValidator(0), MaxValueValidator(250)],
+                                    help_text='In Kilograms')
+    dogTemperature = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True,
+                                         verbose_name='Temperature',
+                                         validators=[MinValueValidator(0), MaxValueValidator(250)],
+                                         help_text='In Celsius')
+    dogPulse = models.PositiveSmallIntegerField(blank=True, null=True,
+                                                verbose_name='Pulse',
+                                                validators=[MinValueValidator(0), MaxValueValidator(250)],
+                                                help_text='In BPM')
+    comments = models.CharField(max_length=250, blank=True, null=True,
+                                verbose_name='Comments')
+    dog = models.ForeignKey('Dog', on_delete=models.CASCADE,
+                            verbose_name='Dog')
 
     def __str__(self):
         formatted_date = self.examinationDate.strftime("%d/%m/%Y")
-        return f"{self.dog}, examined by {self.examinedBy} on: {formatted_date}"
+        return f"{self.dog} by {self.examinedBy} ({formatted_date})"
 
 
 class Kennel(models.Model):
-    kennelNum = models.PositiveSmallIntegerField(primary_key=True, verbose_name='Kennel Number')
+    kennelNum = models.PositiveSmallIntegerField(verbose_name='Kennel Number')
     kennelImage = models.ImageField(upload_to='kennel_pictures',
                                     default=DEFAULT_KENNEL_IMAGE_SOURCE,
                                     null=True, blank=True,
                                     verbose_name='Kennel Image')
+    branch = models.ForeignKey('Branch', on_delete=models.CASCADE, verbose_name='Branch')
 
-    # Deleting an old image, used in save() below it
+    # Deleting an old image, used in save() below
     def delete_old_image(self):
         if self.kennelImage and hasattr(self.kennelImage, 'path'):
             old_image_path = self.kennelImage.path
@@ -229,18 +285,24 @@ class Kennel(models.Model):
         return self.kennelImage.name.startswith('default_kennel')
 
     def __str__(self):
-        return f"Kennel #{self.kennelNum}"
+        return f"Kennel #{self.kennelNum} ({self.branch})"
 
     class Meta:
-        ordering = ['kennelNum']
+        ordering = ['branch', 'kennelNum']
+        unique_together = (('kennelNum', 'branch'),)
 
 
 class DogPlacement(models.Model):
-    dog = models.ForeignKey('Dog', models.SET_NULL, null=True, verbose_name='Dog')
-    kennel = models.ForeignKey('Kennel', models.SET_NULL, null=True, verbose_name='Kennel')
-    entranceDate = models.DateField(default=timezone.now, verbose_name='Entrance Date')
-    expirationDate = models.DateField(blank=True, null=True, verbose_name='Expiration Date')
-    placementReason = models.CharField(max_length=75, blank=True, null=True, verbose_name='Placement Reason')
+    dog = models.ForeignKey('Dog', models.SET_NULL, null=True,
+                            verbose_name='Dog')
+    kennel = models.ForeignKey('Kennel', models.SET_NULL, null=True,
+                               verbose_name='Kennel')
+    entranceDate = models.DateField(default=timezone.localtime(timezone.now()).date(),
+                                    verbose_name='Entrance Date')
+    expirationDate = models.DateField(blank=True, null=True,
+                                      verbose_name='Expiration Date')
+    placementReason = models.CharField(max_length=75, blank=True, null=True,
+                                       verbose_name='Placement Reason')
 
     # Handling cases where a Kennel or a Dog was deleted, displays "Unknown" instead
     def __str__(self):
@@ -252,9 +314,9 @@ class DogPlacement(models.Model):
         if self.kennel is None:
             kennel_str = "an unknown kennel"
         else:
-            kennel_str = str(self.kennel)
+            kennel_str = str(self.kennel.kennelNum)
 
-        return f"{dog_str} in {kennel_str} entered on {formatted_date}"
+        return f"{dog_str} in {kennel_str} ({formatted_date})"
 
     # Ensures that neither dog nor kennel is None when creating a new DogPlacement instance.
     def save(self, *args, **kwargs):
@@ -301,7 +363,7 @@ class Observation(models.Model):
 
     # References the Observes instance
     observes = models.ForeignKey('Observes', on_delete=models.SET_NULL, null=True, verbose_name='Session')
-    obsDateTime = models.DateTimeField(default=timezone.now, verbose_name='Starting Date and Time', db_index=True)
+    obsDateTime = models.DateTimeField(default=timezone.localtime(timezone.now()), verbose_name='Starting Date and Time', db_index=True)
     sessionDurationInMins = models.PositiveIntegerField(default=2,
                                                         validators=[MinValueValidator(0)], verbose_name='Session Duration (mins)')
     isKong = models.CharField(max_length=1, choices=IS_KONG_CHOICES, blank=True, null=True, default='N', verbose_name='Kong')
@@ -345,7 +407,7 @@ class Observation(models.Model):
         local_time = timezone.localtime(self.obsDateTime, local_tz)
         formatted_date = local_time.strftime("%d/%m/%Y at %H:%M:%S")
         observes_str = str(self.observes) if self.observes else "Unknown dog or camera"
-        return f"Session: [{observes_str}], Observation: {formatted_date}"
+        return f"Session: [{observes_str}] - Observation: {formatted_date}"
 
     class Meta:
         unique_together = ('observes', 'obsDateTime')
@@ -386,7 +448,7 @@ class DogStance(models.Model):
     def __str__(self):
         formatted_time = self.stanceStartTime.strftime("%H:%M:%S")
         observation_str = str(self.observation) if self.observation else "Unknown observation"
-        return f"{observation_str}, starting at {formatted_time}"
+        return f"Starting at {formatted_time} ({observation_str})"
 
     def save(self, *args, **kwargs):
         """
@@ -407,3 +469,27 @@ class News(models.Model):
     title = models.CharField(max_length=200)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    branch = models.ForeignKey('Branch', on_delete=models.CASCADE, verbose_name='Branch')
+
+    def __str__(self):
+        return f"{self.title}"
+
+    class Meta:
+        verbose_name_plural = "News"
+
+
+# Branch model for handling the different branches of the shelter (default: Israel, secondary: Italy)
+class Branch(models.Model):
+    branchName = models.CharField(max_length=20, unique=True, verbose_name='Branch Name')
+
+    # Add more fields later if needed
+    # branchAddress = models.CharField(max_length=100, verbose_name='Branch Address')
+    # branchPhone = models.CharField(max_length=15, blank=True, null=True, verbose_name='Branch Phone Number')
+    # branchEmail = models.EmailField(max_length=50, blank=True, null=True, verbose_name='Branch Email')
+    # branchManager = models.CharField(max_length=50, blank=True, null=True, verbose_name='Branch Manager')
+
+    def __str__(self):
+        return f"{self.branchName}"
+
+    class Meta:
+        verbose_name_plural = "Branch"

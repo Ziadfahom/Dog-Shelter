@@ -16,7 +16,7 @@
 
         <div class="py-3 w-100">
             {% comment %} Header {% endcomment %}
-            <h5 class="text-dark fw-bold text-uppercase">{{ dog_record.owner.firstName }} {{ dog_record.owner.lastName }}</h5>
+            <h5 class="text-dark fw-bold text-uppercase text-center">{{ dog_record.owner.firstName }}{% if dog_record.owner.lastName %} {{ dog_record.owner.lastName }}{% endif %}</h5>
             <hr>
 
             {% comment %} Content {% endcomment %}

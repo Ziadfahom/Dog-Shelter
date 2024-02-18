@@ -5,6 +5,9 @@ from . import views
 
 urlpatterns = [
     path('', views.home_view, name='home'),
+    path('toggle_branch/', views.toggle_branch, name='toggle_branch'),          # Toggle branch
+    path('italy/', views.set_italy_branch, name='set_italy_branch'),            # Set Italy branch
+    path('israel/', views.set_israel_branch, name='set_israel_branch'),         # Set Israel branch
     path('logout/', views.logout_user_view, name='logout'),
     path('accounts/login/', views.login_user_view, name='login'),
     path('register/', views.register_user_view, name='register'),

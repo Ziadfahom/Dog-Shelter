@@ -1,6 +1,7 @@
-{% load static %} {% load group_check %}
+{% load static %}
+{% load group_check %}
 
-<nav class="navbar navbar-expand-lg p-3 custom-navbar">
+<nav class="navbar navbar-expand-lg p-3 custom-navbar {% if request.session.branch == 'Italy' %}italy-branch{% else %}israel-branch{% endif %}">
   <div class="container-fluid">
     {% include 'components/logo.html' %}
 
@@ -103,6 +104,11 @@
               </span>
 
               <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+
+                <a href="{% url 'dogs_app:toggle_branch' %}" id="branch-toggle" class="dropdown-item">
+                    <strong>{% if request.session.branch == 'Italy' %}Switch to Israel{% else %}Switch to Italy{% endif %}</strong>
+                </a>
+
                 <a href="{% url 'dogs_app:update_user_self' %}" class="dropdown-item">
                   <strong>Manage Profile</strong>
                 </a>
@@ -137,3 +143,9 @@
     </div>
   </div>
 </nav>
+
+
+<script type="text/javascript">
+    var toggleBranchUrl = "{% url 'dogs_app:toggle_branch' %}";
+</script>
+<script src="{% static 'dogs_app/js/navbar.js' %}"></script>

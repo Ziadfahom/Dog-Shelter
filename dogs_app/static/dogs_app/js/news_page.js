@@ -4,6 +4,7 @@ $(document).ready(function () {
         "columnDefs": [
             {
                 "targets": 0,
+                "type": "date",
                 "render": function (data, type, row, meta) {
                     const parsedDate = moment(data, ["MMM. D, YYYY, h:mm a", "MMMM D, YYYY, h:mm a", "MMMM D, YYYY, h:mm p"], true);
                     if (parsedDate.isValid()) {
@@ -19,6 +20,10 @@ $(document).ready(function () {
             {
                 "targets": 2,
                 "orderable": false  // Disable sorting for the empty space column
+            },
+            {
+                "targets": 3,
+                "orderable": false  // Disable sorting for the actions column
             }
         ],
         "drawCallback": function (settings) {

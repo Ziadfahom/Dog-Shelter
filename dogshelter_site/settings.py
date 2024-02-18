@@ -61,6 +61,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'dogs_app.set_default_branch_middleware.set_default_branch_middleware',  # Set default branch for the app
 ]
 
 ROOT_URLCONF = 'dogshelter_site.urls'

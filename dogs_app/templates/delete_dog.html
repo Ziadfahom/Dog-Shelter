@@ -6,7 +6,6 @@
     <link href="{% static 'dogs_app/css/delete_dog.css' %}" rel="stylesheet">
 {% endblock %}
 
-{% block breadcrumb %} {% endblock %}
 
 {% block content %}
     <div class="container mt-5 text-center">
@@ -19,8 +18,8 @@
                     <h2 class="card-title text-center w-100">Delete Dog</h2>
                 </div>
                 <div class="card-body py-5">
-                    <p class="text-danger pb-4">Are you sure you want to delete {{ dog.dogName }}?</p>
-                   <div class="d-flex align-items-center">
+                    <p class="text-danger pb-4 h4"><strong>Are you sure you want to delete {{ dog.dogName }}?</strong></p>
+                   <div class="d-flex flex-column align-items-center">
                         <div>
                             {% if dog.dogImage %}
                                 <img src="{{ dog.dogImage.url }}" class="rounded-circle" alt="Image not available" style="width: 7rem; height: 7rem; object-fit: cover;">
@@ -36,10 +35,23 @@
                    <ul class="list-group list-group-flush mt-4">
                        <li class="list-group-item d-flex justify-content-between align-items-center">
                            <strong>Dog Breed: </strong>
-                           <span class="centered-content">{{ dog.breed }}</span>
+                           <span class="centered-content">
+                               {% if dog.breed %}
+                                    {{ dog.breed }}
+                               {% else %}
+                                    -
+                               {% endif %}
+                           </span>
                        </li>
                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                           <strong>Chip Number: </strong><span class="centered-content">{{ dog.chipNum }}</span>
+                           <strong>Chip Number: </strong>
+                           <span class="centered-content">
+                               {% if dog.chipNum %}
+                                    {{ dog.chipNum }}
+                               {% else %}
+                                    -
+                               {% endif %}
+                            </span>
                        </li>
                    </ul>
                    <form method="POST" class="mt-5 d-flex">

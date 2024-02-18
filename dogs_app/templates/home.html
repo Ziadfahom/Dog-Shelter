@@ -18,7 +18,7 @@
         JOIN THE PACK!
       </h1>
       <p class="text-white pt-2" style="font-family: 'Playfair Display', serif;"> <!-- Apply Playfair Display font -->
-        Welcome to DogsWatch, the canine observatory at the heart of Lod, where technology and compassion unite for canine care. With {{ total_dogs }} dogs currently calling this home and {{ toy_treatment_dogs }} engaged in our toy treatment program, our shelter is a vibrant community of recovery and discovery.
+        Welcome to DogsWatch, the canine observatory at the heart of {% if request.session.branch == 'Italy' %}Italy{% else %}Lod{% endif %}, where technology and compassion unite for canine care. With {{ total_dogs }} dogs currently calling this home and {{ toy_treatment_dogs }} engaged in our toy treatment program, our shelter is a vibrant community of recovery and discovery.
       </p>
         <p class="text-white pt-2" style="font-family: 'Playfair Display', serif;">Our innovative AI system doesn't just watch; it understands, tracking each dog's behavior, health, and happiness. These insights light the way to personalized care and help potential adopters find their perfect match.</p>
 
@@ -69,7 +69,7 @@
         </a>
         
         {% if user.is_superuser %}
-          <a href="{% url 'dogs_app:view_news' %}" class="button-cover px-5 ms-2">
+          <a href="{% url 'dogs_app:add_news' %}" class="button-cover px-5 ms-2">
             <span class="text">Share Insights</span>
             <span>Spread News!</span>
           </a>

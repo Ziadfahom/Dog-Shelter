@@ -2,15 +2,14 @@ import json
 import math
 from collections import defaultdict, Counter
 from datetime import datetime, time
-
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import localtime
 from openpyxl import Workbook, load_workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
-from django.db.models import Prefetch, Func, DateField
+from django.db.models import Prefetch
 from django.db.models import Value, CharField, Count, Q
-from django.db.models.functions import Concat, TruncDate, ExtractMonth, TruncDay
+from django.db.models.functions import Concat
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout, get_user_model, update_session_auth_hash
 from django.contrib.auth.models import Group
@@ -41,24 +40,53 @@ DEFAULT_IMAGE_SOURCE = '/profile_pictures/default.jpg'
 DEFAULT_DOG_IMAGE_SOURCE = '/dog_pictures/default_dog.jpg'
 
 # CONSTANTS
-# Number of Dogs/Users/Table Entries we want displayed in a single page across all Paginators
+# Number of Dogs/Users/Table Entries we want displayed in a single page in the Paginator
 ENTRIES_PER_PAGE = 10
+
+
+# View for handling switching between Israel and Italy branches
+def toggle_branch(request):
+    current_branch = request.session.get('branch', 'Israel')
+    new_branch = 'Italy' if current_branch == 'Israel' else 'Israel'
+    request.session['branch'] = new_branch
+    return redirect('dogs_app:home')
+
+
+# View for setting the branch to 'Italy'
+def set_italy_branch(request):
+    request.session['branch'] = 'Italy'
+    return redirect('dogs_app:home')
+
+
+# View for setting the branch to 'Israel'
+def set_israel_branch(request):
+    request.session['branch'] = 'Israel'
+    return redirect('dogs_app:home')
+
+
+# Helper function to get the user's current branch object (Israel/Italy)
+def get_current_branch(request):
+    # Get the current Branch (Israel/Italy)
+    branch_name = request.session.get('branch', 'Israel')  # Default to Israel
+    branch = Branch.objects.get(branchName=branch_name)  # Get the branch object
+
+    return branch
 
 
 # Main Page view for displaying either dog records if  user is logged in,
 # or a login page if user is logged out
 def home_view(request):
-    # Get all the dog records in the database
-    all_dogs = Dog.objects.all().order_by('-dateOfArrival')
+    # Get the current Branch
+    branch = get_current_branch(request)
 
     # Get the total number of dogs
-    total_dogs = Dog.objects.count()
+    total_dogs = Dog.objects.filter(branch=branch).count()
 
-    # Get the number of dogs that have received toy treatments
-    toy_treatment_dogs = Dog.objects.filter(observers__observation__isKong='Y').distinct().count()
+    # Get the number of dogs that have received toy treatments for the selected branch
+    toy_treatment_dogs = Dog.objects.filter(branch=branch).filter(observers__observation__isKong='Y').distinct().count()
 
     # Get all the website News to display them in descending order
-    news_items = News.objects.all().order_by('-created_at')[:3]
+    news_items = News.objects.filter(branch=branch).order_by('-created_at')[:3]
 
     # Checking if user is logged in
     if request.method == 'POST':
@@ -96,7 +124,6 @@ def home_view(request):
         role = get_user_role(request.user) if request.user.is_authenticated else ""
 
         context = {
-            'dogs': all_dogs,
             'total_dogs': total_dogs,
             'toy_treatment_dogs': toy_treatment_dogs,
             'news_items': news_items,
@@ -107,8 +134,11 @@ def home_view(request):
 
 # Logout Users view for displaying a user-logout option if they're already logged in
 def logout_user_view(request):
+    # Get the current Branch, make sure it remains the same after logout
+    branch = get_current_branch(request)
     logout(request)
     messages.success(request, message='You have been logged out..')
+    set_israel_branch(request) if branch.branchName == 'Israel' else set_italy_branch(request)
     return redirect('dogs_app:home')
 
 
@@ -145,6 +175,7 @@ def login_user_view(request):
         form = LoginForm()
     return render(request, 'account/login.html', {'form': form})
 
+
 # User Registration view for new users
 def register_user_view(request):
     if request.method == 'POST':
@@ -170,7 +201,7 @@ def register_user_view(request):
             login(request, user)
 
             messages.success(request, f"Welcome, {username} and thank you for signing up! "
-                                      "You're now a member of our Dogs Shelter community.")
+                                      "You're now a member of our Dogswatch community.")
             return redirect('dogs_app:home')
     else:
         form = SignUpForm()
@@ -207,9 +238,13 @@ def change_password(request):
 @user_passes_test(lambda u: u.is_superuser)
 def add_news(request):
     if request.method == 'POST':
+        # Get the current Branch
+        branch = get_current_branch(request)
+
         news_title = request.POST.get('title')
         news_content = request.POST.get('content')
-        News.objects.create(title=news_title, content=news_content)
+        News.objects.create(title=news_title, content=news_content, branch=branch)
+        messages.success(request, 'News has been added successfully!')
         return redirect('dogs_app:home')
     else:
         form = NewsForm()
@@ -229,7 +264,7 @@ def dog_record_view(request, pk):
             'treatment_set',
             'entranceexamination_set',
             'observers__observation_set',
-            'dogplacement_set__kennel',  # For Cameras related to DogPlacement's kennel
+            'dogplacement_set__kennel',  # For Kennels related to DogPlacement's kennel
             'observers__observation_set__dogstance_set',  # For DogStances related to Observations
         ).get(dogID=pk)
 
@@ -314,8 +349,8 @@ def dog_record_view(request, pk):
         # Initialize Treatment/Examination/Placement/Session(Observes) form when adding new entries
         treatment_form = TreatmentForm(request.POST or None)
         examination_form = EntranceExaminationForm(request.POST or None)
-        placement_form = DogPlacementForm(request.POST or None)
-        session_form = ObservesForm(request.POST or None)
+        placement_form = DogPlacementForm(request.POST or None, request=request)
+        session_form = ObservesForm(request.POST or None, request=request)
 
         # Get page numbers for each table from request
         treatments_page_number = request.GET.get('treatments_page', 1)
@@ -332,7 +367,8 @@ def dog_record_view(request, pk):
         placements_paginator = Paginator(
             DogPlacement.objects.filter(dog=dog_record).order_by('-entranceDate'), MAX_PER_PAGE)
         sessions_paginator = Paginator(
-            Observes.objects.filter(dog=dog_record).prefetch_related('observation_set').order_by('-sessionDate'), MAX_PER_PAGE)
+            Observes.objects.filter(dog=dog_record).prefetch_related('observation_set').order_by('-sessionDate'),
+            MAX_PER_PAGE)
 
         # Get the relevant page
         treatments = treatments_paginator.get_page(treatments_page_number)
@@ -354,7 +390,8 @@ def dog_record_view(request, pk):
 
                     # If this is an AJAX request, send back the new treatments data
                     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                        treatments_data = Treatment.objects.filter(dog=dog_record).order_by('-treatmentDate')[:MAX_PER_PAGE]
+                        treatments_data = Treatment.objects.filter(dog=dog_record).order_by('-treatmentDate')[
+                                          :MAX_PER_PAGE]
                         data = {
                             'data': [render_to_string('_treatment_row.html',
                                                       {'treatment': treatment}) for treatment in treatments_data],
@@ -379,10 +416,12 @@ def dog_record_view(request, pk):
 
                     # If this is an AJAX request, send back the new Examination data
                     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                        examinations_data = EntranceExamination.objects.filter(dog=dog_record).order_by('-examinationDate')[:MAX_PER_PAGE]
+                        examinations_data = EntranceExamination.objects.filter(dog=dog_record).order_by(
+                            '-examinationDate')[:MAX_PER_PAGE]
                         data = {
                             'data': [render_to_string('_examination_row.html',
-                                                      {'examination': examination}) for examination in examinations_data],
+                                                      {'examination': examination}) for examination in
+                                     examinations_data],
                             'pagination': render_to_string('_dog_record_pagination.html',
                                                            {'paginated_data': examinations,
                                                             'param_name': 'examinations_page'})
@@ -405,7 +444,8 @@ def dog_record_view(request, pk):
 
                     # If this is an AJAX request, send back the new Placement data
                     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                        placements_data = DogPlacement.objects.filter(dog=dog_record).order_by('-entranceDate')[:MAX_PER_PAGE]
+                        placements_data = DogPlacement.objects.filter(dog=dog_record).order_by('-entranceDate')[
+                                          :MAX_PER_PAGE]
                         data = {
                             'data': [render_to_string('_placement_row.html',
                                                       {'placement': placement}) for placement in placements_data],
@@ -453,25 +493,29 @@ def dog_record_view(request, pk):
                 'pagination': ''
             }
             if 'treatments_page' in request.GET:
-                data['data'] = [render_to_string('_treatment_row.html', {'treatment': treatment}) for treatment in
-                                treatments]
+                data['data'] = [render_to_string('_treatment_row.html',
+                                                 {'treatment': treatment}) for treatment in treatments]
                 data['pagination'] = render_to_string('_dog_record_pagination.html',
-                                                      {'paginated_data': treatments, 'param_name': 'treatments_page'})
+                                                      {'paginated_data': treatments,
+                                                       'param_name': 'treatments_page'})
             elif 'examinations_page' in request.GET:
-                data['data'] = [render_to_string('_examination_row.html', {'examination': examination}) for examination
-                                in examinations]
+                data['data'] = [render_to_string('_examination_row.html',
+                                                 {'examination': examination}) for examination in examinations]
                 data['pagination'] = render_to_string('_dog_record_pagination.html',
-                                                      {'paginated_data': examinations, 'param_name': 'examinations_page'})
+                                                      {'paginated_data': examinations,
+                                                       'param_name': 'examinations_page'})
             elif 'placements_page' in request.GET:
-                data['data'] = [render_to_string('_placement_row.html', {'placement': placement}) for placement
-                                in placements]
+                data['data'] = [render_to_string('_placement_row.html',
+                                                 {'placement': placement}) for placement in placements]
                 data['pagination'] = render_to_string('_dog_record_pagination.html',
-                                                      {'paginated_data': placements, 'param_name': 'placements_page'})
+                                                      {'paginated_data': placements,
+                                                       'param_name': 'placements_page'})
             elif 'sessions_page' in request.GET:
-                data['data'] = [render_to_string('_session_row.html', {'session': session}) for session
-                                in sessions]
+                data['data'] = [render_to_string('_session_row.html',
+                                                 {'session': session}) for session in sessions]
                 data['pagination'] = render_to_string('_dog_record_pagination.html',
-                                                      {'paginated_data': sessions, 'param_name': 'sessions_page'})
+                                                      {'paginated_data': sessions,
+                                                       'param_name': 'sessions_page'})
             return JsonResponse(data)
 
         # Generate Owner form
@@ -638,7 +682,7 @@ def edit_placement(request, placement_id):
         if request.method == 'POST' and request.user.is_authenticated:
             try:
                 placement = DogPlacement.objects.get(id=placement_id)
-                form = DogPlacementForm(request.POST, instance=placement)
+                form = DogPlacementForm(request.POST, instance=placement, request=request)
                 if form.is_valid():
                     form.save()
                     return JsonResponse({'status': 'success'})
@@ -656,7 +700,8 @@ def edit_placement(request, placement_id):
                 placement = DogPlacement.objects.get(id=placement_id)
                 placement_data = {
                     'status': 'success',
-                    'kennel': serializers.serialize('json', [placement.kennel]) if placement.kennel else None,
+                    'kennel': serializers.serialize('json',
+                                                    [placement.kennel]) if placement.kennel else None,
                     'entranceDate': placement.entranceDate.isoformat() if placement.entranceDate else None,
                     'expirationDate': placement.expirationDate.isoformat() if placement.expirationDate else None,
                     'placementReason': placement.placementReason if placement.placementReason else None,
@@ -677,7 +722,7 @@ def edit_session(request, session_id):
         if request.method == 'POST' and request.user.is_authenticated:
             try:
                 session = Observes.objects.get(id=session_id)
-                form = ObservesForm(request.POST, instance=session)
+                form = ObservesForm(request.POST, instance=session, request=request)
                 if form.is_valid():
                     form.save()
                     return JsonResponse({'status': 'success'})
@@ -711,10 +756,19 @@ def edit_session(request, session_id):
 
 # Handle Editing an Owner
 def edit_owner(request, owner_id):
+    # Get the current Branch
+    branch = get_current_branch(request)
+
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         if request.method == 'POST' and request.user.is_authenticated:
             try:
                 owner = Owner.objects.get(ownerSerialNum=owner_id)
+
+                # Validate that the user is in the correct branch
+                if owner.branch != branch:
+                    messages.error(request, "You must be in the correct branch to edit this owner...")
+                    return redirect('dogs_app:home')
+
                 form = OwnerForm(request.POST, instance=owner)
                 if form.is_valid():
                     form.save()
@@ -731,6 +785,12 @@ def edit_owner(request, owner_id):
         elif request.method == 'GET':
             try:
                 owner = Owner.objects.get(ownerSerialNum=owner_id)
+
+                # Validate that the user is in the correct branch
+                if owner.branch != branch:
+                    messages.error(request, "You must be in the correct branch to edit this owner...")
+                    return redirect('dogs_app:home')
+
                 owner_data = {
                     'status': 'success',
                     'firstName': owner.firstName if owner.firstName else None,
@@ -781,7 +841,8 @@ def view_observations(request, session_id):
                             }
                         }, status=201)
                     except IntegrityError:
-                        return JsonResponse({"status": "error", "errors": "Duplicate Stance Start Time"}, status=400)
+                        return JsonResponse({"status": "error",
+                                             "errors": "Duplicate Stance Start Time"}, status=400)
                 else:
                     return JsonResponse({"status": "error", "errors": stance_form.errors}, status=400)
 
@@ -820,7 +881,8 @@ def view_observations(request, session_id):
 # Handle deleting an Observation
 @require_POST  # Ensures this view can only be accessed with POST request
 def delete_observation(request):
-    if request.method == 'POST' and request.user.is_authenticated and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+    if request.method == 'POST' and request.user.is_authenticated and request.headers.get(
+            'X-Requested-With') == 'XMLHttpRequest':
         observation_id = request.POST.get('observation_id')
         try:
             observation = Observation.objects.get(id=observation_id)
@@ -840,8 +902,8 @@ def edit_observation(request, observation_id):
         # Exclude the file field from the JSON response
         observation_data = observation_form.initial
         # Temporary! Remove the file fields from the JSON response
-        del observation_data['jsonFile'] # TODO: Remove this line once the JSON file is implemented
-        del observation_data['rawVideo'] # TODO: Remove this line once the raw video is implemented
+        del observation_data['jsonFile']  # TODO: Remove this line once the JSON file is implemented
+        del observation_data['rawVideo']  # TODO: Remove this line once the raw video is implemented
         return JsonResponse({"status": "success", "observation": observation_data}, status=200)
 
     elif request.method == 'POST':
@@ -860,9 +922,10 @@ def edit_observation(request, observation_id):
 
 
 # Handle deleting a DogStance
-@require_POST # Ensures this view can only be accessed with POST request
+@require_POST  # Ensures this view can only be accessed with POST request
 def delete_stance(request):
-    if request.method == 'POST' and request.user.is_authenticated and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+    if request.method == 'POST' and request.user.is_authenticated and request.headers.get(
+            'X-Requested-With') == 'XMLHttpRequest':
         stance_id = request.POST.get('stance_id')
         try:
             dog_stance = DogStance.objects.get(id=stance_id)
@@ -891,8 +954,11 @@ def edit_dog_stance(request, stance_id):
             updated_stance = DogStance.objects.get(id=stance_id)
             new_row_html = render_to_string('_observation_row.html', {'stance': updated_stance})
             return JsonResponse(
-               {"status": "success", "stance": stance_form.cleaned_data, "newRowHtml": new_row_html, "observationId": observation_id},
-               status=200)
+                {"status": "success",
+                 "stance": stance_form.cleaned_data,
+                 "newRowHtml": new_row_html,
+                 "observationId": observation_id},
+                status=200)
         else:
             return JsonResponse({"status": "error", "errors": stance_form.errors}, status=400)
 
@@ -921,6 +987,8 @@ def delete_dog_view(request, pk):
 
 
 def add_dog_view(request):
+    branch = get_current_branch(request)
+
     # Check if user is logged in
     if request.user.is_authenticated:
         # Check if the user has the right permissions
@@ -930,19 +998,27 @@ def add_dog_view(request):
         # If form is submitted (i.e., User has filled the form)
         if request.method == 'POST':
             # Initialize the form
-            form = AddDogForm(request.POST, request.FILES)
+            form = AddDogForm(request.POST, request.FILES, request=request)
             # Validate the form inputs
             if form.is_valid():
-                # Save new dog details to database + display success message
-                form.save()
-                messages.success(request, f"{form.cleaned_data['dogName']} Has Been Added Successfully...")
+                try:
+                    # Create Dog instance but don't save to DB yet
+                    dog_instance = form.save(commit=False)
+                    # Assign the current branch to the Dog
+                    dog_instance.branch = branch
+                    # Save the Dog instance to the database
+                    dog_instance.save()
+                    messages.success(request, f"{form.cleaned_data['dogName']} Has Been Added Successfully...")
+                except Exception as e:
+                    messages.error(request, f"Error occurred while adding Dog: {str(e)}")
+
                 return redirect('dogs_app:view_dogs')
             # If form is not valid, render errors
             else:
                 return render(request, 'add_dog.html', {"form": form})
         # If request is not POST (i.e., GET), just render the form
         else:
-            form = AddDogForm()
+            form = AddDogForm(request=request)
             return render(request, 'add_dog.html', {"form": form})
     # If user is not logged in/authenticated, show an error message and redirect to home.
     else:
@@ -960,7 +1036,7 @@ def update_dog_view(request, pk):
 
         # Grab the Dog record
         current_dog = Dog.objects.get(dogID=pk)
-        form = AddDogForm(request.POST or None, request.FILES or None, instance=current_dog)
+        form = AddDogForm(request.POST or None, request.FILES or None, instance=current_dog, request=request)
 
         # Check if the "deleteImage" button was clicked
         if 'deleteImage' in request.POST:
@@ -994,8 +1070,8 @@ def update_dog_view(request, pk):
 @user_passes_test(lambda u: u.is_superuser)
 def view_users(request):
     # Retrieve sorting criteria from request
-    order_by = request.GET.get('order_by', 'username') # Default sort field
-    direction = request.GET.get('direction', 'asc') # Default sort direction
+    order_by = request.GET.get('order_by', 'username')  # Default sort field
+    direction = request.GET.get('direction', 'asc')  # Default sort direction
 
     # Retrieve all the users in the system, prefetch their groups, and select their profiles
     users = User.objects.all().prefetch_related('groups').select_related('profile')
@@ -1272,8 +1348,17 @@ def update_user_self_view(request):
 # Page for editing the news from the homepage. Only visible to Admins
 @user_passes_test(lambda u: u.is_superuser)
 def update_news(request, news_id):
+    # Get the news story to edit
     news = get_object_or_404(News, pk=news_id)
-    if request.method == 'POST':
+
+    # Get the current Branch
+    branch = get_current_branch(request)
+
+    if news.branch != branch:
+        messages.error(request, "You must be in the correct branch to edit this news story...")
+        return redirect('dogs_app:home')
+
+    elif request.method == 'POST':
         news.title = request.POST['title']
         news.content = request.POST['content']
         news.save()
@@ -1281,19 +1366,29 @@ def update_news(request, news_id):
         return redirect('dogs_app:home')
     else:
         form = NewsForm(instance=news)
-    return render(request, 'update_news.html', {'news': news, 'form': form})
+        return render(request, 'update_news.html', {'news': news, 'form': form})
 
 
 # View for deleting a News story from the homepage. Only available to Admins
 @user_passes_test(lambda u: u.is_superuser)
 def delete_news(request, news_id):
+    # Get the news story to delete
     news = get_object_or_404(News, pk=news_id)
-    if request.method == 'POST':
+
+    # Get the current Branch
+    branch = get_current_branch(request)
+
+    if news.branch != branch:
+        messages.error(request, "You must be in the correct branch to delete this news story...")
+        return redirect('dogs_app:home')
+
+    elif request.method == 'POST':
         news_title = news.title
         news.delete()
         messages.success(request, f"News Story: '{news_title}' has been successfully deleted...")
         return redirect('dogs_app:home')
-    return render(request, 'delete_news.html', {'news': news})
+    else:
+        return render(request, 'delete_news.html', {'news': news})
 
 
 # Render Graphs page
@@ -1303,7 +1398,6 @@ def graphs(request):
 
 # View for the Dynamic Graphs page
 def chart_data(request):
-
     # Prepare a dictionary in JSON for distribution of dogs by gender,  vaccination, isneutered, and isdangerous
     health_metrics = get_health_metrics_dict()
 
@@ -1319,7 +1413,8 @@ def chart_data(request):
     top_stance_position_combos = fetch_top_stance_position_combos(obs_with_kong, obs_without_kong)
 
     # Getting breeds and their counts
-    dog_breeds = Dog.objects.values('breed').annotate(total=Count('breed')).exclude(breed='').exclude(breed__isnull=True).order_by('-total')
+    dog_breeds = Dog.objects.values('breed').annotate(total=Count('breed')).exclude(breed='').exclude(
+        breed__isnull=True).order_by('-total')
 
     # Count of DogStances with and without kong toy, then make sure we use the front-end names of the values
     stances_with_kong = DogStance.objects.filter(observation__in=obs_with_kong).values('dogStance').annotate(
@@ -1363,7 +1458,6 @@ def map_stances_to_frontend(stances):
 
 # Returns the top dog stances, parameter to set limit
 def get_top_dog_stances(limit=5):
-
     # Fetch and count the occurrences of each dogStance from the database for Dog Stances Across The Week
     dog_stance_counts = DogStance.objects.values('dogStance').annotate(total_count=Count('dogStance')).order_by(
         '-total_count')
@@ -1509,31 +1603,42 @@ def exclude_unwanted(attribute):
 
 
 # Fetch unique values for a given dog attribute.
-def get_unique_values(attribute):
-    return Dog.objects.exclude(exclude_unwanted(attribute)).values(attribute).distinct().order_by(attribute)
+def get_unique_values(request, attribute):
+    branch = get_current_branch(request)
+
+    return (Dog.objects.filter(owner__branch=branch)
+            .exclude(exclude_unwanted(attribute))
+            .values(attribute).distinct().order_by(attribute))
 
 
 # Fetch unique owner values.
-def get_unique_owners():
-    return Dog.objects.exclude(owner__isnull=True).values('owner__firstName',
-                                                          'owner__lastName',
-                                                          'owner').distinct().order_by('owner__firstName',
-                                                                                       'owner__lastName')
+def get_unique_owners(request):
+    branch = get_current_branch(request)
+
+    return (Dog.objects.filter(owner__branch=branch)
+            .exclude(owner__isnull=True)
+            .values('owner__firstName',
+                    'owner__lastName',
+                    'owner').distinct().order_by('owner__firstName',
+                                                 'owner__lastName'))
 
 
 # Prepare a dictionary in JSON for distribution of dogs
 # by gender,  vaccination, isneutered, and isdangerous. Used for health_metrics_chart.
 def get_health_metrics_dict():
     # Fetch required attributes of all dogs
-    dogs_data = Dog.objects.values_list('gender',  'dateOfVaccination', 'isNeutered', 'isDangerous')
+    dogs_data = Dog.objects.values_list('gender', 'dateOfVaccination', 'isNeutered', 'isDangerous')
 
     # Initialize data structure
     health_metrics_dict = {
-        'gender': {'M': 0, 'F': 0},
-        'vaccinated': {'M': {'Y': 0, 'N': 0}, 'F': {'Y': 0, 'N': 0}},
+        'gender': {'M': 0, 'F': 0, '-': 0},
+        'vaccinated': {'M': {'Y': 0, 'N': 0}, 'F': {'Y': 0, 'N': 0}, '-': {'Y': 0, 'N': 0}},
         'neutered': {
             'M': {'Y': {'Y': 0, 'N': 0, '-': 0}, 'N': {'Y': 0, 'N': 0, '-': 0}},
-            'F': {'Y': {'Y': 0, 'N': 0, '-': 0}, 'N': {'Y': 0, 'N': 0, '-': 0}}}
+            'F': {'Y': {'Y': 0, 'N': 0, '-': 0}, 'N': {'Y': 0, 'N': 0, '-': 0}},
+            '-': {'Y': {'Y': 0, 'N': 0, '-': 0}, 'N': {'Y': 0, 'N': 0, '-': 0}}
+        }
+
         # 'dangerous': {
         #     'M': {'Y': {'Y': {'Y': 0, 'N': 0, '-': 0}, 'N': {'Y': 0, 'N': 0, '-': 0}, '-': {'Y': 0, 'N': 0, '-': 0}},
         #           'N': {'Y': {'Y': 0, 'N': 0, '-': 0}, 'N': {'Y': 0, 'N': 0, '-': 0}, '-': {'Y': 0, 'N': 0, '-': 0}}},
@@ -1543,7 +1648,8 @@ def get_health_metrics_dict():
 
     # Loop through each dog entry to populate chart_data
     for gender, dateOfVaccination, isNeutered, isDangerous in dogs_data:
-        # Gender can't be Null/empty
+        # Handle Null/empty gender
+        gender = gender if gender in ['M', 'F'] else '-'
 
         # Calculate if vaccination is within the last 365 days or not, if null set as No as well
         if dateOfVaccination:
@@ -1581,26 +1687,31 @@ def get_health_metrics_dict():
 
 # View for displaying all News in a dedicated news page
 def view_news(request):
-    news_list = News.objects.all().order_by('-created_at')  # Fetch news in descending order
+    # Get the current Branch
+    branch = get_current_branch(request)
+
+    news_list = News.objects.filter(branch=branch).order_by('-created_at')  # Fetch news in descending order
     context = {'news_list': news_list}
     return render(request, 'news_page.html', context)
 
 
 # View for viewing all dogs in a table
 def view_dogs(request):
+    branch = get_current_branch(request)
+
     # Check if user is logged in
     if request.user.is_authenticated:
         # Apply sorting by attributes
         sort_by = request.GET.get('sort_by', '-dateOfArrival')
 
         # Fetch all filtered dogs
-        dog_filter = DogFilter(request.GET, queryset=Dog.objects.all().order_by(sort_by))
+        dog_filter = DogFilter(request.GET, queryset=Dog.objects.filter(branch=branch).order_by(sort_by))
         filtered_dogs = dog_filter.qs
 
         # Prepare a list of unique breeds, fur colors and owners, exclude redundant results
-        unique_breeds = get_unique_values('breed')
-        unique_colors = get_unique_values('furColor')
-        unique_owners = get_unique_owners()
+        unique_breeds = get_unique_values(request, 'breed')
+        unique_colors = get_unique_values(request, 'furColor')
+        unique_owners = get_unique_owners(request)
 
         # Pagination logic
         paginator = Paginator(filtered_dogs, ENTRIES_PER_PAGE)
@@ -1645,12 +1756,14 @@ def unspecified_filter(dogs, field_name, value):
 
 # Handling Dog Filtering in the view_dogs page
 def filter_dogs(request):
+    branch = get_current_branch(request)
+
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         # Apply sorting by attributes
         sort_by = request.GET.get('sort_by', '-dateOfArrival')
 
         # Initialize queryset
-        dogs = Dog.objects.all().order_by(sort_by)
+        dogs = Dog.objects.filter(branch=branch).order_by(sort_by)
 
         # Date filtering
         for field in ['dateOfArrival', 'dateOfVaccination', 'kongDateAdded']:
@@ -1735,8 +1848,8 @@ def export_dogs_json(request):
             dog_ids = json.loads(request.POST.get('dog_ids'))
 
             # Use select_related and prefetch_related for optimization and fetching all associated entities
-            dogs = Dog.objects\
-                .select_related('owner')\
+            dogs = Dog.objects \
+                .select_related('owner') \
                 .prefetch_related('entranceexamination_set',
                                   'treatment_set',
                                   'dogplacement_set__kennel',
@@ -1744,7 +1857,7 @@ def export_dogs_json(request):
                                            queryset=Observes.objects.prefetch_related(
                                                Prefetch('observation_set',
                                                         queryset=Observation.objects
-                                                        .prefetch_related('dogstance_set')))))\
+                                                        .prefetch_related('dogstance_set'))))) \
                 .filter(dogID__in=dog_ids)
 
             # Serialize dogs
@@ -1806,7 +1919,8 @@ def export_dogs_excel(request):
                     cell.fill = header_fill
                     cell.alignment = center_aligned
                     cell.border = thin_border
-                    ws.column_dimensions[col_letter].width = 15 if header not in ['Gender', 'Neutered', 'Dangerous'] else 10
+                    ws.column_dimensions[col_letter].width = 15 if header not in ['Gender', 'Neutered',
+                                                                                  'Dangerous'] else 10
 
                 # Check if dogs queryset is empty
                 if not dogs.exists():
@@ -1906,15 +2020,18 @@ def import_dogs_excel(request):
                             is_dangerous_value = ''
 
                             if row[6].value:
-                                gender_value = 'M' if row[6].value.lower() in ['male', 'm'] or row[6].value in ['זכר', 'ז'] \
+                                gender_value = 'M' if row[6].value.lower() in ['male', 'm'] or row[6].value in ['זכר',
+                                                                                                                'ז'] \
                                     else 'F' if row[6].value.lower() in ['female', 'f'] or row[6].value in ['נקבה', 'נ'] \
                                     else 'M'
                             if row[8].value:
-                                is_neutered_value = 'Y' if row[8].value.lower() in ['yes', 'y'] or row[8].value in ['כן', 'כ'] \
+                                is_neutered_value = 'Y' if row[8].value.lower() in ['yes', 'y'] or row[8].value in [
+                                    'כן', 'כ'] \
                                     else 'N' if row[8].value.lower() in ['no', 'n'] or row[8].value in ['לא', 'ל'] \
                                     else ''
                             if row[9].value:
-                                is_dangerous_value = 'Y' if row[9].value.lower() in ['yes', 'y'] or row[9].value in ['כן', 'כ'] \
+                                is_dangerous_value = 'Y' if row[9].value.lower() in ['yes', 'y'] or row[9].value in [
+                                    'כן', 'כ'] \
                                     else 'N' if row[9].value.lower() in ['no', 'n'] or row[9].value in ['לא', 'ל'] \
                                     else ''
 
@@ -1923,7 +2040,7 @@ def import_dogs_excel(request):
                                 date_of_arrival_value = timezone.now().date()
 
                             # dog_image_url = None if row[10].value is None else '/static/img/' + row[10].value
-                            dog_image_url = None # TO-DO Work on Images
+                            dog_image_url = None  # TO-DO Work on Images
 
                             dog_data = {
                                 'chipNum': row[0].value,
@@ -1986,6 +2103,7 @@ def import_dogs_excel(request):
 
 # View for handling JSON file imports in view_dogs page
 def import_dogs_json(request):
+    branch = get_current_branch(request)
     if request.method == 'POST':
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             try:
@@ -2030,10 +2148,12 @@ def import_dogs_json(request):
                                         # If owner already exists, update the owner info
                                         for k, v in owner_info.items():
                                             setattr(owner, k, v)
+                                        owner.branch = branch
                                         owner.save()
                                 else:
                                     # ownerID not provided, create an owner without one
                                     owner = Owner(**owner_info)
+                                    owner.branch = branch
                                     owner.save()
 
                             # Extract and validate dog data from dog_info
@@ -2093,6 +2213,7 @@ def import_dogs_json(request):
                                         if not created:
                                             # If kennel already exists, update the kennel info
                                             kennel.kennelImage = kennel_image
+                                            kennel.branch = branch
                                             kennel.save()
 
                                     new_dogPlacement = DogPlacement(**dogPlacement_info, dog=new_dog, kennel=kennel)
@@ -2119,7 +2240,7 @@ def import_dogs_json(request):
 
                                     camera = None
                                     if camID:
-                                        camera, created = Camera.objects.get_or_create(camID=camID)
+                                        camera, created = Camera.objects.get_or_create(camID=camID, branch=branch)  # TO-DO: Check if this is correct
 
                                     new_observes = Observes(**observes_data, dog=new_dog, camera=camera)
                                     new_observes.full_clean()

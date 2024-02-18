@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block head %}
-    <title>DogsWatch | Edit Owner</title>
+    <title>DogsWatch | Edit Camera</title>
     <link rel="stylesheet" href="{% static 'portal_app/css/simple_styles.css' %}">
 {% endblock %}
 
@@ -17,15 +17,15 @@
                 <div class="container mt-3">
                     <div class="row">
                         <div class="col-12">
-                            <a href="{% url 'portal_app:list-owners' %}?page={{ page }}&sort={{ sort }}&search={{ search }}" class="btn btn-secondary mb-3">Back</a>
+                            <a href="{% url 'portal_app:list-cameras' %}?page={{ page }}&sort={{ sort }}&search={{ search }}" class="btn btn-secondary mb-3">Back</a>
                         </div>
                     </div>
                 </div>
 
                 <!-- Form -->
                 <div class="form-container">
-                    <h2>Edit Owner</h2>
-                    <form method="post" novalidate>
+                    <h2>Edit Camera</h2>
+                    <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         {{ form.as_p }}
                         <button type="submit" class="btn btn-primary w-100">Save</button>
@@ -35,4 +35,3 @@
         </div>
     </div>
 {% endblock %}
-
