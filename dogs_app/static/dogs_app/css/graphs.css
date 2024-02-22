@@ -151,3 +151,16 @@ h1 {
 #chart_dogStance_dogPosition_with_without {
     margin-bottom: 2rem;
 }
+
+.dropdown-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    margin-bottom: 1rem;
+    margin-top: -1rem;
+}
+.dropdown-container label {
+    margin-right: 2rem;
+    font-size: 1.4em;
+}

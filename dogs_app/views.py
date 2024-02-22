@@ -815,6 +815,7 @@ def edit_owner(request, owner_id):
 # Handle Observations display
 def view_observations(request, session_id):
     if request.user.is_authenticated:
+        print("5555555555555")
         dog_stances = DogStance.objects.all().order_by('stanceStartTime')
         observations = Observation.objects.filter(observes_id=session_id).prefetch_related(
             Prefetch('dogstance_set', queryset=dog_stances, to_attr='related_dog_stances')
@@ -826,6 +827,7 @@ def view_observations(request, session_id):
                 # Handle DogStance form submission via AJAX
                 stance_form = DogStanceForm(request.POST or None)
                 if stance_form.is_valid():
+                    print("1111111111")
                     try:
                         new_stance = stance_form.save(commit=False)
                         new_stance.observation_id = request.POST.get('observation_id')
@@ -841,22 +843,30 @@ def view_observations(request, session_id):
                             }
                         }, status=201)
                     except IntegrityError:
+                        print("3333333333")
                         return JsonResponse({"status": "error",
                                              "errors": "Duplicate Stance Start Time"}, status=400)
+                    except Exception as e:
+                        print("4444444444444")
+                        return JsonResponse({"status": "error", "errors": str(e)}, status=400)
                 else:
+                    print("22222222222222")
                     return JsonResponse({"status": "error", "errors": stance_form.errors}, status=400)
 
             else:
+                print("66666666666666")
                 stance_form = DogStanceForm()
 
             observation_form = ObservationForm(request.POST or None, request.FILES or None)
             if observation_form.is_valid():
+                print("777777777777777777")
                 new_observation = observation_form.save(commit=False)
                 new_observation.observes = session_instance
                 new_observation.save()
                 messages.success(request, 'Success! Observation has been successfully added.')
                 return redirect('dogs_app:view_observations', session_id=session_id)
         else:
+            print("888888888888888888888888888")
             observation_form = ObservationForm()
             stance_form = DogStanceForm()
 
@@ -897,6 +907,7 @@ def delete_observation(request):
 # Handle editing an Observation
 def edit_observation(request, observation_id):
     if request.method == 'GET':
+        print("99999999999999999")
         observation = Observation.objects.get(id=observation_id)
         observation_form = ObservationForm(instance=observation)
         # Exclude the file field from the JSON response
@@ -907,8 +918,10 @@ def edit_observation(request, observation_id):
         return JsonResponse({"status": "success", "observation": observation_data}, status=200)
 
     elif request.method == 'POST':
+        print("000000000000000000")
         observation_form = ObservationForm(request.POST or None, instance=Observation.objects.get(id=observation_id))
         if observation_form.is_valid():
+            print("valid!!")
             observation_form.save()
             # Get the updated observation
             updated_observation = Observation.objects.get(id=observation_id)
@@ -918,6 +931,7 @@ def edit_observation(request, observation_id):
                 {"status": "success", "observation": observation_form.cleaned_data, "newRowHtml": new_row_html},
                 status=200)
         else:
+            print("Not valid!!")
             return JsonResponse({"status": "error", "errors": observation_form.errors}, status=400)
 
 
@@ -1398,49 +1412,62 @@ def graphs(request):
 
 # View for the Dynamic Graphs page
 def chart_data(request):
+    branch = get_current_branch(request)
     # Prepare a dictionary in JSON for distribution of dogs by gender,  vaccination, isneutered, and isdangerous
-    health_metrics = get_health_metrics_dict()
+    health_metrics = get_health_metrics_dict(request=request)
 
     # Get all the Dogs that have received a Kong Toy
-    dogs_with_kong = Dog.objects.filter(kongDateAdded__isnull=False)
+    dogs_with_kong = Dog.objects.filter(branch=branch, kongDateAdded__isnull=False)
 
+    # ---Dog Stances With/Without Kong Charts---
     # Get all Observations with and without a Kong Toy
-    obs_with_kong = Observation.objects.filter(isKong='Y', obsDateTime__isnull=False)
-    obs_without_kong = Observation.objects.filter(isKong='N', obsDateTime__isnull=False)
-
-    # Fetch a dictionary of the top combined stance+position in DogStances,
-    # with their counts of "with" and "without" kong individually
-    top_stance_position_combos = fetch_top_stance_position_combos(obs_with_kong, obs_without_kong)
-
-    # Getting breeds and their counts
-    dog_breeds = Dog.objects.values('breed').annotate(total=Count('breed')).exclude(breed='').exclude(
-        breed__isnull=True).order_by('-total')
+    obs_with_kong = Observation.objects.filter(observes__dog__branch=branch, isKong='Y', obsDateTime__isnull=False)
+    obs_without_kong = Observation.objects.filter(observes__dog__branch=branch, isKong='N', obsDateTime__isnull=False)
 
     # Count of DogStances with and without kong toy, then make sure we use the front-end names of the values
     stances_with_kong = DogStance.objects.filter(observation__in=obs_with_kong).values('dogStance').annotate(
         total=models.Count('observation'))
     stances_with_kong = map_stances_to_frontend(list(stances_with_kong))
-
     stances_without_kong = DogStance.objects.filter(observation__in=obs_without_kong).values('dogStance').annotate(
         total=models.Count('observation'))
     stances_without_kong = map_stances_to_frontend(list(stances_without_kong))
 
+    # Get a dictionary with count of dogStances by years for the "Dog Stances With/Without Kong" Charts yearly options
+    yearly_stances_with_kong, yearly_stances_without_kong = get_stances_count_by_year(request=request)
+
+    # For the drop-down yearly selection
+    years_with_kong = sorted(yearly_stances_with_kong.keys(), reverse=True)
+    years_without_kong = sorted(yearly_stances_without_kong.keys(), reverse=True)
+    # -----------------------------------------
+
+    # Fetch a dictionary of the top combined stance+position in DogStances,
+    # with their counts of "with" and "without" kong individually
+    top_stance_position_combos = fetch_top_stance_position_combos(obs_with_kong, obs_without_kong, request=request)
+
+    # Getting breeds and their counts
+    dog_breeds = Dog.objects.filter(branch=branch).values('breed').annotate(total=Count('breed')).exclude(breed='').exclude(
+        breed__isnull=True).order_by('-total')
+
     # Define the limit for the required top dog stances then fetch
     # those values for "Dog Stances Across The Week" Graph
     TOP_STANCES_LIMIT = 5
-    top_dog_stances = get_top_dog_stances(TOP_STANCES_LIMIT)
+    top_dog_stances = get_top_dog_stances(TOP_STANCES_LIMIT, request=request)
 
-    stance_count_by_day = get_stance_count_by_day(top_dog_stances)
+    stance_count_by_day = get_stance_count_by_day(top_dog_stances, request=request)
 
     # Preparing data to be used in the frontend
     data = {
         'dogs_with_kong': serializers.serialize('json', dogs_with_kong),
-        'stances_with_kong': list(stances_with_kong),
-        'stances_without_kong': list(stances_without_kong),
-        'dog_breeds': list(dog_breeds),
-        'stance_count_by_day': stance_count_by_day,
-        'top_stance_position_combos': top_stance_position_combos,
-        'health_metrics': health_metrics,
+        'stances_with_kong': list(stances_with_kong),  # Dog Stances With Kong (1) Chart
+        'yearly_stances_with_kong': yearly_stances_with_kong,  # Dog Stances With Kong (2) Chart
+        'years_with_kong': years_with_kong,  # Dog Stances With Kong (3) Chart (for drop-down yearly selection)
+        'stances_without_kong': list(stances_without_kong),  # Dog Stances Without Kong (1) Chart
+        'yearly_stances_without_kong': yearly_stances_without_kong,  # Dog Stances Without Kong (2) Chart
+        'years_without_kong': years_without_kong,  # Dog Stances Without Kong (3) Chart (for drop-down yearly selection)
+        'dog_breeds': list(dog_breeds),  # Dog Breeds Distribution Chart
+        'stance_count_by_day': stance_count_by_day,  # Dog Stances by Day (Across The Week)
+        'top_stance_position_combos': top_stance_position_combos, # Most Common General Behaviors Chart
+        'health_metrics': health_metrics,  # Comprehensive Health & Safety Profile of Our Canines Chart
     }
 
     return JsonResponse(data)
@@ -1456,10 +1483,72 @@ def map_stances_to_frontend(stances):
     return stances
 
 
+# Fetch two dictionaries with the total counts of dogStances by years - with and without kong toys
+# (for the ("Dog Stances With Kong" Chart)
+def get_stances_count_by_year(request):
+    branch = get_current_branch(request)
+
+    # Get all Observations with and without a Kong Toy
+    obs_with_kong = Observation.objects.filter(observes__dog__branch=branch, isKong='Y', obsDateTime__isnull=False)
+    obs_without_kong = Observation.objects.filter(observes__dog__branch=branch, isKong='N', obsDateTime__isnull=False)
+
+    # Get all DogStances associated with these Observations
+    stances_with_kong = DogStance.objects.filter(observation__in=obs_with_kong)
+    stances_without_kong = DogStance.objects.filter(observation__in=obs_without_kong)
+
+    # Extract year in Python and count DogStances by year and type for the "Dog Stances With Kong" Chart
+    stances_with_kong_grouped_by_year = {}
+    for stance in stances_with_kong:
+        year = stance.observation.obsDateTime.year if stance.observation.obsDateTime else None
+        if year not in stances_with_kong_grouped_by_year:
+            stances_with_kong_grouped_by_year[year] = {}
+
+        dog_stance = stance.dogStance
+        if dog_stance not in stances_with_kong_grouped_by_year[year]:
+            stances_with_kong_grouped_by_year[year][dog_stance] = 0
+
+        stances_with_kong_grouped_by_year[year][dog_stance] += 1
+
+    # Extract year in Python and count DogStances by year and type for the "Dog Stances Without Kong" Chart
+    stances_without_kong_grouped_by_year = {}
+    for stance in stances_without_kong:
+        year = stance.observation.obsDateTime.year if stance.observation.obsDateTime else None
+        if year not in stances_without_kong_grouped_by_year:
+            stances_without_kong_grouped_by_year[year] = {}
+
+        dog_stance = stance.dogStance
+        if dog_stance not in stances_without_kong_grouped_by_year[year]:
+            stances_without_kong_grouped_by_year[year][dog_stance] = 0
+
+        stances_without_kong_grouped_by_year[year][dog_stance] += 1
+
+    # Convert the counts to the frontend format
+    formatted_stances_with_kong = {
+        year: map_stances_to_frontend([
+            {'dogStance': stance, 'total': total}
+            for stance, total in year_stances.items()
+        ])
+        for year, year_stances in stances_with_kong_grouped_by_year.items()
+    }
+
+    formatted_stances_without_kong = {
+        year: map_stances_to_frontend([
+            {'dogStance': stance, 'total': total}
+            for stance, total in year_stances.items()
+        ])
+        for year, year_stances in stances_without_kong_grouped_by_year.items()
+    }
+
+    return formatted_stances_with_kong, formatted_stances_without_kong
+
+
 # Returns the top dog stances, parameter to set limit
-def get_top_dog_stances(limit=5):
+def get_top_dog_stances(limit=5, request=None):
+    branch = get_current_branch(request) if request else 'Israel'
+
+    dogs = Dog.objects.filter(branch=branch)
     # Fetch and count the occurrences of each dogStance from the database for Dog Stances Across The Week
-    dog_stance_counts = DogStance.objects.values('dogStance').annotate(total_count=Count('dogStance')).order_by(
+    dog_stance_counts = DogStance.objects.values('dogStance').filter(observation__observes__dog__in=dogs).annotate(total_count=Count('dogStance')).order_by(
         '-total_count')
 
     # Create a list to store the top X dogStances
@@ -1475,7 +1564,9 @@ def get_top_dog_stances(limit=5):
 
 
 # Get a dictionary of each Dog Stance's occurrences in every day of the week, for a selected list of Stances
-def get_stance_count_by_day(top_dog_stances):
+def get_stance_count_by_day(top_dog_stances, request):
+    branch = get_current_branch(request)
+    dogs = Dog.objects.filter(branch=branch)
     days_of_week = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday']
 
     # Initialize a dictionary to hold the stance count for each day of the week
@@ -1486,8 +1577,7 @@ def get_stance_count_by_day(top_dog_stances):
             stance_count_by_day[day][stance] = 0
 
     # Query the database to get the stances and their observation dates
-    stances_with_datetime = DogStance.objects.select_related('observation').values('observation__obsDateTime',
-                                                                                   'dogStance')
+    stances_with_datetime = DogStance.objects.filter(observation__observes__dog__in=dogs).select_related('observation').values('observation__obsDateTime', 'dogStance')
     # Mapping of Python's datetime.weekday() indexes to actual day names
     days_of_week_mapping = {0: 'Monday', 1: 'Tuesday', 2: 'Wednesday', 3: 'Thursday', 4: 'Friday', 5: 'Saturday',
                             6: 'Sunday'}
@@ -1518,6 +1608,7 @@ def get_stance_count_by_day(top_dog_stances):
         if stance in top_dog_stances:
             stance_count_by_day[day_name][stance] += 1
 
+
     transformed_stance_count_by_day = {}
 
     for day, stances in stance_count_by_day.items():
@@ -1526,37 +1617,31 @@ def get_stance_count_by_day(top_dog_stances):
             transformed_key = stance_name_mapping.get(stance_key, "Unknown")
             transformed_stances[transformed_key] = count
         transformed_stance_count_by_day[day] = transformed_stances
-
     return transformed_stance_count_by_day
 
 
 # Helper function for fetching a top 10 list of combined dogStances + dogPositions and their counts with/without kongs
-def fetch_top_stance_position_combos(obs_with_kong, obs_without_kong):
+def fetch_top_stance_position_combos(obs_with_kong, obs_without_kong, request):
+    branch = get_current_branch(request)
+    branch_dogs = Dog.objects.filter(branch=branch)
+
     # Define the mapping dictionaries for the final display
     stance_choices_dict = dict(DogStance.DOG_STANCE_CHOICES)
     location_choices_dict = dict(DogStance.DOG_LOCATION_CHOICES)
 
     # Fetch a list of top stance+location combinations with kong
-    stance_pos_combo_with = DogStance.objects \
-                                .filter(observation__in=obs_with_kong) \
-                                .annotate(stance_location=Concat('dogStance',
-                                                                 Value(' + '),
-                                                                 'dogLocation',
-                                                                 output_field=CharField())) \
-                                .values('stance_location') \
-                                .annotate(count=Count('stance_location')) \
-                                .order_by('-count')[:10]
+    stance_pos_combo_with = DogStance.objects.filter(observation__observes__dog__in=branch_dogs,
+                                                     observation__in=obs_with_kong).annotate(stance_location=Concat('dogStance',
+                                                                                                                    Value(' + '),
+                                                                                                                    'dogLocation',
+                                                                                                                    output_field=CharField())).values('stance_location').annotate(count=Count('stance_location')).order_by('-count')[:10]
 
     # Fetch a list of top stance+location combinations with kong
-    stance_pos_combo_without = DogStance.objects \
-                                   .filter(observation__in=obs_without_kong) \
-                                   .annotate(stance_location=Concat('dogStance',
-                                                                    Value(' + '),
-                                                                    'dogLocation',
-                                                                    output_field=CharField())) \
-                                   .values('stance_location') \
-                                   .annotate(count=Count('stance_location')) \
-                                   .order_by('-count')[:10]
+    stance_pos_combo_without = DogStance.objects.filter(observation__observes__dog__in=branch_dogs,
+                                                        observation__in=obs_without_kong).annotate(stance_location=Concat('dogStance',
+                                                                                                                          Value(' + '),
+                                                                                                                          'dogLocation',
+                                                                                                                          output_field=CharField())).values('stance_location').annotate(count=Count('stance_location')).order_by('-count')[:10]
 
     # Replace the values in the QuerySets for both lists
     for stance in stance_pos_combo_with:
@@ -1624,10 +1709,11 @@ def get_unique_owners(request):
 
 
 # Prepare a dictionary in JSON for distribution of dogs
-# by gender,  vaccination, isneutered, and isdangerous. Used for health_metrics_chart.
-def get_health_metrics_dict():
+# by gender,  vaccination and isneutered. Used for health_metrics_chart.
+def get_health_metrics_dict(request):
+    branch = get_current_branch(request)
     # Fetch required attributes of all dogs
-    dogs_data = Dog.objects.values_list('gender', 'dateOfVaccination', 'isNeutered', 'isDangerous')
+    dogs_data = Dog.objects.filter(branch=branch).values_list('gender', 'dateOfVaccination', 'isNeutered', 'isDangerous')
 
     # Initialize data structure
     health_metrics_dict = {
@@ -1638,12 +1724,6 @@ def get_health_metrics_dict():
             'F': {'Y': {'Y': 0, 'N': 0, '-': 0}, 'N': {'Y': 0, 'N': 0, '-': 0}},
             '-': {'Y': {'Y': 0, 'N': 0, '-': 0}, 'N': {'Y': 0, 'N': 0, '-': 0}}
         }
-
-        # 'dangerous': {
-        #     'M': {'Y': {'Y': {'Y': 0, 'N': 0, '-': 0}, 'N': {'Y': 0, 'N': 0, '-': 0}, '-': {'Y': 0, 'N': 0, '-': 0}},
-        #           'N': {'Y': {'Y': 0, 'N': 0, '-': 0}, 'N': {'Y': 0, 'N': 0, '-': 0}, '-': {'Y': 0, 'N': 0, '-': 0}}},
-        #     'F': {'Y': {'Y': {'Y': 0, 'N': 0, '-': 0}, 'N': {'Y': 0, 'N': 0, '-': 0}, '-': {'Y': 0, 'N': 0, '-': 0}},
-        #           'N': {'Y': {'Y': 0, 'N': 0, '-': 0}, 'N': {'Y': 0, 'N': 0, '-': 0}, '-': {'Y': 0, 'N': 0, '-': 0}}}}
     }
 
     # Loop through each dog entry to populate chart_data
@@ -1653,7 +1733,7 @@ def get_health_metrics_dict():
 
         # Calculate if vaccination is within the last 365 days or not, if null set as No as well
         if dateOfVaccination:
-            current_date = datetime.now().date()
+            current_date = timezone.now().date()
             delta = current_date - dateOfVaccination
             isVaccinated = 'Y' if delta.days <= 365 else 'N'
         else:
@@ -1661,26 +1741,11 @@ def get_health_metrics_dict():
 
         # Handle Nulls and empties
         isNeutered = isNeutered or '-'
-        isDangerous = isDangerous or '-'
 
         # Populate the counters
         health_metrics_dict['gender'][gender] += 1
         health_metrics_dict['vaccinated'][gender][isVaccinated] += 1
         health_metrics_dict['neutered'][gender][isVaccinated][isNeutered] += 1
-        # health_metrics_dict['dangerous'][gender][isVaccinated][isNeutered][isDangerous] += 1
-
-    # def flatten_dict(d, parent_key='', sep='/'):
-    #     items = {}
-    #     for k, v in d.items():
-    #         new_key = f"{parent_key}{sep}{k}" if parent_key else k
-    #         if isinstance(v, dict):
-    #             items.update(flatten_dict(v, new_key, sep=sep))
-    #         else:
-    #             items[new_key] = v
-    #     return items
-    #
-    # flattened_dict = flatten_dict(health_metrics_dict)
-    # print(flattened_dict)
 
     return health_metrics_dict
 

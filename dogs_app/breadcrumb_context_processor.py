@@ -102,6 +102,64 @@ def breadcrumb_processor(request):
         breadcrumbs.append({"name": f"{user_name}", "url": f"/update_user/{user_id}"})
         breadcrumbs.append({"name": "Delete User", "url": f"{url_path}"})
 
+    # Portal breadcrumbs
+    if 'portal/' in url_path:
+        breadcrumbs.append({"name": "Portal", "url": "/portal/"})
+        if 'kennels/' in url_path:
+            breadcrumbs.append({"name": "Kennels", "url": "/portal/kennels/"})
+            if 'add/' in url_path:
+                breadcrumbs.append({"name": "Add Kennel", "url": f"{url_path}"})
+            elif 'edit/' in url_path:
+                breadcrumbs.append({"name": "Edit Kennel", "url": f"{url_path}"})
+        elif 'placements/' in url_path:
+            breadcrumbs.append({"name": "Dog Placements", "url": "/portal/placements/"})
+            if 'add/' in url_path:
+                breadcrumbs.append({"name": "Add Placement", "url": f"{url_path}"})
+            elif 'edit/' in url_path:
+                breadcrumbs.append({"name": "Edit Placement", "url": f"{url_path}"})
+        elif 'cameras/' in url_path:
+            breadcrumbs.append({"name": "Cameras", "url": "/portal/cameras/"})
+            if 'add/' in url_path:
+                breadcrumbs.append({"name": "Add Camera", "url": f"{url_path}"})
+            elif 'edit/' in url_path:
+                breadcrumbs.append({"name": "Edit Camera", "url": f"{url_path}"})
+        elif 'sessions/' in url_path:
+            breadcrumbs.append({"name": "Camera Sessions", "url": "/portal/sessions/"})
+            if 'add/' in url_path:
+                breadcrumbs.append({"name": "Add Session", "url": f"{url_path}"})
+            elif 'edit/' in url_path:
+                breadcrumbs.append({"name": "Edit Session", "url": f"{url_path}"})
+        elif 'observations/' in url_path:
+            breadcrumbs.append({"name": "Observations", "url": "/portal/observations/"})
+            if 'add/' in url_path:
+                breadcrumbs.append({"name": "Add Observation", "url": f"{url_path}"})
+            elif 'edit/' in url_path:
+                breadcrumbs.append({"name": "Edit Observation", "url": f"{url_path}"})
+        elif 'stances/' in url_path:
+            breadcrumbs.append({"name": "Stances", "url": "/portal/stances/"})
+            if 'add/' in url_path:
+                breadcrumbs.append({"name": "Add Stance", "url": f"{url_path}"})
+            elif 'edit/' in url_path:
+                breadcrumbs.append({"name": "Edit Stance", "url": f"{url_path}"})
+        elif 'treatments/' in url_path:
+            breadcrumbs.append({"name": "Treatments", "url": "/portal/treatments/"})
+            if 'add/' in url_path:
+                breadcrumbs.append({"name": "Add Treatment", "url": f"{url_path}"})
+            elif 'edit/' in url_path:
+                breadcrumbs.append({"name": "Edit Treatment", "url": f"{url_path}"})
+        elif 'examinations/' in url_path:
+            breadcrumbs.append({"name": "Examinations", "url": "/portal/examinations/"})
+            if 'add/' in url_path:
+                breadcrumbs.append({"name": "Add Examination", "url": f"{url_path}"})
+            elif 'edit/' in url_path:
+                breadcrumbs.append({"name": "Edit Examination", "url": f"{url_path}"})
+        elif 'owners/' in url_path:
+            breadcrumbs.append({"name": "Dog Owners", "url": "/portal/owners/"})
+            if 'add/' in url_path:
+                breadcrumbs.append({"name": "Add Owner", "url": f"{url_path}"})
+            elif 'edit/' in url_path:
+                breadcrumbs.append({"name": "Edit Owner", "url": f"{url_path}"})
+
     # Add more conditions later
 
     return {'breadcrumbs': breadcrumbs}

@@ -72,14 +72,15 @@
                 <div class="carousel-item">
                     <div class="card chart-container chart-container-with-kong d-block w-100">
                         <div class="card-body">
-                            <select id="year-select">
-                                <option value="2023">2023</option>
-                                <option value="2022">2022</option>
-                                <option value="2021">2021</option>
-                                <option value="2020">2020</option>
-                                <option value="2019">2019</option>
-                                <option value="2018">2018</option>
-                            </select>
+                            <!-- Dropdown for with-kong chart -->
+                            <div class="dropdown-container">
+                                <label for="year-select-with-kong">
+                                    <strong>Year Selection:</strong>
+                                </label>
+                                <select id="year-select-with-kong" class="centered-content">
+                                    <option value="total">Total Count</option>
+                                </select>
+                            </div>
                             <h2 class="card-title">
                                 Dog Stances
                                 <span class="with-kong-color">
@@ -94,14 +95,15 @@
                 <div class="carousel-item">
                     <div class="card chart-container chart-container-without-kong d-block w-100">
                         <div class="card-body">
-                            <select id="year-select">
-                                <option value="2023">2023</option>
-                                <option value="2022">2022</option>
-                                <option value="2021">2021</option>
-                                <option value="2020">2020</option>
-                                <option value="2019">2019</option>
-                                <option value="2018">2018</option>
-                            </select>
+                            <!-- Dropdown for without-kong chart -->
+                            <div class="dropdown-container">
+                                <label for="year-select-without-kong">
+                                    <strong>Year Selection:</strong>
+                                </label>
+                                <select id="year-select-without-kong">
+                                    <option value="total">Total Count</option>
+                                </select>
+                            </div>
                             <h2 class="card-title">
                                 Dog Stances
                                 <span class="without-kong-color">

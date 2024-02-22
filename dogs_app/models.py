@@ -25,6 +25,16 @@ DEFAULT_KENNEL_IMAGE_SOURCE = 'kennel_pictures/default_kennel.jpg'
 ALTERNATIVE_DEFAULT_KENNEL_IMAGE_SOURCE = 'static/dogs_app/img/default_kennel.jpg'
 
 
+# return the current date in the timezone of the user
+def current_timezone_aware_date():
+    return timezone.localtime(timezone.now()).date()
+
+
+# return the current datetime in the timezone of the user
+def current_timezone_aware_datetime():
+    return timezone.localtime(timezone.now())
+
+
 # Adding more attributes to the User model
 class Profile(models.Model):
 
@@ -114,7 +124,7 @@ class Dog(models.Model):
     chipNum = models.CharField(max_length=30, unique=True, blank=True, null=True)
     dogName = models.CharField(max_length=35)
     dateOfBirthEst = models.DateField(blank=True, null=True)
-    dateOfArrival = models.DateField(blank=True, null=True, default=timezone.localtime(timezone.now()).date())
+    dateOfArrival = models.DateField(blank=True, null=True, default=current_timezone_aware_date)
     dateOfVaccination = models.DateField(blank=True, null=True)
     breed = models.CharField(max_length=30, blank=True, null=True)
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True, null=True)
@@ -209,7 +219,7 @@ class Treatment(models.Model):
                                      verbose_name='Treatment Name')
     treatmentDate = models.DateField(blank=True, null=True,
                                      verbose_name='Date of Treatment',
-                                     default=timezone.localtime(timezone.now()).date())
+                                     default=current_timezone_aware_date)
     treatedBy = models.CharField(max_length=50,
                                  verbose_name='Treated By')
     comments = models.CharField(max_length=250, blank=True, null=True,
@@ -224,7 +234,7 @@ class Treatment(models.Model):
 class EntranceExamination(models.Model):
     examinationID = models.AutoField(primary_key=True,
                                      verbose_name='Examination ID')
-    examinationDate = models.DateField(default=timezone.localtime(timezone.now()).date(),
+    examinationDate = models.DateField(default=current_timezone_aware_date,
                                        verbose_name='Examination Date')
     examinedBy = models.CharField(max_length=50,
                                   verbose_name='Examined By')
@@ -297,7 +307,7 @@ class DogPlacement(models.Model):
                             verbose_name='Dog')
     kennel = models.ForeignKey('Kennel', models.SET_NULL, null=True,
                                verbose_name='Kennel')
-    entranceDate = models.DateField(default=timezone.localtime(timezone.now()).date(),
+    entranceDate = models.DateField(default=current_timezone_aware_date,
                                     verbose_name='Entrance Date')
     expirationDate = models.DateField(blank=True, null=True,
                                       verbose_name='Expiration Date')
@@ -363,7 +373,7 @@ class Observation(models.Model):
 
     # References the Observes instance
     observes = models.ForeignKey('Observes', on_delete=models.SET_NULL, null=True, verbose_name='Session')
-    obsDateTime = models.DateTimeField(default=timezone.localtime(timezone.now()), verbose_name='Starting Date and Time', db_index=True)
+    obsDateTime = models.DateTimeField(default=current_timezone_aware_datetime, verbose_name='Starting Date and Time', db_index=True)
     sessionDurationInMins = models.PositiveIntegerField(default=2,
                                                         validators=[MinValueValidator(0)], verbose_name='Session Duration (mins)')
     isKong = models.CharField(max_length=1, choices=IS_KONG_CHOICES, blank=True, null=True, default='N', verbose_name='Kong')

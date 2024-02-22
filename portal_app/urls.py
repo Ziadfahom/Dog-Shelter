@@ -6,7 +6,7 @@ from . import views
 app_name = 'portal_app'
 
 urlpatterns = [
-    path('', RedirectView.as_view(url='owners/', permanent=False), name='portal'),
+    path('', RedirectView.as_view(url='kennels/', permanent=False), name='portal'),
 
     path('owners/', views.owner_list_portal, name='list-owners'),
     path('owners/add/', views.add_owner_portal, name='add-owner'),

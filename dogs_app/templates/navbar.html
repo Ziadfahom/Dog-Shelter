@@ -106,7 +106,7 @@
               <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
 
                 <a href="{% url 'dogs_app:toggle_branch' %}" id="branch-toggle" class="dropdown-item">
-                    <strong>{% if request.session.branch == 'Italy' %}Switch to Israel{% else %}Switch to Italy{% endif %}</strong>
+                    <strong>{% if request.session.branch == 'Italy' %}Switch to Lod{% else %}Switch to Italy{% endif %}</strong>
                 </a>
 
                 <a href="{% url 'dogs_app:update_user_self' %}" class="dropdown-item">

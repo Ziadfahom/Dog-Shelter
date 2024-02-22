@@ -513,7 +513,8 @@ class ObservationForm(forms.ModelForm):
         model = Observation
         fields = ['obsDateTime', 'sessionDurationInMins', 'isKong', 'jsonFile', 'rawVideo']
         widgets = {
-            'sessionDurationInMins': forms.NumberInput(attrs={'class': 'form-control'}),
+            'sessionDurationInMins': forms.NumberInput(attrs={'class': 'form-control',
+                                                              'title': 'Please enter a duration (in minutes)',}),
             'isKong': forms.Select(choices=Observation.IS_KONG_CHOICES, attrs={'class': 'form-control',
                                                                                'title': 'Select if the dog is with a Kong',
                                                                                'required': 'required'}),
