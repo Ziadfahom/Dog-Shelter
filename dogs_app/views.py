@@ -68,7 +68,7 @@ def set_israel_branch(request):
 def get_current_branch(request):
     # Get the current Branch (Israel/Italy)
     branch_name = request.session.get('branch', 'Israel')  # Default to Israel
-    branch = Branch.objects.get(branchName=branch_name)  # Get the branch object
+    branch = Branch.objects.get(branchName=branch_name if branch_name else 'Israel')  # Get the branch object
 
     return branch
 
@@ -1407,17 +1407,22 @@ def delete_news(request, news_id):
 
 # Render Graphs page
 def graphs(request):
-    return render(request, 'graphs.html')
+    # Get the maximum number of stance options used in the DogStance in the website
+    # For the slider max limit above the "Top Dog Stances Across The Week" chart
+    max_dog_stances_count = get_max_dog_stances_count(request=request)
+    return render(request, 'graphs.html', {'max_dog_stances_count': max_dog_stances_count})
 
 
 # View for the Dynamic Graphs page
 def chart_data(request):
     branch = get_current_branch(request)
-    # Prepare a dictionary in JSON for distribution of dogs by gender,  vaccination, isneutered, and isdangerous
-    health_metrics = get_health_metrics_dict(request=request)
 
     # Get all the Dogs that have received a Kong Toy
     dogs_with_kong = Dog.objects.filter(branch=branch, kongDateAdded__isnull=False)
+    # ---Comprehensive Health & Safety Profile of Our Canines Chart---
+    # Prepare a dictionary in JSON for distribution of dogs by gender, vaccination and isneutered
+    health_metrics = get_health_metrics_dict(request=request)
+    # -----------------------------------
 
     # ---Dog Stances With/Without Kong Charts---
     # Get all Observations with and without a Kong Toy
@@ -1440,20 +1445,36 @@ def chart_data(request):
     years_without_kong = sorted(yearly_stances_without_kong.keys(), reverse=True)
     # -----------------------------------------
 
+    # ---Most Common General Behaviors Chart---
     # Fetch a dictionary of the top combined stance+position in DogStances,
     # with their counts of "with" and "without" kong individually
     top_stance_position_combos = fetch_top_stance_position_combos(obs_with_kong, obs_without_kong, request=request)
+    # -----------------------------------
 
+    # ---Dog Breeds Distribution Chart---
     # Getting breeds and their counts
     dog_breeds = Dog.objects.filter(branch=branch).values('breed').annotate(total=Count('breed')).exclude(breed='').exclude(
         breed__isnull=True).order_by('-total')
+    # -----------------------------------
 
-    # Define the limit for the required top dog stances then fetch
-    # those values for "Dog Stances Across The Week" Graph
-    TOP_STANCES_LIMIT = 5
-    top_dog_stances = get_top_dog_stances(TOP_STANCES_LIMIT, request=request)
+    # ---Dog Stances by Day (Across The Week) Chart---
+    top_dog_stances = get_top_dog_stances(request)
+    top_dog_stances_limit = get_max_dog_stances_count(request)
+    # Switch the Stances names to the front-end friendly version
+    DOG_STANCE_DICT = dict(DogStance.DOG_STANCE_CHOICES)
+    top_dog_stances_names = []
+    for stance in top_dog_stances:
+        top_dog_stances_names.append(DOG_STANCE_DICT[stance])
 
     stance_count_by_day = get_stance_count_by_day(top_dog_stances, request=request)
+
+    # Set Up the yearly data for the yearly drop-down selection
+    # Fetch the top stances per year and their limits
+    top_stances_per_year, top_stances_per_year_limits = get_top_dog_stances_per_year(request)
+
+    # Fetch the top stances per year dictionary for the chart dataset
+    yearly_stance_count_by_day = get_yearly_stance_count_by_day(request)
+    # -----------------------------------
 
     # Preparing data to be used in the frontend
     data = {
@@ -1465,8 +1486,13 @@ def chart_data(request):
         'yearly_stances_without_kong': yearly_stances_without_kong,  # Dog Stances Without Kong (2) Chart
         'years_without_kong': years_without_kong,  # Dog Stances Without Kong (3) Chart (for drop-down yearly selection)
         'dog_breeds': list(dog_breeds),  # Dog Breeds Distribution Chart
-        'stance_count_by_day': stance_count_by_day,  # Dog Stances by Day (Across The Week)
-        'top_stance_position_combos': top_stance_position_combos, # Most Common General Behaviors Chart
+        'stance_count_by_day': stance_count_by_day,  # Dog Stances by Day (Across The Week) Chart (1)
+        'top_dog_stances': top_dog_stances_names,  # Dog Stances by Day (Across The Week) Chart (2)
+        'top_dog_stances_limit': top_dog_stances_limit,  # Dog Stances by Day (Across The Week) Chart (3)
+        'yearly_stance_count_by_day': yearly_stance_count_by_day,  # Dog Stances by Day (Across The Week) Chart (4)
+        'top_stances_per_year': top_stances_per_year,  # Dog Stances by Day (Across The Week) Chart (5)
+        'top_stances_per_year_limits': top_stances_per_year_limits,  # Dog Stances by Day (Across The Week) Chart (6)
+        'top_stance_position_combos': top_stance_position_combos,  # Most Common General Behaviors Chart
         'health_metrics': health_metrics,  # Comprehensive Health & Safety Profile of Our Canines Chart
     }
 
@@ -1542,11 +1568,13 @@ def get_stances_count_by_year(request):
     return formatted_stances_with_kong, formatted_stances_without_kong
 
 
-# Returns the top dog stances, parameter to set limit
-def get_top_dog_stances(limit=5, request=None):
-    branch = get_current_branch(request) if request else 'Israel'
+# Returns the overall top dog stances
+def get_top_dog_stances(request=None):
+    branch = get_current_branch(request)
 
+    # Get all the dogs in the current branch
     dogs = Dog.objects.filter(branch=branch)
+
     # Fetch and count the occurrences of each dogStance from the database for Dog Stances Across The Week
     dog_stance_counts = DogStance.objects.values('dogStance').filter(observation__observes__dog__in=dogs).annotate(total_count=Count('dogStance')).order_by(
         '-total_count')
@@ -1556,18 +1584,71 @@ def get_top_dog_stances(limit=5, request=None):
 
     # Collect the top X dogStances
     for i, entry in enumerate(dog_stance_counts):
-        if i >= limit:
-            break
         top_dog_stances.append(entry['dogStance'])
 
     return top_dog_stances
 
 
-# Get a dictionary of each Dog Stance's occurrences in every day of the week, for a selected list of Stances
-def get_stance_count_by_day(top_dog_stances, request):
+# Returns the top dog stances for each year and another dictionary for the limits of stances per year
+def get_top_dog_stances_per_year(request):
     branch = get_current_branch(request)
     dogs = Dog.objects.filter(branch=branch)
-    days_of_week = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday']
+
+    # Fetch all DogStance instances with their observation dates
+    stances_with_datetime = DogStance.objects.filter(observation__observes__dog__in=dogs).select_related(
+        'observation').values('observation__obsDateTime', 'dogStance')
+
+    # Initialize a dictionary to group stances by year
+    stances_by_year = {}
+
+    # Loop through the stances and group them by year
+    for entry in stances_with_datetime:
+        # Extract the year from the observation datetime
+        year = timezone.localtime(entry['observation__obsDateTime']).year
+
+        # Append the stance to the corresponding year
+        if year not in stances_by_year:
+            stances_by_year[year] = []
+        stances_by_year[year].append(entry['dogStance'])
+
+    # Calculate top dog stances for each year
+    top_stances_per_year = {}
+    for year, stances in stances_by_year.items():
+        stance_count = Counter(stances)
+        top_stances = [stance for stance, _ in stance_count.most_common()]
+        top_stances_per_year[year] = top_stances
+
+    # Get the mapping from the DOG_STANCE_CHOICES
+    stance_name_mapping = {backend: frontend for backend, frontend in DogStance.DOG_STANCE_CHOICES}
+
+    # Replace back-end names with front-end friendly names
+    for year, stances in top_stances_per_year.items():
+        front_end_stances = [stance_name_mapping.get(stance, "Unknown") for stance in stances]
+        top_stances_per_year[year] = front_end_stances
+
+    # Initialize the dictionary to hold the stance limits for the slider per year
+    top_stances_per_year_limits = {}
+
+    # Loop through the top_dog_stances_per_year dictionary
+    for year, stances in top_stances_per_year.items():
+        # Calculate the length of the stances list and assign it to the corresponding year
+        top_stances_per_year_limits[year] = len(stances)
+
+    # Order the dictionary keys in descending order
+    top_stances_per_year = dict(sorted(top_stances_per_year.items(), reverse=True))
+    top_stances_per_year_limits = dict(sorted(top_stances_per_year_limits.items(), reverse=True))
+
+    return top_stances_per_year, top_stances_per_year_limits
+
+
+# Get a dictionary of each DogStance's occurrences in every day of the week, for a selected list of Stances
+def get_stance_count_by_day(top_dog_stances, request):
+    branch = get_current_branch(request)
+
+    # Get all the dogs in the current branch
+    dogs = Dog.objects.filter(branch=branch)
+
+    days_of_week = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
     # Initialize a dictionary to hold the stance count for each day of the week
     stance_count_by_day = {}
@@ -1597,17 +1678,12 @@ def get_stance_count_by_day(top_dog_stances, request):
         # Map the weekday index to its string name
         day_name = days_of_week_mapping[day_index]
 
-        # Skip Friday and Saturday
-        if day_name in ['Friday', 'Saturday']:
-            continue  # Skip to next iteration of the loop, ignoring this entry
-
         # Fetch the stance for this particular record
         stance = entry['dogStance']
 
         # If this stance is among the top stances we are tracking, update the count
         if stance in top_dog_stances:
             stance_count_by_day[day_name][stance] += 1
-
 
     transformed_stance_count_by_day = {}
 
@@ -1618,6 +1694,74 @@ def get_stance_count_by_day(top_dog_stances, request):
             transformed_stances[transformed_key] = count
         transformed_stance_count_by_day[day] = transformed_stances
     return transformed_stance_count_by_day
+
+
+# Get a yearly dictionary of each DogStance's occurrences in every day of the week, for a selected list of Stances
+def get_yearly_stance_count_by_day(request):
+    branch = get_current_branch(request)
+    dogs = Dog.objects.filter(branch=branch)
+
+    # Fetch all DogStance instances with their observation dates
+    stances_with_datetime = DogStance.objects.filter(observation__observes__dog__in=dogs).select_related('observation').values('observation__obsDateTime', 'dogStance')
+
+    # Initialize a nested dictionary to hold the data
+    stance_count_by_year_and_day = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
+
+    # Mapping of Python's datetime.weekday() indexes to actual day names
+    days_of_week_mapping = {0: 'Monday', 1: 'Tuesday', 2: 'Wednesday', 3: 'Thursday', 4: 'Friday', 5: 'Saturday',
+                            6: 'Sunday'}
+
+    # Loop through the stances and group them by year and day
+    for entry in stances_with_datetime:
+        # Extract the year and day from the observation datetime
+        observation_datetime = timezone.localtime(entry['observation__obsDateTime'])
+        year = observation_datetime.year
+        day_index = observation_datetime.weekday()
+        day_name = days_of_week_mapping[day_index]
+
+        # Fetch the stance for this particular record
+        stance = entry['dogStance']
+
+        # Increment the count for this stance in the specific year and day
+        stance_count_by_year_and_day[year][day_name][stance] += 1
+
+    # Convert defaultdicts to regular dicts
+    stance_count_by_year_and_day = {year: {day: dict(stances) for day, stances in days.items()} for year, days in stance_count_by_year_and_day.items()}
+
+    # Order the dictionary keys in descending order
+    stance_count_by_year_and_day = dict(sorted(stance_count_by_year_and_day.items(), reverse=True))
+
+    # Get the mapping from the DOG_STANCE_CHOICES
+    stance_name_mapping = {backend: frontend for backend, frontend in DogStance.DOG_STANCE_CHOICES}
+
+    # Replace back-end names with front-end friendly names
+    for year, days in stance_count_by_year_and_day.items():
+        for day, stances in days.items():
+            front_end_stances = {stance_name_mapping.get(stance, "Unknown"): count for stance, count in stances.items()}
+            stance_count_by_year_and_day[year][day] = front_end_stances
+
+    # Convert defaultdicts to regular dicts
+    stance_count_by_year_and_day = {year: {day: dict(stances) for day, stances in days.items()} for year, days in
+                                    stance_count_by_year_and_day.items()}
+
+    return stance_count_by_year_and_day
+
+
+# Get the maximum number of stance options used in the DogStance in the current branch
+# For the slider max limit above the "Top Dog Stances Across The Week" chart
+def get_max_dog_stances_count(request):
+    branch = get_current_branch(request)
+
+    # Fetch all Dogs in the current branch
+    dogs = Dog.objects.filter(branch=branch)
+
+    # Fetch all DogStance objects in current branch
+    all_stances = DogStance.objects.filter(observation__observes__dog__in=dogs)
+
+    # Extract distinct dogStance values
+    used_stances = set([stance.dogStance for stance in all_stances])
+
+    return len(used_stances)
 
 
 # Helper function for fetching a top 10 list of combined dogStances + dogPositions and their counts with/without kongs

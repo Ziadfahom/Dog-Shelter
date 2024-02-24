@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", function() {
         minuteIncrement: 1,
         enableSeconds: true,
         allowInput: true,
+        defaultDate: "00:00:00",
 
     });
 });
