@@ -1861,19 +1861,19 @@ def get_health_metrics_dict(request):
 
     # Initialize data structure
     health_metrics_dict = {
-        'gender': {'M': 0, 'F': 0, '-': 0},
-        'vaccinated': {'M': {'Y': 0, 'N': 0}, 'F': {'Y': 0, 'N': 0}, '-': {'Y': 0, 'N': 0}},
+        'gender': {'M': 0, 'F': 0},
+        'vaccinated': {'M': {'Y': 0, 'N': 0}, 'F': {'Y': 0, 'N': 0}},
         'neutered': {
             'M': {'Y': {'Y': 0, 'N': 0, '-': 0}, 'N': {'Y': 0, 'N': 0, '-': 0}},
-            'F': {'Y': {'Y': 0, 'N': 0, '-': 0}, 'N': {'Y': 0, 'N': 0, '-': 0}},
-            '-': {'Y': {'Y': 0, 'N': 0, '-': 0}, 'N': {'Y': 0, 'N': 0, '-': 0}}
+            'F': {'Y': {'Y': 0, 'N': 0, '-': 0}, 'N': {'Y': 0, 'N': 0, '-': 0}}
         }
     }
 
     # Loop through each dog entry to populate chart_data
     for gender, dateOfVaccination, isNeutered, isDangerous in dogs_data:
-        # Handle Null/empty gender
-        gender = gender if gender in ['M', 'F'] else '-'
+        # Skip dogs with unknown gender
+        if gender not in ['M', 'F']:
+            continue
 
         # Calculate if vaccination is within the last 365 days or not, if null set as No as well
         if dateOfVaccination:

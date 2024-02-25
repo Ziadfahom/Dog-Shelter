@@ -19,7 +19,7 @@
         </div>
 
         <div id="carouselExampleIndicators" class="carousel carousel-dark slide">
-            <div class="carousel-indicators">
+            <div class="carousel-indicators" style="bottom: -1rem;">
                 <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
                 <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1" aria-label="Slide 2"></button>
                 <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2" aria-label="Slide 3"></button>
@@ -33,7 +33,15 @@
                         <div class="card-body">
                             <div class="controls-container">
                                 <div class="slider-container">
-                                    <label for="stanceSlider">
+                                    <div class="form-check form-switch" style="display: flex;">
+                                        <label for="showAllStances" id="showAllStancesLabel">
+                                            <strong>
+                                                Show All
+                                            </strong>
+                                        </label>
+                                        <input class="form-check-input" id="showAllStances" type="checkbox" role="switch">
+                                    </div>
+                                    <label for="stanceSlider" id="stanceSliderLabel">
                                         <strong>
                                             Number of Stances:
                                         </strong>
@@ -42,7 +50,7 @@
                                 </div>
 
                                 <div class="dropdown-container">
-                                    <label for="year-select-stances">
+                                    <label for="year-select-stances" id="year-select-stances-label">
                                         <strong>Year Selection:</strong>
                                     </label>
                                     <select id="year-select-stances" class="centered-content">
@@ -77,7 +85,7 @@
                                 </span>
                                     Kong
                             </h2>
-                            <canvas id="chart_dogStances_with_kong"></canvas>
+                            <canvas id="chart_dogStances_with_kong" width="800" height="450"></canvas>
                         </div>
                     </div>
                 </div>
@@ -100,7 +108,7 @@
                                 </span>
                                 Kong
                             </h2>
-                            <canvas id="chart_dogStances_without_kong"></canvas>
+                            <canvas id="chart_dogStances_without_kong" width="800" height="450"></canvas>
                         </div>
                     </div>
                 </div>
@@ -119,7 +127,7 @@
                                 </span>
                                 Kongs
                             </h2>
-                            <canvas id="chart_dogStance_dogPosition_with_without" width="900" height="550"></canvas>
+                            <canvas id="chart_dogStance_dogPosition_with_without" width="800" height="550"></canvas>
                         </div>
                     </div>
                 </div>
@@ -127,7 +135,7 @@
                     <div class="card chart-container chart-container-breeds d-block w-100 ">
                         <div class="card-body breed-distribution-container">
                             <h2 class="card-title">Distribution of Dog Breeds</h2>
-                            <canvas id="chart_dogBreeds" height="650" width="650"></canvas>
+                            <canvas id="chart_dogBreeds" width="650" height="650"></canvas>
                         </div>
                     </div>
                 </div>
@@ -137,21 +145,21 @@
                             <h2 class="card-title-metrics">
                                 Comprehensive Health & Safety Profile of Our Canines
                                 <br>
-                                Categorized by Gender, Vaccination Status and Neutering
+                                Categorized by Gender, Vaccination and Neutering Statuses
                             </h2>
-                            <div style="width: 80%; margin-left: 5rem;">
-                                <canvas id="chart_health_metrics" ></canvas>
+                            <div style="width: 65%;  margin-left: 12rem;">
+                                <canvas id="chart_health_metrics"></canvas>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
+            <button class="carousel-control-prev" style="left: -10rem;" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
                 <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                 <span class="visually-hidden">Previous</span>
             </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
+            <button class="carousel-control-next" style="right: -10rem;" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
                 <span class="carousel-control-next-icon" aria-hidden="true"></span>
                 <span class="visually-hidden">Next</span>
             </button>

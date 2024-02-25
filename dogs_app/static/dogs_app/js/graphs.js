@@ -1,5 +1,8 @@
 const loadingElement = document.getElementById('loading');
 
+// Global variable to hold the fetched data
+let globalData;
+
 // Global variable to store the chart data for the Dog Stances With/Without Kong Charts
 var chart_with_kong;
 var chart_without_kong;
@@ -101,6 +104,22 @@ $(document).ready(function() {
         var selectedYear = $(this).val();
         updateSliderForYear(selectedYear);
     });
+
+    // Add event listener for "Show All" checkbox in the "Top Stances by Day" chart
+    $('#showAllStances').change(function() {
+        var selectedYear = $('#year-select-stances').val();
+        updateSliderForYear(selectedYear);
+    });
+
+    // Add event listener for slider change in the "Top Stances by Day" chart
+    $('#stanceSlider').on('input', function() {
+        var slider = document.getElementById('stanceSlider');
+        var showAllCheckBox = document.getElementById('showAllStances')
+        if (slider.value !== slider.max) {
+            showAllCheckBox.checked = false;
+        }
+        updateStanceLimit(this.value);
+    });
 });
 
 function fetchDataAndCreateCharts() {
@@ -113,6 +132,9 @@ function fetchDataAndCreateCharts() {
                 return response.json();
             })
             .then(data => {
+                // Set the global data variable
+                globalData = data;
+
                 // Set Up the Charts
 
                 // Dog Stances With/Without Kong Bar Charts
@@ -362,7 +384,8 @@ function fetchDataAndCreateCharts() {
                                         weight: 'bold'
                                     },
                                     color: '#333333'
-                                }
+                                },
+                                position: 'bottom'
                             }
                         },
                     }
@@ -464,8 +487,7 @@ function fetchDataAndCreateCharts() {
                 const genderLabels = ['Total Male Dogs', 'Total Female Dogs'];
 
                 // Extract vaccination data for each gender
-                const vaccinatedMaleData = [health_metrics.vaccinated.M.Y, health_metrics.vaccinated.M.N];
-                const vaccinatedFemaleData = [health_metrics.vaccinated.F.Y, health_metrics.vaccinated.F.N];
+                const vaccinatedData = [].concat(health_metrics.vaccinated.M.Y, health_metrics.vaccinated.M.N, health_metrics.vaccinated.F.Y, health_metrics.vaccinated.F.N);
 
                 // Extract neutered data for each gender
                 const neuteredMaleData = [
@@ -485,6 +507,8 @@ function fetchDataAndCreateCharts() {
                     health_metrics.neutered.F.N.N,
                     health_metrics.neutered.F.N['-']
                 ];
+
+                const neuteredData = [].concat.apply([], [neuteredMaleData, neuteredFemaleData]);
 
                 // Takes a base color in RGB format and a factor by which to lighten or darken the color
                 function adjustColor(color, factor) {
@@ -544,16 +568,14 @@ function fetchDataAndCreateCharts() {
                     'Female Vaccinated Neutered', 'Female Vaccinated Not Neutered', 'Female Vaccinated Unknown',
                     'Female Not Vaccinated Neutered', 'Female Not Vaccinated Not Neutered', 'Female Not Vaccinated Unknown'
                 ];
-
-                // Flatten the arrays to include all possible combinations
-                const vaccinationData = [].concat.apply([], [vaccinatedMaleData, vaccinatedFemaleData]);
-                const neuteredData = [].concat.apply([], [neuteredMaleData, neuteredFemaleData]);
+                // Combined labels
+                const combinedLabels = [...genderLabels, ...vaccinationLabels, ...neuteredLabels];
 
                 // Initialize Chart.js Data and Config based on health metrics
                 var chart_health_metrics = new Chart(ctx_health_metrics, {
                     type: 'pie',
                     data: {
-                        labels: [...genderLabels, ...vaccinationLabels, ...neuteredLabels],
+                        labels: combinedLabels,
                         datasets: [
                             {
                                 label: 'Neutered',
@@ -563,9 +585,9 @@ function fetchDataAndCreateCharts() {
                             },
                             {
                                 label: 'Vaccinated',
-                                backgroundColor: health_backgroundColors.slice(2, 2 + vaccinationData.length),
+                                backgroundColor: health_backgroundColors.slice(2, 2 + vaccinatedData.length),
                                 borderColor: 'black',
-                                data: vaccinationData
+                                data: vaccinatedData
                             },
                             {
                                 label: 'Gender',
@@ -573,9 +595,11 @@ function fetchDataAndCreateCharts() {
                                 borderColor: 'black',
                                 data: genderData
                             }
+
                         ]
                     },
                     options: {
+                        events: ['mousemove', 'mouseout', 'touchstart', 'touchmove'], //Exclude click event on Legends
                         responsive: true,
                         plugins: {
                             datalabels: {
@@ -619,6 +643,7 @@ function fetchDataAndCreateCharts() {
                             },
                             legend: {
                                 display: true,
+                                reverse: true,
                                 position: 'bottom',
                                 labels: {
                                     font: {
@@ -627,31 +652,43 @@ function fetchDataAndCreateCharts() {
                                     },
                                     color: '#333333',
                                     generateLabels: function (chart) {
-                                        const datasets = chart.data.datasets;
-                                        const labels = [];
-                                        let cumulativeLength = 0;
-                                        for (let i = 0; i < datasets.length; i++) {
-                                            const dataset = datasets[i];
-                                            for (let j = 0; j < dataset.data.length; j++) {
-                                                if (dataset.data[j] !== 0) {
-                                                    labels.push({
-                                                        datasetIndex: i,
-                                                        text: chart.data.labels[cumulativeLength + j],
-                                                        fillStyle: health_backgroundColors[cumulativeLength + j], // Corrected here
-                                                        hidden: !chart.isDatasetVisible(i),
-                                                        index: j
+                                        let labels = [];
+                                        let cumulativeIndex = 0;
+
+                                        chart.data.datasets.slice().reverse().forEach((dataset, datasetIndexRev) => {
+                                            let datasetIndex = chart.data.datasets.length - 1 - datasetIndexRev;
+
+                                            dataset.data.slice().reverse().forEach((dataValue, dataIndexRev) => {
+                                                if (dataValue !== 0) {
+                                                    // Calculate the actual label index in the combinedLabels array
+                                                    let dataIndex = dataset.data.length - 1 - dataIndexRev;
+                                                    let actualLabelIndex = cumulativeIndex + dataIndex;
+
+                                                    labels.unshift({ // Unshift to add to the beginning of the array
+                                                        text: chart.data.labels[actualLabelIndex],
+                                                        fillStyle: dataset.backgroundColor[dataIndex],
+                                                        hidden: !chart.isDatasetVisible(datasetIndex),
+                                                        datasetIndex: datasetIndex,
+                                                        index: dataIndex
                                                     });
                                                 }
-                                            }
-                                            cumulativeLength += dataset.data.length;
-                                        }
+                                            });
+
+                                            // Update cumulative index for the next dataset
+                                            cumulativeIndex += dataset.data.length;
+                                        });
+
                                         return labels;
                                     },
-                                    onClick: function (mouseEvent, legendItem, legend) {
-                                        // Do Nothing
-                                        // legend.chart.getDatasetMeta(legendItem.datasetIndex).hidden = legend.chart.isDatasetVisible(legendItem.datasetIndex);
-                                        // legend.chart.update();
-                                    }
+                                    onClick: function (event, legendItem, legend) {
+                                        // Explicitly do nothing and prevent default action
+                                        null;
+
+                                        // const ci = legend.chart;
+                                        // const datasetMeta = ci.getDatasetMeta(legendItem.datasetIndex);
+                                        // datasetMeta.hidden = !datasetMeta.hidden;
+                                        // ci.update();
+                                    },
                                 }
                             }
                         }
@@ -683,16 +720,17 @@ function createChartStancesByDay(topDogStances, daysOfWeek, stanceData) {
     gradient_by_day.addColorStop(1, 'rgba(128, 0, 128, 0.5)');
 
     var datasets = filteredStances.map((stance, index) => {
-        const colorIndex = index % colors.length;
-        return {
-            label: stance,
-            data: daysOfWeek.map(day => stanceData[day][stance] || 0),
-            borderColor: colors[colorIndex],
-            borderWidth: 3,
-            backgroundColor: backgroundColors[colorIndex],
-            stack: 'stack1'
-        };
-    });
+    const colorIndex = index % colors.length;
+    return {
+        label: stance,
+        data: daysOfWeek.map(day => stanceData[day] ? (stanceData[day][stance] || 0) : 0),
+        borderColor: colors[colorIndex],
+        borderWidth: 3,
+        backgroundColor: backgroundColors[colorIndex],
+        stack: 'stack1'
+    };
+});
+
 
 
     chart_stances_by_days = new Chart(ctx_by_day, {
@@ -817,19 +855,42 @@ function updateStanceLimit(value) {
 function updateSliderForYear(year) {
     var slider = document.getElementById('stanceSlider');
     var sliderValueDisplay = document.getElementById('stanceSliderValue');
+    var sliderLabel = document.getElementById('stanceSliderLabel')
+    var showAllCheckBox = document.getElementById('showAllStances')
 
     // Check if 'All Years' is selected
     if (year === 'total') {
         slider.max = globalMaxDogStancesCount;
-        // Set slider value to 5 if max is greater than 4, else set it to max
-        slider.value = slider.max > 4 ? 5 : slider.max;
+        globalTopDogStances = globalData.top_dog_stances;
+        globalStanceData = globalData.stance_count_by_day;
     } else {
         slider.max = globalTopStancesPerYearLimits[year];
-        // Check if current slider value is greater than new max
-        slider.value = slider.value > slider.max ? slider.max : slider.value;
+        globalTopDogStances = globalData.top_stances_per_year[year];
+        globalStanceData = globalData.yearly_stance_count_by_day[year];
     }
+
+    // Disable or enable the slider based on the max value
+    slider.disabled = slider.max === '1';
+
+    if (slider.disabled) {
+    sliderLabel.style.color = '#aaa'; // Light grey color for disabled
+    sliderLabel.style.cursor = 'not-allowed'; // Change cursor
+} else {
+    sliderLabel.style.color = 'initial'; // Default color
+    sliderLabel.style.cursor = 'default'; // Default cursor
+}
+
+    // Set slider value within new max limit
+    slider.value = slider.value > slider.max ? slider.max : slider.value;
+
+    if (showAllCheckBox.checked) {
+        slider.value = slider.max;
+    }
+
 
     // Update the displayed slider value and redraw the chart
     sliderValueDisplay.innerText = slider.value;
     updateStanceLimit(slider.value);
+    createChartStancesByDay(globalTopDogStances, globalDaysOfWeek, globalStanceData);
+
 }
