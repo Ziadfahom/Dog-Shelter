@@ -17,10 +17,10 @@ let chart_stances_by_days;
 
 // Set Up the colors for the charts
 const colors = [
+    'rgba(54, 162, 235, 1)',  // Blue
     'rgba(255, 99, 132, 1)',  // Red
     'rgba(75, 192, 192, 1)',  // Green
     'rgba(255, 206, 86, 1)',  // Yellow
-    'rgba(54, 162, 235, 1)',  // Blue
     'rgba(153, 102, 255, 1)', // Purple
     'rgba(128, 0, 0, 1)',     // Maroon
     'rgba(0, 128, 0, 1)',     // Green
@@ -580,19 +580,22 @@ function fetchDataAndCreateCharts() {
                             {
                                 label: 'Neutered',
                                 backgroundColor: health_backgroundColors.slice(6, 6 + neuteredData.length),
-                                borderColor: 'black',
+                                borderColor: '#1F2633',
+                                borderWidth: 3,
                                 data: neuteredData,
                             },
                             {
                                 label: 'Vaccinated',
                                 backgroundColor: health_backgroundColors.slice(2, 2 + vaccinatedData.length),
-                                borderColor: 'black',
+                                borderColor: '#1F2633',
+                                borderWidth: 3,
                                 data: vaccinatedData
                             },
                             {
                                 label: 'Gender',
                                 backgroundColor: health_backgroundColors.slice(0, genderData.length),
-                                borderColor: 'black',
+                                borderColor: '#1F2633',
+                                borderWidth: 3,
                                 data: genderData
                             }
 
@@ -611,13 +614,36 @@ function fetchDataAndCreateCharts() {
                                 anchor: 'center',
                                 align: 'center',
                                 formatter: function (value, context) {
-                                    if (value === 0) {
-                                        return null;
-                                    }
+                                    // show each context.dataset.label on the first value for that dataset
+                                    // Also show all values that are not zero
                                     if (context.dataIndex === 0) {
-                                        return context.dataset.label + '  \n        ' + value;
+                                        if (value !== 0) {
+                                            if (context.dataset.label === 'Gender') {
+                                                return ' ' + context.dataset.label + '  \n      ' + value + '\n';
+                                            }
+                                            else if (context.dataset.label === 'Vaccinated') {
+                                                return '     ' + context.dataset.label + '  \n            ' + value;
+                                            }
+                                            else {
+                                                return context.dataset.label + '  \n      ' + value;
+                                            }
+                                        }
+                                        else {
+                                            if (context.dataset.label === 'Gender') {
+                                                return '             ' + context.dataset.label;
+                                            }
+                                            else {
+                                                return '                     ' + context.dataset.label;
+                                            }
+                                        }
+                                    } else {
+                                        if (value !== 0) {
+                                            return value;
+                                        }
+                                        else {
+                                            return '';
+                                        }
                                     }
-                                    return value;
                                 }
                             },
                             tooltip: {
@@ -846,7 +872,46 @@ function populateYearDropdown(yearLimits) {
 
 // Update the stances limit for the "Top Stances by Day" chart slider and redraw the chart
 function updateStanceLimit(value) {
-    document.getElementById('stanceSliderValue').innerText = value;
+    var sliderValueDisplay = document.getElementById('stanceSliderValue');
+    var stanceChartTitleTop = document.getElementById('stanceChartTitleTop');
+    var stanceChartTitleMiddle = document.getElementById('stanceChartTitleMiddle');
+    var slider = document.getElementById('stanceSlider');
+    var sliderLabel = document.getElementById('stanceSliderLabel');
+    var showAllCheckBox = document.getElementById('showAllStances')
+    var showAllLabel = document.getElementById('showAllStancesLabel')
+
+    // Disable or enable the slider and its title and the checkbox based on the max value
+    slider.disabled = slider.max === '1';
+    if (slider.disabled) {
+        slider.style.cursor = 'not-allowed';
+        sliderLabel.style.color = '#aaa';
+        sliderLabel.style.cursor = 'not-allowed';
+        showAllCheckBox.disabled = true;
+        showAllCheckBox.checked = true;
+        showAllLabel.style.color = '#aaa';
+        showAllLabel.style.cursor = 'not-allowed';
+    }
+    else {
+        slider.style.cursor = 'default';
+        sliderLabel.style.color = 'initial';
+        sliderLabel.style.cursor = 'default';
+        showAllCheckBox.disabled = false;
+        showAllCheckBox.checked = slider.value === slider.max;
+        showAllLabel.style.color = 'initial';
+        showAllLabel.style.cursor = 'default';
+    }
+
+    // Update the chart title
+    if (value === '1') {
+        sliderValueDisplay.innerText = '';
+        stanceChartTitleTop.innerText = '';
+        stanceChartTitleMiddle.innerText = 'Activity';
+    }
+    else {
+        sliderValueDisplay.innerText = value;
+        stanceChartTitleTop.innerText = 'Top';
+        stanceChartTitleMiddle.innerText = 'Activities';
+    }
 
     createChartStancesByDay(globalTopDogStances, globalDaysOfWeek, globalStanceData);
 }
@@ -857,6 +922,10 @@ function updateSliderForYear(year) {
     var sliderValueDisplay = document.getElementById('stanceSliderValue');
     var sliderLabel = document.getElementById('stanceSliderLabel')
     var showAllCheckBox = document.getElementById('showAllStances')
+
+    // Get the chart title for adjustments
+    var stanceChartTitleTop = document.getElementById('stanceChartTitleTop');
+    var stanceChartTitleMiddle = document.getElementById('stanceChartTitleMiddle');
 
     // Check if 'All Years' is selected
     if (year === 'total') {
@@ -873,12 +942,24 @@ function updateSliderForYear(year) {
     slider.disabled = slider.max === '1';
 
     if (slider.disabled) {
-    sliderLabel.style.color = '#aaa'; // Light grey color for disabled
-    sliderLabel.style.cursor = 'not-allowed'; // Change cursor
-} else {
-    sliderLabel.style.color = 'initial'; // Default color
-    sliderLabel.style.cursor = 'default'; // Default cursor
-}
+        sliderLabel.style.color = '#aaa'; // Light grey color for disabled
+        sliderLabel.style.cursor = 'not-allowed'; // Change cursor
+
+        // Adjust the chart title accordingly
+        stanceChartTitleTop.innerText = '';
+        sliderValueDisplay.innerText = '';
+        stanceChartTitleMiddle.innerText = 'Activity';
+
+    } else {
+        sliderLabel.style.color = 'initial'; // Default color
+        sliderLabel.style.cursor = 'default'; // Default cursor
+
+        // Adjust the chart title accordingly
+        stanceChartTitleTop.innerText = 'Top';
+        sliderValueDisplay.innerText = slider.value;
+        stanceChartTitleMiddle.innerText = 'Activities';
+
+    }
 
     // Set slider value within new max limit
     slider.value = slider.value > slider.max ? slider.max : slider.value;
@@ -889,7 +970,6 @@ function updateSliderForYear(year) {
 
 
     // Update the displayed slider value and redraw the chart
-    sliderValueDisplay.innerText = slider.value;
     updateStanceLimit(slider.value);
     createChartStancesByDay(globalTopDogStances, globalDaysOfWeek, globalStanceData);
 

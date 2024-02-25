@@ -59,8 +59,8 @@
                                 </div>
                             </div>
 
-                            <h2 class="card-title">
-                                Top <span id="stanceSliderValue">{% if max_dog_stances_count > 4 %}5{% else %}{{ max_dog_stances_count }}{% endif %}</span> Dog Stances Across The Week
+                            <h2 class="card-title" id="stanceChartTitle">
+                                <span id="stanceChartTitleTop">Top</span> <span id="stanceSliderValue">{% if max_dog_stances_count > 4 %}5{% else %}{{ max_dog_stances_count }}{% endif %}</span> Dog <span id="stanceChartTitleMiddle">Activities</span> Across The Week
                             </h2>
                             <canvas id="chart_dogStances_by_day"  width="800" height="450"></canvas>
                         </div>
