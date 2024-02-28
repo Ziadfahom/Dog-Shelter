@@ -157,9 +157,6 @@ def login_user_view(request):
 
                 # If correct username+password combination
                 if user is not None:
-                    # Update last login time
-                    user.last_login = datetime.now() # Updates to the current time when user logs in
-                    user.save(update_fields=['last_login'])
                     login(request, user=user)
                     messages.success(request, message='You have successfully logged in!')
                     return redirect('dogs_app:home')
