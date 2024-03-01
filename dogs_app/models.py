@@ -1,15 +1,13 @@
 import os
-from datetime import timedelta
-
+from django.utils.dateparse import parse_datetime
 import pytz
 from django.db import models
-from django.db.models import ExpressionWrapper, F, OuterRef, Subquery, IntegerField
-from django.db.models.functions import ExtractDay
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import User
 import re
+import datetime
 
 
 # Location of the default User profile picture if they don't have one
@@ -188,8 +186,8 @@ def get_current_date_jerusalem():
 
 
 class Observes(models.Model):
-    dog = models.ForeignKey('Dog', on_delete=models.SET_NULL, null=True, related_name='observers', verbose_name='Dog')
-    camera = models.ForeignKey('Camera', on_delete=models.SET_NULL, null=True, related_name='observes', verbose_name='Camera')
+    dog = models.ForeignKey('Dog', on_delete=models.CASCADE, null=True, related_name='observers', verbose_name='Dog')
+    camera = models.ForeignKey('Camera', on_delete=models.CASCADE, null=True, related_name='observes', verbose_name='Camera')
     sessionDate = models.DateField(default=get_current_date_jerusalem, verbose_name='Session Start Date')
     comments = models.CharField(max_length=200, blank=True, null=True, verbose_name='Comments')
 
@@ -303,9 +301,9 @@ class Kennel(models.Model):
 
 
 class DogPlacement(models.Model):
-    dog = models.ForeignKey('Dog', models.SET_NULL, null=True,
+    dog = models.ForeignKey('Dog', models.CASCADE, null=True,
                             verbose_name='Dog')
-    kennel = models.ForeignKey('Kennel', models.SET_NULL, null=True,
+    kennel = models.ForeignKey('Kennel', models.CASCADE, null=True,
                                verbose_name='Kennel')
     entranceDate = models.DateField(default=current_timezone_aware_date,
                                     verbose_name='Entrance Date')
@@ -332,6 +330,10 @@ class DogPlacement(models.Model):
     def save(self, *args, **kwargs):
         if self.dog is None or self.kennel is None:
             raise ValidationError('Dog and Kennel are required fields.')
+        # Ensure expirationDate is not before entranceDate
+        if self.expirationDate and self.entranceDate and self.expirationDate < self.entranceDate:
+            raise ValidationError("Expiration Date cannot be before Entrance Date.")
+
         super().save(*args, **kwargs)
 
     # Calculates dog's stay duration in the kennel (expiratedDate-entranceDate)
@@ -372,7 +374,7 @@ class Observation(models.Model):
     ]
 
     # References the Observes instance
-    observes = models.ForeignKey('Observes', on_delete=models.SET_NULL, null=True, verbose_name='Session')
+    observes = models.ForeignKey('Observes', on_delete=models.CASCADE, null=True, verbose_name='Session')
     obsDateTime = models.DateTimeField(default=current_timezone_aware_datetime, verbose_name='Starting Date and Time', db_index=True)
     sessionDurationInMins = models.PositiveIntegerField(default=2,
                                                         validators=[MinValueValidator(0)], verbose_name='Session Duration (mins)')
@@ -449,7 +451,7 @@ class DogStance(models.Model):
         ('ELSE', 'Else'),
     ]
 
-    observation = models.ForeignKey('Observation', on_delete=models.SET_NULL, null=True, verbose_name='Observation')
+    observation = models.ForeignKey('Observation', on_delete=models.CASCADE, null=True, verbose_name='Observation')
     stanceStartTime = models.TimeField(verbose_name='Stance Start Time')
     dogStance = models.CharField(max_length=15, choices=DOG_STANCE_CHOICES, verbose_name='Stance')
     dogLocation = models.CharField(max_length=10, choices=DOG_LOCATION_CHOICES, blank=True, null=True, verbose_name='Location')

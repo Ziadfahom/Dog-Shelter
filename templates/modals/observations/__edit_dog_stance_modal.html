@@ -1,7 +1,6 @@
-{% load date_filters %}
 <div
   class="modal fade"
-  id="editStanceModal"
+  id="editDogStanceModal"
   data-backdrop="static"
   data-keyboard="false"
   tabindex="-1"
@@ -21,8 +20,22 @@
             <hr>
 
             {% comment %} Content {% endcomment %}
-            <form method="post" enctype="multipart/form-data">
+            <form method="post" id="edit-stance-form">
                 {% csrf_token %}
+                <!-- General Error Display Area -->
+                <div class="form-general-error edit-stance-form" id="edit-stance-general-error">
+                    <span class="text-danger form-error">
+                        {% if non_field_errors %}
+                                {% for error in non_field_errors %}
+                                    {{ error }}<br>
+                                {% endfor %}
+                        {% endif %}
+                    </span>
+                </div>
+
+                <!-- Hidden input to hold the Observation ID Field -->
+                <input type="hidden" id="observation_id" name="observation_id">
+
                 <div class="modal-body" style="padding-bottom: 0;">
                     {% if stance_form.stanceStartTime.errors %}
                         <div class="form-error-row">
@@ -31,7 +44,7 @@
                     {% endif %}
                     <div class="form-row">
                         <label for="timepicker">Stance Start Time:</label>
-                        <input class="form-control" type="text" id="timepicker" name="stanceStartTime" value="{{ stance_form.stanceStartTime.value|format_time }}">
+                        <input type="text" id="timepicker" class="form-control {{ stance_form.stanceStartTime.name }}" name="{{ stance_form.stanceStartTime.name }}" value="{{ stance_form.stanceStartTime.value }}">
                     </div>
 
                     {% if stance_form.dogStance.errors %}
@@ -41,7 +54,7 @@
                     {% endif %}
                     <div class="form-row">
                         <label for="currentStance">Stance:</label>
-                        <select id="currentStance" class="form-control" name="{{ stance_form.dogStance.name }}">
+                        <select id="currentStance" class="form-control {{ stance_form.dogStance.name }}" name="{{ stance_form.dogStance.name }}">
                             {% for value, display in stance_form.dogStance.field.choices %}
                                 <option value="{{ value }}" {% if stance_form.dogStance.value == value %}selected{% endif %}>{{ display }}</option>
                             {% endfor %}
@@ -55,7 +68,7 @@
                     {% endif %}
                     <div class="form-row">
                         <label for="dogLocation">Location:</label>
-                        <select id="dogLocation" class="form-control" name="{{ stance_form.dogLocation.name }}">
+                        <select id="dogLocation" class="form-control {{ stance_form.dogLocation.name }}" name="{{ stance_form.dogLocation.name }}">
                             {% for value, display in stance_form.dogLocation.field.choices %}
                                 <option value="{{ value }}" {% if stance_form.dogLocation.value == value %}selected{% endif %}>{{ display }}</option>
                             {% endfor %}

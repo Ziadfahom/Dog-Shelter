@@ -17,7 +17,8 @@
     <div class="container-fluid p-5 mt-5">
         <div class="col-md-12 mx-auto">
             <div class="card shadowed">
-                <div class="card-header bg-dark py-4 text-white d-flex align-items-center justify-content-between">
+                <div class="card-header bg-dark py-4 text-white d-flex align-items-center justify-content-between"
+                     id="observations-table-top">
                     <!-- Back button on the left -->
                     <button onclick="goBackWithParam()" class="btn btn-light" title="Go Back">
                         <span class="icon-arrow_back text-dark"></span>
@@ -28,7 +29,7 @@
                         All Observations For Session ({{ session_instance }})
                     </h6>
 
-                    <a class="btn add-dog-btn text-white" href="#" data-bs-toggle="modal" data-bs-target="#newObservationModal">
+                    <a id="add-observation-button" class="btn add-dog-btn text-white" href="#" data-bs-toggle="modal" data-bs-target="#newObservationModal">
                         <i class="bi bi-plus-circle-fill mr-1"></i> New Oservation
                     </a>
                 </div>
@@ -68,10 +69,8 @@
         </div>
     </div>
 
-<!-- Edit Dog Stance Modal -->
-{% include 'modals/observations/__edit_dog_stance_modal.html' %}
 
-<!-- Edit Dog Stance Modal -->
+<!-- Edit Observation Modal -->
 {% include 'modals/observations/__edit_observation_modal.html' %}
 
 <!-- Add New Observation Modal -->
@@ -92,11 +91,4 @@
         }
     </script>
     <script src="{% static 'dogs_app/js/view_observations.js' %}"></script>
-    <script>
-        $(document).on("change", ".file_multi_video", function(evt) {
-            var $source = $('#video_here');
-            $source[0].src = URL.createObjectURL(this.files[0]);
-            $source.parent()[0].load();
-          });
-    </script>
 {% endblock %}

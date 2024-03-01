@@ -2,8 +2,10 @@ import json
 import math
 from collections import defaultdict, Counter
 from datetime import datetime, time
+
+from django.middleware.csrf import get_token
 from django.utils.dateparse import parse_datetime
-from django.utils.timezone import localtime
+from django.utils.timezone import localtime, make_aware
 from openpyxl import Workbook, load_workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
@@ -25,13 +27,16 @@ from .models import *
 from django.conf import settings
 import os
 from django.core import serializers
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, EmptyPage
 from django.template.loader import render_to_string
 from datetime import date, timedelta
 from django.db import IntegrityError, transaction
 from io import BytesIO
 from .serializers import DogSerializer
 from django.views.decorators.http import require_POST
+from django.core.serializers.json import DjangoJSONEncoder
+from django.forms.utils import ErrorList
+
 
 # Location of the default User profile picture if they don't have a picture
 DEFAULT_IMAGE_SOURCE = '/profile_pictures/default.jpg'
@@ -296,8 +301,8 @@ def dog_record_view(request, pk):
         # Fetch all observations for the dog in one query
         # Fetch all observations for the dog in UTC
         local_tz = pytz.timezone('Asia/Jerusalem')
-        utc_first_date = timezone.make_aware(datetime.combine(first_date, time.min), local_tz).astimezone(pytz.utc)
-        utc_last_date = timezone.make_aware(datetime.combine(last_date, time.max), local_tz).astimezone(pytz.utc)
+        utc_first_date = timezone.make_aware(datetime.datetime.combine(first_date, time.min), local_tz).astimezone(pytz.utc)
+        utc_last_date = timezone.make_aware(datetime.datetime.combine(last_date, time.max), local_tz).astimezone(pytz.utc)
 
         # Fetch observations in UTC
         observations = Observation.objects.filter(
@@ -437,54 +442,69 @@ def dog_record_view(request, pk):
 
             # Check if it's a Placement form
             elif form_type == 'placement_form':
-                if placement_form.is_valid():
-                    new_placement = placement_form.save(commit=False)
-                    new_placement.dog = dog_record
-                    new_placement.save()
+                try:
+                    if placement_form.is_valid():
+                        new_placement = placement_form.save(commit=False)
+                        new_placement.dog = dog_record
+                        new_placement.save()
 
-                    # If this is an AJAX request, send back the new Placement data
-                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                        placements_data = DogPlacement.objects.filter(dog=dog_record).order_by('-entranceDate')[
-                                          :MAX_PER_PAGE]
-                        data = {
-                            'data': [render_to_string('_placement_row.html',
-                                                      {'placement': placement}) for placement in placements_data],
-                            'pagination': render_to_string('_dog_record_pagination.html',
-                                                           {'paginated_data': placements,
-                                                            'param_name': 'placements_page'})
-                        }
-                        return JsonResponse(data)
+                        # If this is an AJAX request, send back the new Placement data
+                        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                            placements_data = DogPlacement.objects.filter(dog=dog_record).order_by('-entranceDate')[
+                                              :MAX_PER_PAGE]
+                            data = {
+                                'data': [render_to_string('_placement_row.html',
+                                                          {'placement': placement}) for placement in placements_data],
+                                'pagination': render_to_string('_dog_record_pagination.html',
+                                                               {'paginated_data': placements,
+                                                                'param_name': 'placements_page'})
+                            }
+                            return JsonResponse(data)
+                        else:
+                            # Redirect back to the dog_record_view to see the new placement.
+                            return redirect('dogs_app:dog_record', pk=dog_record.pk)
                     else:
-                        # Redirect back to the dog_record_view to see the new placement.
-                        return redirect('dogs_app:dog_record', pk=dog_record.pk)
-                else:
-                    errors = placement_form.errors.as_json()
-                    return JsonResponse({'status': 'fail', 'errors': errors}, status=400)
-
+                        errors = placement_form.errors.as_json()
+                        return JsonResponse({'status': 'fail', 'errors': errors}, status=400)
+                except IntegrityError as e:
+                    error_message = "Duplicate Kennel Placement, this dog already has this kennel on that date."
+                    # Construct the error structure
+                    errors_dict = {'__all__': [{'message': error_message}]}
+                    # Convert the error dictionary to a JSON string
+                    errors_json_string = json.dumps(errors_dict, cls=DjangoJSONEncoder)
+                    return JsonResponse({'status': 'fail', 'errors': errors_json_string}, status=400)
             # Check if it's a Session (Observes) form
             elif form_type == 'session_form':
-                if session_form.is_valid():
-                    new_session = session_form.save(commit=False)
-                    new_session.dog = dog_record
-                    new_session.save()
+                try:
+                    if session_form.is_valid():
+                        new_session = session_form.save(commit=False)
+                        new_session.dog = dog_record
+                        new_session.save()
 
-                    # If this is an AJAX request, send back the new Session data
-                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                        sessions_data = Observes.objects.filter(dog=dog_record).order_by('-sessionDate')[:MAX_PER_PAGE]
-                        data = {
-                            'data': [render_to_string('_session_row.html',
-                                                      {'session': session}) for session in sessions_data],
-                            'pagination': render_to_string('_dog_record_pagination.html',
-                                                           {'paginated_data': sessions,
-                                                            'param_name': 'sessions_page'})
-                        }
-                        return JsonResponse(data)
+                        # If this is an AJAX request, send back the new Session data
+                        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                            sessions_data = Observes.objects.filter(dog=dog_record).order_by('-sessionDate')[:MAX_PER_PAGE]
+                            data = {
+                                'data': [render_to_string('_session_row.html',
+                                                          {'session': session}) for session in sessions_data],
+                                'pagination': render_to_string('_dog_record_pagination.html',
+                                                               {'paginated_data': sessions,
+                                                                'param_name': 'sessions_page'})
+                            }
+                            return JsonResponse(data)
+                        else:
+                            # Redirect back to the dog_record_view to see the new placement.
+                            return redirect('dogs_app:dog_record', pk=dog_record.pk)
                     else:
-                        # Redirect back to the dog_record_view to see the new placement.
-                        return redirect('dogs_app:dog_record', pk=dog_record.pk)
-                else:
-                    errors = session_form.errors.as_json()
-                    return JsonResponse({'status': 'fail', 'errors': errors}, status=400)
+                        errors = session_form.errors.as_json()
+                        return JsonResponse({'status': 'fail', 'errors': errors}, status=400)
+                except IntegrityError as e:
+                    error_message = "Duplicate Camera Sessions, this dog already has this camera on that date."
+                    # Construct the error structure
+                    errors_dict = {'__all__': [{'message': error_message}]}
+                    # Convert the error dictionary to a JSON string
+                    errors_json_string = json.dumps(errors_dict, cls=DjangoJSONEncoder)
+                    return JsonResponse({'status': 'fail', 'errors': errors_json_string}, status=400)
 
         # Check if request is AJAX call for switching pages
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -693,6 +713,10 @@ def edit_placement(request, placement_id):
                     return JsonResponse({'status': 'fail', 'errors': errors})
             except DogPlacement.DoesNotExist:
                 return JsonResponse({'status': 'fail'})
+            # Handle IntegrityError for duplicate kennel placements
+            except IntegrityError:
+                error_message = 'Duplicate Kennel Placement, this dog already has this kennel on that date.'
+                return JsonResponse({'status': 'fail', 'errors': {'__all__': [error_message]}})
             except Exception as e:
                 return JsonResponse({'status': 'fail', 'message': str(e)})
         elif request.method == 'GET':
@@ -709,6 +733,7 @@ def edit_placement(request, placement_id):
                 return JsonResponse(placement_data)
             except DogPlacement.DoesNotExist:
                 return JsonResponse({'status': 'fail', 'message': 'Placement not found'})
+                # Handle IntegrityError for duplicate kennel placements
             except Exception as e:
                 return JsonResponse({'status': 'fail', 'message': str(e)})
         else:
@@ -733,6 +758,9 @@ def edit_session(request, session_id):
                     return JsonResponse({'status': 'fail', 'errors': errors})
             except Observes.DoesNotExist:
                 return JsonResponse({'status': 'fail'})
+            except IntegrityError:
+                error_message = 'Duplicate Camera Session, this dog already has this camera on that date.'
+                return JsonResponse({'status': 'fail', 'errors': {'__all__': [error_message]}})
             except Exception as e:
                 return JsonResponse({'status': 'fail', 'message': str(e)})
         elif request.method == 'GET':
@@ -814,24 +842,27 @@ def edit_owner(request, owner_id):
 
 # Handle Observations display
 def view_observations(request, session_id):
+    observation_form = None
+    stance_form = None
     if request.user.is_authenticated:
-        print("5555555555555")
-        dog_stances = DogStance.objects.all().order_by('stanceStartTime')
+        dog_stances = DogStance.objects.filter(observation__observes_id=session_id).order_by('stanceStartTime')
         observations = Observation.objects.filter(observes_id=session_id).prefetch_related(
             Prefetch('dogstance_set', queryset=dog_stances, to_attr='related_dog_stances')
         ).order_by('-obsDateTime')
         session_instance = Observes.objects.get(pk=session_id)
 
         if request.method == 'POST':
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            # Check the form type to determine which form is being submitted
+            form_type = request.POST.get('form_type')
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest' and form_type == 'dog_stance':
                 # Handle DogStance form submission via AJAX
                 stance_form = DogStanceForm(request.POST or None)
                 if stance_form.is_valid():
-                    print("1111111111")
                     try:
                         new_stance = stance_form.save(commit=False)
                         new_stance.observation_id = request.POST.get('observation_id')
                         new_stance.save()
+                        messages.success(request, 'Stance has been added successfully!')
                         return JsonResponse({
                             "status": "success",
                             "new_stance": {
@@ -842,31 +873,44 @@ def view_observations(request, session_id):
                                 'observation': new_stance.observation_id,
                             }
                         }, status=201)
+                    except ValidationError as e:
+                        return JsonResponse({"status": "error", "errors": e.message_dict}, status=400)
                     except IntegrityError:
-                        print("3333333333")
                         return JsonResponse({"status": "error",
                                              "errors": "Duplicate Stance Start Time"}, status=400)
                     except Exception as e:
-                        print("4444444444444")
                         return JsonResponse({"status": "error", "errors": str(e)}, status=400)
                 else:
-                    print("22222222222222")
                     return JsonResponse({"status": "error", "errors": stance_form.errors}, status=400)
+            elif request.headers.get('X-Requested-With') == 'XMLHttpRequest' and form_type == 'add_observation':
+                # Handle Observation form submission via AJAX
+                observation_form = ObservationForm(request.POST or None, request.FILES or None)
+                if observation_form.is_valid():
+                    try:
+                        new_observation = observation_form.save(commit=False)
+                        new_observation.observes = session_instance
 
-            else:
-                print("66666666666666")
-                stance_form = DogStanceForm()
+                        # Convert to naive datetime
+                        naive_dt = new_observation.obsDateTime.replace(tzinfo=None)
+                        # Apply the correct timezone
+                        local_tz = pytz.timezone('Asia/Jerusalem')
+                        local_dt = local_tz.localize(naive_dt)
+                        # Convert to UTC
+                        utc_dt = local_dt.astimezone(pytz.utc)
+                        new_observation.obsDateTime = utc_dt
 
-            observation_form = ObservationForm(request.POST or None, request.FILES or None)
-            if observation_form.is_valid():
-                print("777777777777777777")
-                new_observation = observation_form.save(commit=False)
-                new_observation.observes = session_instance
-                new_observation.save()
-                messages.success(request, 'Success! Observation has been successfully added.')
-                return redirect('dogs_app:view_observations', session_id=session_id)
+                        new_observation.save()
+                        messages.success(request, 'Observation has been added successfully!')
+                        return JsonResponse({"status": "success"}, status=201)
+                    except ValidationError as e:
+                        return JsonResponse({"status": "error", "errors": e.message_dict}, status=400)
+                    except IntegrityError:
+                        return JsonResponse({"status": "error", "errors": "Duplicate Observation Date"}, status=400)
+                    except Exception as e:
+                        return JsonResponse({"status": "error", "errors": str(e)}, status=400)
+                else:
+                    return JsonResponse({"status": "error", "errors": observation_form.errors}, status=400)
         else:
-            print("888888888888888888888888888")
             observation_form = ObservationForm()
             stance_form = DogStanceForm()
 
@@ -878,8 +922,8 @@ def view_observations(request, session_id):
             'observations': observations,
             'paginated_observations': paginated_observations,
             'session_instance': session_instance,
-            'observation_form': observation_form,
-            'stance_form': stance_form,
+            'observation_form': observation_form if observation_form else None,
+            'stance_form': stance_form if stance_form else None,
         }
 
         return render(request, 'view_observations.html', context=context)
@@ -894,10 +938,31 @@ def delete_observation(request):
     if request.method == 'POST' and request.user.is_authenticated and request.headers.get(
             'X-Requested-With') == 'XMLHttpRequest':
         observation_id = request.POST.get('observation_id')
+
+        session_id = Observes.objects.get(observation__id=observation_id).id
+        dog_stances = DogStance.objects.filter(observation_id=observation_id).order_by('stanceStartTime')
+        observations = Observation.objects.filter(observes_id=session_id).prefetch_related(
+            Prefetch('dogstance_set', queryset=dog_stances, to_attr='related_dog_stances')
+        ).order_by('-obsDateTime')
+
+        # Get the current page number
+        page_number = request.POST.get('page_number', 1)  # Get the current page number
+        paginator = Paginator(observations, ENTRIES_PER_PAGE)
+
+        # Check if the current page is empty
+        try:
+            current_page = paginator.page(page_number)
+            is_current_page_empty = len(current_page.object_list)-1 == 0
+        except EmptyPage:
+            is_current_page_empty = True
+
         try:
             observation = Observation.objects.get(id=observation_id)
             observation.delete()
-            return JsonResponse({"status": "success"})
+
+            return JsonResponse({"status": "success",
+                                 "is_current_page_empty": is_current_page_empty
+                                 })
         except Observation.DoesNotExist:
             return JsonResponse({"status": "error", "message": "Observation not found"}, status=404)
     else:
@@ -907,32 +972,53 @@ def delete_observation(request):
 # Handle editing an Observation
 def edit_observation(request, observation_id):
     if request.method == 'GET':
-        print("99999999999999999")
         observation = Observation.objects.get(id=observation_id)
         observation_form = ObservationForm(instance=observation)
+
         # Exclude the file field from the JSON response
         observation_data = observation_form.initial
+
         # Temporary! Remove the file fields from the JSON response
         del observation_data['jsonFile']  # TODO: Remove this line once the JSON file is implemented
         del observation_data['rawVideo']  # TODO: Remove this line once the raw video is implemented
+
         return JsonResponse({"status": "success", "observation": observation_data}, status=200)
 
     elif request.method == 'POST':
-        print("000000000000000000")
-        observation_form = ObservationForm(request.POST or None, instance=Observation.objects.get(id=observation_id))
-        if observation_form.is_valid():
-            print("valid!!")
-            observation_form.save()
-            # Get the updated observation
-            updated_observation = Observation.objects.get(id=observation_id)
-            # Render the _observation_row.html template with the updated observation
-            new_row_html = render_to_string('_observation_row.html', {'observation': updated_observation})
-            return JsonResponse(
-                {"status": "success", "observation": observation_form.cleaned_data, "newRowHtml": new_row_html},
-                status=200)
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            observation_form = ObservationForm(request.POST or None, instance=Observation.objects.get(id=observation_id))
+            if observation_form.is_valid():
+                try:
+                    new_observation = observation_form.save(commit=False)
+
+                    # Convert to naive datetime
+                    naive_dt = new_observation.obsDateTime.replace(tzinfo=None)
+                    # Apply the correct timezone
+                    local_tz = pytz.timezone('Asia/Jerusalem')
+                    local_dt = local_tz.localize(naive_dt)
+                    # Convert to UTC
+                    utc_dt = local_dt.astimezone(pytz.utc)
+                    new_observation.obsDateTime = utc_dt
+
+                    new_observation.save()
+                    # Get the updated observation
+                    updated_observation = Observation.objects.get(id=observation_id)
+                    # Render the _observation_row.html template with the updated observation
+                    new_row_html = render_to_string('_observation_row.html', {'observation': updated_observation}, request=request)
+                    messages.success(request, 'Observation has been edited successfully!')
+                    return JsonResponse(
+                        {"status": "success", "observation": observation_form.cleaned_data, "newRowHtml": new_row_html},
+                        status=200)
+                except ValidationError as e:
+                    return JsonResponse({"status": "error", "errors": e.message_dict}, status=400)
+                except IntegrityError as e:
+                    return JsonResponse({"status": "error", "errors": "Duplicate Observation Date"}, status=400)
+                except Exception as e:
+                    return JsonResponse({"status": "error", "errors": str(e)}, status=400)
+            else:
+                return JsonResponse({"status": "error", "errors": observation_form.errors}, status=400)
         else:
-            print("Not valid!!")
-            return JsonResponse({"status": "error", "errors": observation_form.errors}, status=400)
+            return HttpResponseNotAllowed(['POST', 'GET'])
 
 
 # Handle deleting a DogStance
@@ -954,27 +1040,39 @@ def delete_stance(request):
 # Handle editing a DogStance
 def edit_dog_stance(request, stance_id):
     if request.method == 'GET':
-        stance = DogStance.objects.get(id=stance_id)
-        stance_form = DogStanceForm(instance=stance)
-        stance_data = stance_form.initial
-        return JsonResponse({"status": "success", "stance": stance_data}, status=200)
-
+        try:
+            stance = DogStance.objects.get(id=stance_id)
+            stance_form = DogStanceForm(instance=stance)
+            stance_data = stance_form.initial
+            return JsonResponse({"status": "success", "stance": stance_data}, status=200)
+        except DogStance.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Dog Stance not found"}, status=404)
     elif request.method == 'POST':
         stance_form = DogStanceForm(request.POST or None, instance=DogStance.objects.get(id=stance_id))
         if stance_form.is_valid():
-            saved_stance = stance_form.save()
-            observation_id = saved_stance.observation.id
-
-            updated_stance = DogStance.objects.get(id=stance_id)
-            new_row_html = render_to_string('_observation_row.html', {'stance': updated_stance})
-            return JsonResponse(
-                {"status": "success",
-                 "stance": stance_form.cleaned_data,
-                 "newRowHtml": new_row_html,
-                 "observationId": observation_id},
-                status=200)
+            try:
+                saved_stance = stance_form.save()
+                observation_id = saved_stance.observation.id
+                observation = Observation.objects.get(id=observation_id)
+                updated_stance = DogStance.objects.get(id=stance_id)
+                new_row_html = render_to_string('_observation_row.html', {'stance': updated_stance, 'observation': observation}, request=request)
+                messages.success(request, 'Stance has been edited successfully!')
+                return JsonResponse(
+                    {"status": "success",
+                     "stance": stance_form.cleaned_data,
+                     "newRowHtml": new_row_html,
+                     "observationId": observation_id},
+                    status=200)
+            except ValidationError as e:
+                return JsonResponse({"status": "error", "errors": e.message_dict}, status=400)
+            except IntegrityError:
+                return JsonResponse({"status": "error", "errors": "Duplicate Stance Start Time"}, status=400)
+            except Exception as e:
+                return JsonResponse({"status": "error", "errors": str(e)}, status=400)
         else:
             return JsonResponse({"status": "error", "errors": stance_form.errors}, status=400)
+    else:
+        return HttpResponseNotAllowed(['POST', 'GET'])
 
 
 # Deleting a dog record
