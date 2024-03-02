@@ -1,13 +1,12 @@
 <!-- This HTML is used in 'view_dogs.html' to iterate
 over each dog and display them in a separate row-->
-
 {% load group_check %}
 {% load dog_filters %}
 {% load static %}
 
 <!--The row is clickable (redirects to the dog's record page), and hovering over it
  shows a pointer cursor and displays a tooltip with the dog's thumbnail.-->
-<tr class="dog-row position-relative"
+<tr class="dog-row position-relative {% if dog.adoptionDate %}table-danger{% endif %}"
     data-href="{% url 'dogs_app:dog_record' dog.dogID %}"
     data-dogid="{{ dog.dogID }}"
     style="cursor: pointer;"

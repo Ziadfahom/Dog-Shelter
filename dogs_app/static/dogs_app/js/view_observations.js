@@ -110,7 +110,7 @@ $(document).ready(function() {
     // Initialize flatpickr with the current date for Add New Entity
     initializeDateTimeFlatpickr(new Date().setSeconds(0, 0));
 
-    // Set a timeout to hide success message after 4 seconds
+    // Set a timeout to hide success message after 3 seconds
     setTimeout(function() {
         $('#messageContainer .alert').fadeOut('slow');
     }, 3000);

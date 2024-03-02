@@ -851,7 +851,13 @@ def view_observations(request, session_id):
         ).order_by('-obsDateTime')
         session_instance = Observes.objects.get(pk=session_id)
 
-        if request.method == 'POST':
+        # Check if user is on the correct branch
+        branch = get_current_branch(request)
+        dog = session_instance.dog
+        if dog.branch != branch:
+            messages.error(request, "You must be in the correct branch to view this dog's observations...")
+            return redirect('dogs_app:home')
+        elif request.method == 'POST':
             # Check the form type to determine which form is being submitted
             form_type = request.POST.get('form_type')
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest' and form_type == 'dog_stance':

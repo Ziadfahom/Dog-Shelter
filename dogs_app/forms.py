@@ -11,7 +11,6 @@ from datetime import date
 from django.utils.dateparse import parse_datetime
 
 
-
 # Helper function to get the user's current branch object (Israel/Italy)
 def get_current_branch(request):
     # Get the current Branch (Israel/Italy)
@@ -121,12 +120,12 @@ class AddDogForm(forms.ModelForm):
                                    required=False,
                                    widget=forms.widgets.Select(attrs={"class": "form-control",
                                                                       "title": "Select if the dog is neutered"}),
-                                   label="Neutered?")
+                                   label="Is the dog neutered?")
     isDangerous = forms.ChoiceField(choices=Dog.IS_DANGEROUS_CHOICES,
                                     required=False,
                                     widget=forms.widgets.Select(attrs={"class": "form-control",
                                                                        "title": "Select if the dog is dangerous"}),
-                                    label="Dangerous?")
+                                    label="Is the dog dangerous?")
     dogImage = forms.ImageField(required=False,
                                 widget=forms.widgets.ClearableFileInput(attrs={"class": "form-control",
                                                                                "title": "Upload the dog's image."}),
@@ -143,10 +142,17 @@ class AddDogForm(forms.ModelForm):
                                    widget=forms.widgets.Select(attrs={"class": "form-control",
                                                                       "title": "Select the dog's owner"}),
                                    label="Dog's Owner")
+    adoptionDate = forms.DateField(required=False,
+                                   widget=forms.widgets.DateInput(format='%Y-%m-%d',
+                                                                  attrs={"type": "date",
+                                                                         "class": "form-control",
+                                                                         "title": "Please enter a valid date",
+                                                                         "id": "id_adoptionDate"}),
+                                   label="Adoption Date")
 
     class Meta:
         model = Dog
-        exclude = ['branch']
+        exclude = ['branch', 'dogID']
 
     def __init__(self, *args, **kwargs):
         request = kwargs.pop('request', None)  # Extract the request object

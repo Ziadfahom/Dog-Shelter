@@ -55,17 +55,37 @@
                     {% for field in form %}
                     {% if not field.name == "dogID" and not field.name == "dogImage" %}
                         <div class="mb-3">
-                            <strong><label for="{{ field.id_for_label }}" class="form-label stylish-label">{{ field.label }}</label></strong>
-
                             {% if field.field.widget.input_type == "date" %}
-                                <!-- Wrap date field and reset link in a div for layout control -->
-                                <div class="d-flex align-items-center">
-                                    <!-- Add 'date-field' CSS class to date fields for easy targeting in JavaScript -->
-                                    {{ field|add_class:"form-control stylish-form-control date-field" }}
-                                    <!-- Reset link that will clear the associated date field when clicked -->
-                                    <a href="#" style="padding-left: 8px;" class="reset-date-link ml-2">Reset</a>
-                                </div>
+                                <!-- Check if it's the adoptionDate field -->
+                                {% if field.label == "Adoption Date" %}
+                                    <!-- Dropdown for Adoption status -->
+                                    <strong><label for="adoptionStatus" class="form-label stylish-label">Is the dog adopted?</label></strong>
+                                    <select id="adoptionStatus" class="form-control">
+                                        <option value="No" {% if form.instance.adoptionDate == None %}selected{% endif %}>No (Not Adopted)</option>
+                                        <option value="Yes" {% if form.instance.adoptionDate != None %}selected{% endif %}>Yes (Adopted)</option>
+                                    </select>
+                                    <div id="adoptionDateAndLabel">
+                                        <strong><label for="{{ field.id_for_label }}" class="form-label stylish-label">{{ field.label }}</label></strong>
+                                        <!-- Wrap date field and reset link in a div for layout control -->
+                                        <div class="d-flex align-items-center">
+                                            <!-- Adoption Date field -->
+                                            {{ field|add_class:"form-control stylish-form-control date-field" }}
+                                            <!-- Reset link that will clear the associated date field when clicked -->
+                                            <a href="#" style="padding-left: 8px;" class="reset-date-link ml-2" id="reset-adoption">Reset</a>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <strong><label for="{{ field.id_for_label }}" class="form-label stylish-label">{{ field.label }}</label></strong>
+                                    <div class="d-flex align-items-center">
+                                        <!-- Add 'date-field' CSS class to date fields for easy targeting in JavaScript -->
+                                        {{ field|add_class:"form-control stylish-form-control date-field" }}
+                                        <!-- Reset link that will clear the associated date field when clicked -->
+                                        <a href="#" style="padding-left: 8px;" class="reset-date-link ml-2">Reset</a>
+                                    </div>
+                                {% endif %}
+
                             {% else %}
+                                <strong><label for="{{ field.id_for_label }}" class="form-label stylish-label">{{ field.label }}</label></strong>
                                 {{ field|add_class:"form-control stylish-form-control" }}
                             {% endif %}
 
@@ -82,7 +102,7 @@
                         <div class="d-flex mt-1">
                             <button class="btn flex-grow-1 mx-2 btn-outline-dark btn-lg" type="submit">
                                 Update
-                            </button> 
+                            </button>
                         </div>
                     </div>
 
@@ -91,17 +111,6 @@
 
         </div>
     </div>
-    {% comment %} <div class="card border-warning stylish-card shadow">
-        <div class="d-flex justify-content-between align-items-center p-2 card-header bg-warning text-black text-center stylish-card-header">
-
-            <button onclick="goBack()" class="btn btn-secondary">Back</button>
-            <h2 class="m-2 flex-grow-1 text-center" style="padding-left: 4rem;">Update Details</h2>
-            <button type="submit" class="btn btn-success" onclick="submitDogForm()">Save Changes</button>
-
-        </div>
-
-        </div>
-    </div> {% endcomment %}
 {% endblock %}
 
 {% block script %}

@@ -1160,3 +1160,8 @@ document.addEventListener('DOMContentLoaded', function() {
 $('#addTreatmentModal, #editTreatmentModal, #addExaminationModal, #editExaminationModal, #addPlacementModal, #editPlacementModal, #addSessionModal, #editSessionModal\n').on('show.bs.modal hidden.bs.modal', function () {
     $('.error').remove();
 });
+
+// Set a timeout to hide success message after 3 seconds
+setTimeout(function() {
+    $('#messageContainer .alert').fadeOut('slow');
+}, 3000);

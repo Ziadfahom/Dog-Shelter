@@ -121,6 +121,7 @@ class Dog(models.Model):
     dogID = models.AutoField(primary_key=True)
     chipNum = models.CharField(max_length=30, unique=True, blank=True, null=True)
     dogName = models.CharField(max_length=35)
+    owner = models.ForeignKey(Owner, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Owner')
     dateOfBirthEst = models.DateField(blank=True, null=True)
     dateOfArrival = models.DateField(blank=True, null=True, default=current_timezone_aware_date)
     dateOfVaccination = models.DateField(blank=True, null=True)
@@ -131,7 +132,7 @@ class Dog(models.Model):
     isDangerous = models.CharField(max_length=1, choices=IS_DANGEROUS_CHOICES, blank=True, null=True)
     dogImage = models.ImageField(upload_to='dog_pictures', default=DEFAULT_DOG_IMAGE_SOURCE, null=True, blank=True)
     kongDateAdded = models.DateField(blank=True, null=True)
-    owner = models.ForeignKey(Owner, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Owner')
+    adoptionDate = models.DateField(blank=True, null=True, verbose_name='Adoption Date', default=None)
     branch = models.ForeignKey('Branch', on_delete=models.CASCADE, verbose_name='Branch')
 
     # Returns True if the Dog's profile picture is the default.jpg
