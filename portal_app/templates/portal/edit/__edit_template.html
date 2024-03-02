@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block head %}
-    <title>DogsWatch | New Kennel</title>
+    <title>DogsWatch | Edit {{ title }}</title>
     <link rel="stylesheet" href="{% static 'portal_app/css/simple_styles.css' %}">
 {% endblock %}
 
@@ -12,10 +12,10 @@
         <div class="col-md-8 mx-auto">
             <div class="card shadow-lg">
                 <div class="card-header bg-dark text-white d-flex align-items-center justify-content-between py-0">
-                    <a href="{% url 'portal_app:list-kennels' %}" class="btn btn-light my-3 align-self-start">
+                    <a href="{{ list_page }}?page={{ page }}&sort={{ sort }}&search={{ search }}" class="btn btn-light my-3 align-self-start">
                         <span class="icon-arrow_back text-dark"></span>
                     </a>
-                    <h2 class="card-title">Add Kennel</h2>
+                    <h2 class="card-title">Edit {{ title }}</h2>
                     <span></span>
                 </div>
 
@@ -29,4 +29,23 @@
             </div>
         </div>
     </div>
+{% endblock %}
+
+{% block script %}
+    <!-- Flatpickr for Time field -->
+    {% if flatpicker_col %}
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                flatpickr("#{{ flatpicker_col }}", {
+                    enableTime: true,
+                    noCalendar: true,
+                    dateFormat: {% if flatpicker_col != 'obsDateTime' %} "H:i:S" {% else %} "Y-m-d H:i:S" {% endif %},
+                    time_24hr: true,
+                    minuteIncrement: 1,
+                    enableSeconds: true,
+                    allowInput: true
+                });
+            });
+        </script>
+    {% endif %}
 {% endblock %}

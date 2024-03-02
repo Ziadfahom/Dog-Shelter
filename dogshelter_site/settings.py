@@ -199,7 +199,7 @@ LOGGING = {
 DJANGO_TABLES2_TABLE_ATTRS = {
    'class': 'table table-hover table-bordered table-striped border-dark',
    'thead': {
-       'class': 'table-primary border-dark',
+       'class': 'table-light border-dark',
    },
 }
 

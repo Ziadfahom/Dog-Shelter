@@ -1,0 +1,28 @@
+{% load querystring from django_tables2 %}
+{% load i18n %}
+
+<div class="pagination">
+    {% if table.page %}
+        {% if table.page.has_previous %}
+            <a class="btn btn-outline-secondary" href="?{% querystring table.prefixed_page_field=table.page.previous_page_number %}">{% trans "Previous" %}</a>
+        {% else %}
+            <span class="btn btn-outline-secondary disabled">{% trans "Previous" %}</span>
+        {% endif %}
+
+        {% for page in table.page.paginator.page_range %}
+            {% if page == table.page.number %}
+                <span class="btn btn-outline-secondary active">{{ page }}</span>
+            {% elif page %}
+                <a class="btn btn-outline-secondary" href="?{% querystring table.prefixed_page_field=page %}">{{ page }}</a>
+            {% else %}
+                <span class="btn btn-outline-secondary disabled">&hellip;</span>
+            {% endif %}
+        {% endfor %}
+
+        {% if table.page.has_next %}
+            <a class="btn btn-outline-secondary" href="?{% querystring table.prefixed_page_field=table.page.next_page_number %}">{% trans "Next" %}</a>
+        {% else %}
+            <span class="btn btn-outline-secondary disabled">{% trans "Next" %}</span>
+        {% endif %}
+    {% endif %}
+</div>
