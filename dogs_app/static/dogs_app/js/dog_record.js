@@ -184,13 +184,29 @@ $(document).ready(function(){
         e.preventDefault();
         $("#id_expirationDate").val("");
     });
+
+
 });
 
 // Open the New Treatment/Examination/Placement/Session modal when the button for adding new entity is clicked
 function showModalOnClick(buttonSelector, modalId) {
     document.querySelector(buttonSelector).addEventListener('click', function(event) {
         event.preventDefault();
-        var modal = new bootstrap.Modal(document.getElementById(modalId));
+        var modalElement = document.getElementById(modalId);
+        var modal = new bootstrap.Modal(modalElement);
+
+        // Reset the form
+        var form = modalElement.querySelector('form');
+        if (form) {
+            form.reset();
+        }
+
+        // Clear existing error messages
+        var errorMessages = modalElement.querySelectorAll('.error');
+        errorMessages.forEach(function(error) {
+            error.remove();
+        });
+
         modal.show();
     });
 }
@@ -222,6 +238,9 @@ $(document).ready(function() {
         $(`${modalId} form`).submit(function(e) {
             e.preventDefault();
 
+            // Clear existing error messages
+            $(`${modalId} .error`).remove();
+
             $.ajax({
                 type: $(this).attr('method'),
                 url: $(this).attr('action'),
@@ -243,8 +262,27 @@ $(document).ready(function() {
 
                     // Update pagination controls
                     updatePagination(`${paginationId}`, data.pagination);
-                }
+                },
+                error: function(xhr) {
+                    // First, parse the JSON string to get the error object
+                    var response = JSON.parse(xhr.responseText);
 
+                    var errors = JSON.parse(response.errors);
+                    // Check and handle form-wide errors
+                    if (errors['__all__']) {
+                        $(`${modalId} .form-general-error`).html('<span class="error">' + errors['__all__'][0].message + '</span>');
+                    }
+
+                    else {
+                        // Iterate over field errors
+                        for (var field in errors) {
+                            // Check if the error message is an array and get the first message
+                            var errorMessage = Array.isArray(errors[field]) ? errors[field][0].message : errors[field];
+                            $(`${modalId} input[name="${field}"], ${modalId} textarea[name="${field}"]`).after('<span class="error">' + errorMessage + '</span>');
+                        }
+                    }
+
+                }
             });
         });
     }
@@ -512,30 +550,36 @@ $(document).ready(function() {
                     // Refresh the placement table to show the updated data
                     fetchTablePage('placements_page', currentPlacementPage);
 
-                } else {
-                   // Display error messages
-                   for (var field in response.errors) {
-                       var errorMessage = response.errors[field];
+                }
+                else {
+                    if (response.errors['__all__']) {
+                        // Handle non-specific form errors
+                        $('#editPlacementModal .form-general-error').html('<span class="error">' + response.errors['__all__'] + '</span>');
+                   } else {
+                        // Display error messages
+                        for (var field in response.errors) {
+                            var errorMessage = response.errors[field];
 
-                       // Get the element
-                       var $element = $('#editPlacementModal [name="' + field + '"]');
+                            // Get the element
+                            var $element = $('#editPlacementModal [name="' + field + '"]');
 
-                       // Check the tag name of the element
-                       switch ($element.prop('tagName')) {
-                           case 'SELECT':
-                               $element.after('<span class="error">' + errorMessage + '</span>');
-                               break;
-                           case 'INPUT':
-                               $element.after('<span class="error">' + errorMessage + '</span>');
-                               break;
-                           case 'TEXTAREA':
-                               $element.after('<span class="error">' + errorMessage + '</span>');
-                               break;
-                           default:
-                               console.log('Unknown field type: ' + $element.prop('tagName'));
-                               break;
-                       }
-                   }
+                            // Check the tag name of the element
+                            switch ($element.prop('tagName')) {
+                                case 'SELECT':
+                                    $element.after('<span class="error">' + errorMessage + '</span>');
+                                    break;
+                                case 'INPUT':
+                                    $element.after('<span class="error">' + errorMessage + '</span>');
+                                    break;
+                                case 'TEXTAREA':
+                                    $element.after('<span class="error">' + errorMessage + '</span>');
+                                    break;
+                                default:
+                                    console.log('Unknown field type: ' + $element.prop('tagName'));
+                                    break;
+                            }
+                        }
+                    }
                 }
             }
         });
@@ -604,30 +648,37 @@ $(document).ready(function() {
                     // Refresh the session table to show the updated data
                     fetchTablePage('sessions_page', currentSessionPage);
 
-                } else {
-                   // Display error messages
-                   for (var field in response.errors) {
-                       var errorMessage = response.errors[field];
+                }
+                else {
+                    if (response.errors['__all__']) {
+                        // Handle non-specific form errors
+                        $('#editSessionModal .form-general-error').html('<span class="error">' + response.errors['__all__'] + '</span>');
+                   } else {
+                        // Display error messages
+                        for (var field in response.errors) {
+                            var errorMessage = response.errors[field];
 
-                       // Get the element
-                       var $element = $('#editSessionModal [name="' + field + '"]');
+                            // Get the element
+                            var $element = $('#editSessionModal [name="' + field + '"]');
 
-                       // Check the tag name of the element
-                       switch ($element.prop('tagName')) {
-                           case 'SELECT':
-                               $element.after('<span class="error">' + errorMessage + '</span>');
-                               break;
-                           case 'INPUT':
-                               $element.after('<span class="error">' + errorMessage + '</span>');
-                               break;
-                           case 'TEXTAREA':
-                               $element.after('<span class="error">' + errorMessage + '</span>');
-                               break;
-                           default:
-                               console.log('Unknown field type: ' + $element.prop('tagName'));
-                               break;
-                       }
-                   }
+                            // Check the tag name of the element
+                            switch ($element.prop('tagName')) {
+                                case 'SELECT':
+                                    $element.after('<span class="error">' + errorMessage + '</span>');
+                                    break;
+                                case 'INPUT':
+                                    $element.after('<span class="error">' + errorMessage + '</span>');
+                                    break;
+                                case 'TEXTAREA':
+                                    $element.after('<span class="error">' + errorMessage + '</span>');
+                                    break;
+                                default:
+                                    console.log('Unknown field type: ' + $element.prop('tagName'));
+                                    break;
+                            }
+                        }
+                    }
+
                 }
             }
         });
@@ -1104,3 +1155,13 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
 });
+
+// Clear all error messages after closing modals
+$('#addTreatmentModal, #editTreatmentModal, #addExaminationModal, #editExaminationModal, #addPlacementModal, #editPlacementModal, #addSessionModal, #editSessionModal\n').on('show.bs.modal hidden.bs.modal', function () {
+    $('.error').remove();
+});
+
+// Set a timeout to hide success message after 3 seconds
+setTimeout(function() {
+    $('#messageContainer .alert').fadeOut('slow');
+}, 3000);

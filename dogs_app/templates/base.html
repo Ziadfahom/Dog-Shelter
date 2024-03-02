@@ -74,7 +74,6 @@
     <script src="https://code.highcharts.com/modules/heatmap.js"></script>
     <script src="https://code.highcharts.com/modules/accessibility.js"></script>
 
-
   </head>
   <body>
 
@@ -84,19 +83,25 @@
     <div id="messageContainer">
       {% if messages %}
         {% for message in messages %}
-          <div
-            class="alert alert-warning alert-dismissible fade show text-center"
-            role="alert"
-          >
+            <div class="alert
+                        {% if message.tags == 'error' %}
+                        alert-danger
+                        {% else %}
+                        alert-{{ message.tags }}
+                        {% endif %}
+                        alert-dismissible fade show text-center"
+                 role="alert"
+            >
             {{ message }}
             <button
               type="button"
               class="btn-close position-absolute right-5 top-5"
               data-bs-dismiss="alert"
               aria-label="Close"
-            ></button>
+            >
+            </button>
           </div>
-        {% endfor %} 
+        {% endfor %}
       {% endif %}
     </div>
 

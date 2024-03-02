@@ -1,17 +1,24 @@
-// Initialize Flatpickr for Timepicker field
-document.addEventListener("DOMContentLoaded", function() {
+// Show toast for success messages instead of alert
+const obsSuccessToastEl = document.getElementById('obsSuccessToast');
+const obsToastEl = new bootstrap.Toast(obsSuccessToastEl, {
+    autohide: true,
+    delay: 2000
+});
+
+
+// Initialize Flatpick Time picker for the sessionDurationInMins attribute in the form
+function initializeTimeFlatpickr(defaultTime) {
     flatpickr("#timepicker", {
         enableTime: true,
         noCalendar: true,
         dateFormat: "H:i:S",
+        defaultDate: defaultTime,
         time_24hr: true,
         minuteIncrement: 1,
         enableSeconds: true,
-        allowInput: true,
-
+        allowInput: true
     });
-});
-
+}
 
 // Display tooltips on action buttons
 var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
@@ -19,26 +26,99 @@ var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggl
         return new bootstrap.Tooltip(tooltipTriggerEl)
     })
 
-
-// Flatpick DateTime picker for the date attribute
-flatpickr("#datetimepicker", {
-    enableTime: true,
-    clickOpens: true,
-    allowInput: true,
-    dateFormat: "Y-m-d H:i:S",
-    timeZone: 'Asia/Jerusalem',
-    defaultDate: new Date().setSeconds(0, 0),
-    plugins: [new confirmDatePlugin({
+// Initialize Flatpick DateTime picker for the obsDateTime attribute in the form
+function initializeDateTimeFlatpickr(defaultDate) {
+    flatpickr("#datetimepicker", {
+        enableTime: true,
+        clickOpens: true,
+        allowInput: true,
+        minuteIncrement: 1,
+        dateFormat: "Y-m-dTH:i:S\\Z",  // Format for submission
+        altInput: true,  // Enable alternative input
+        altFormat: "Y-m-d H:i:S",  // User-friendly format for display
+        timeZone: 'Asia/Jerusalem',
+        defaultDate: defaultDate,
+        plugins: [new confirmDatePlugin({
             confirmText: "Confirm",
-    })]
-});
+        })]
+    });
+}
 
-// Style form errors when submitting Observation form with errors
+// Display form errors in the modal
+function displayErrors(errors, formName, modalId) {
+    // Clear existing errors
+    $('.form-error').remove();
+    $('.form-general-error').remove();
+
+    // Handle simple string errors
+    if (typeof errors === 'string') {
+        let errorContainer = $('#' + formName + '-general-error');
+        if (errorContainer.length) {
+            // If the error container exists, update its content
+            errorContainer.html('<div class="alert alert-danger form-general-error" role="alert">' + errors + '</div>');
+        } else {
+            // If the error container doesn't exist, create it
+            $('#'+ formName + '-form').prepend('<div id="' + formName + '-general-error" class="alert alert-danger form-general-error" role="alert">' + errors + '</div>');
+        }
+
+    }
+    // Check if general error exists and is not already displayed
+    else if ((errors['__all__'] || errors['non_field_errors']) && !$('.form-general-error').length) {
+        let generalErrors = errors['__all__'] || errors['non_field_errors'];
+        let errorString = generalErrors.join('<br>');
+
+        let errorContainer = $('#' + formName + '-general-error');
+        if (errorContainer.length) {
+            // If the error container exists, update its content
+            errorContainer.html('<div class="alert alert-danger form-general-error" role="alert">' + errorString + '</div>');
+        } else {
+            // If the error container doesn't exist, create it
+            $('#'+ formName + '-form').prepend('<div id="' + formName + '-general-error" class="alert alert-danger form-general-error" role="alert">' + errorString + '</div>');
+        }
+    }
+    else {
+        // Display field-specific errors
+        $.each(errors, function(field, messages) {
+            if (field !== '__all__' && field !== 'non_field_errors') {
+                let errorString = messages.join('<br>');
+
+                let inputField = $('#' + formName + '-form [name=' + field + ']');
+                if (!inputField.length) {
+                    // Use the class name if the name attribute is not available
+                    inputField = $('.' + field);
+                }
+
+                let formRow = inputField.closest('.form-row');
+                let errorContainer = formRow.prev('.form-error-row');
+
+                if (!errorContainer.length) {
+                    // Create the .form-error-row div and insert it before the .form-row
+                    errorContainer = $('<div class="form-error-row"></div>').insertBefore(formRow);
+                }
+                // Populate the .form-error-row div with the error messages
+                errorContainer.html('<span class="text-danger form-error">' + errorString + '</span>');
+            }
+        });
+    }
+    // Open the modal if it's not already open
+    if (!$('#' + modalId).hasClass('show')) {
+        $('#' + modalId).modal('show');
+    }
+}
+
 $(document).ready(function() {
+    // Initialize flatpickr with the current date for Add New Entity
+    initializeDateTimeFlatpickr(new Date().setSeconds(0, 0));
+
+    // Set a timeout to hide success message after 3 seconds
+    setTimeout(function() {
+        $('#messageContainer .alert').fadeOut('slow');
+    }, 3000);
 
     // Check for URL parameters to expand a specific observation
     const urlParams = new URLSearchParams(window.location.search);
     const expandObservation = urlParams.get('expandObservation');
+
     if(expandObservation){
         // Trigger the click event to expand the specified Observation
         $("#observation-" + expandObservation + " .clickable-row").click();
@@ -48,12 +128,67 @@ $(document).ready(function() {
             behavior: 'smooth'
         });
     }
-
-    // Check if any form field has an error
-    if ($('.form-error').length > 0) {
-        // Open the modal
-        $('#newObservationModal').modal('show');
+    else {
+        // Scroll to #observations-table-title
+        // Scroll smoothly to the expanded Observation
+        document.querySelector("#observations-table-top").scrollIntoView({
+            behavior: 'smooth'
+        });
     }
+
+
+    // Handle user clicking the #add-observation-button to display the modal
+    $('#add-observation-button').click(function() {
+        initializeDateTimeFlatpickr(new Date().setSeconds(0, 0));
+        // Set the default values for the form fields
+        $('#newObservationModal input[name="sessionDurationInMins"]').val('2');
+        $('#newObservationModal select[name="isKong"]').val('N');
+        // $('#newObservationModal select[name="jsonFile"]').val('');
+        // $('#newObservationModal select[name="rawVideo"]').val('');
+
+        //Empty the form errors
+        $('.form-error-row').remove();
+        $('.form-general-error').remove();
+        $('#newObservationModal').modal('show');
+    });
+
+    // Handle the form submission
+    $('#add-observation-form').submit(function(e) {
+        e.preventDefault();
+
+        let formData = new FormData(this);
+        formData.append('form_type', 'add_observation'); // Add an identifier
+
+        $.ajax({
+            url: window.location.href,
+            type: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.status === 'success') {
+                    $('#newObservationModal').modal('hide');
+                    document.dispatchEvent(new CustomEvent('observationAdded'));
+
+                } else {
+                    // Display errors in the modal
+                    displayErrors(response.errors, 'add-observation', 'newObservationModal');
+                }
+            },
+            error: function(xhr, status, error) {
+                // Check if the error is a 400 Bad Request (validation error)
+                if (xhr.status === 400) {
+                    displayErrors(xhr.responseJSON.errors, 'add-observation', 'newObservationModal');
+                } else {
+                    // Handle non-validation errors (e.g., network issues)
+                    $('#newObservationModal').find('.modal-body').prepend('<div class="alert alert-danger form-add-observation-general-error" role="alert">An error occurred. Please try again.</div>');
+                }
+            }
+        });
+    });
+
+
 
     // Switch between dropdown and dropup icons when expanded or collapsed rows detected
     $(".clickable-row").click(function(event) {
@@ -95,6 +230,8 @@ $(document).ready(function() {
 
     function performDeletion(observationId){
         var observationRow = $('#observation-' + observationId); // the main observation row
+        var currentPage = new URLSearchParams(window.location.search).get('page');
+        var expandObservation = new URLSearchParams(window.location.search).get('expandObservation');
 
         $.ajax({
             url: '/delete_observation/',
@@ -102,13 +239,38 @@ $(document).ready(function() {
             headers: { 'X-CSRFToken': getCookie('csrftoken') },
             data: {
                 observation_id: observationId,
+                page_number: currentPage || 1,
             },
             success: function(response) {
                 if(response.status == 'success'){
                     observationRow.remove();
-                    // Show toast instead of alert
-                    var toastEl = new bootstrap.Toast(document.getElementById('successToast'));
-                    toastEl.show();
+
+                    var newUrl = window.location.pathname;
+                    var queryParams = [];
+
+                    // Remove expandObservation from URL if it matches the deleted observation
+                    if (expandObservation && expandObservation != observationId.toString()) {
+                        console.log('NOT THE SAME');
+                        queryParams.push('expandObservation=' + expandObservation);
+                    }
+
+                    // If no observations left, move to the previous page if possible
+                    if(!response.is_current_page_empty){
+                        queryParams.push('page=' + currentPage);
+                        observationRow.remove();
+                        obsToastEl.show();
+                    } else {
+                        // If no observations left, move to the previous page if possible
+                        var prevPage = currentPage > 1 ? currentPage - 1 : 1;
+                        queryParams.push('page=' + prevPage);
+                    }
+
+                    // Construct the new URL
+                    if (queryParams.length > 0) {
+                        newUrl += '?' + queryParams.join('&');
+                    }
+                    console.log(newUrl);
+                    window.location.href = newUrl;
                 } else if (response.status == 'error') {
                     alert('Error: ' + response.message);
                 }
@@ -116,8 +278,13 @@ $(document).ready(function() {
         });
     }
 
+    // Handle the edit Observation button click
     $(".edit-observation-btn").click(function(){
       var observationId = $(this).data('observation-id');
+
+      //Empty the form errors
+      $('.form-error-row').remove();
+      $('.form-general-error').remove();
 
       // Fetch the current observation data
       $.ajax({
@@ -126,29 +293,25 @@ $(document).ready(function() {
           headers: { 'X-CSRFToken': getCookie('csrftoken') },
           success: function(response) {
               if(response.status == 'success'){
-                  // Populate the form fields with the current observation data
-                  // Convert the obsDateTime to a JavaScript Date object
-               var obsDateTime = new Date(response.observation.obsDateTime);
+                    // Populate the form fields with the current observation data
+                    // Convert the obsDateTime to a JavaScript Date object
 
-               // Format the obsDateTime in the desired format
-               var formattedObsDateTime = obsDateTime.getFullYear() + '-' +
-                 ('0' + (obsDateTime.getMonth() + 1)).slice(-2) + '-' +
-                 ('0' + obsDateTime.getDate()).slice(-2) + ' ' +
-                 ('0' + obsDateTime.getHours()).slice(-2) + ':' +
-                 ('0' + obsDateTime.getMinutes()).slice(-2) + ':' +
-                 ('0' + obsDateTime.getSeconds()).slice(-2);
+                    // Create a new Date object and set the seconds and milliseconds to 0
+                    let obsDate = new Date(response.observation.obsDateTime);
+                    obsDate.setSeconds(0, 0);
+                    // Re-initialize flatpickr with the fetched date
+                    initializeDateTimeFlatpickr(obsDate);
 
-                  // Populate the form fields with the current observation data
-                  $('#editObservationModal input[name="obsDateTime"]').val(formattedObsDateTime);
-                  $('#editObservationModal input[name="sessionDurationInMins"]').val(response.observation.sessionDurationInMins);
-                  $('#editObservationModal select[name="isKong"]').val(response.observation.isKong);
-                  $('#editObservationModal select[name="jsonFile"]').val(response.observation.jsonFile);
-                  $('#editObservationModal select[name="rawVideo"]').val(response.observation.rawVideo);
-                  // Store the observation ID so it can be used when submitting the form
-                  $('#editObservationModal').data('observation-id', observationId);
+                    // Populate the form fields with the current observation data
+                    $('#editObservationModal input[name="sessionDurationInMins"]').val(response.observation.sessionDurationInMins);
+                    $('#editObservationModal select[name="isKong"]').val(response.observation.isKong);
+                    $('#editObservationModal select[name="jsonFile"]').val(response.observation.jsonFile);
+                    $('#editObservationModal select[name="rawVideo"]').val(response.observation.rawVideo);
+                    // Store the observation ID so it can be used when submitting the form
+                    $('#editObservationModal').data('observation-id', observationId);
 
-                  // Show the modal
-                  $('#editObservationModal').modal('show');
+                    // Show the modal
+                    $('#editObservationModal').modal('show');
               } else if (response.status == 'error') {
                   alert('Error: ' + response.message);
               }
@@ -167,59 +330,85 @@ $(document).ready(function() {
              headers: { 'X-CSRFToken': getCookie('csrftoken') },
              data: formData,
              success: function(response) {
-                 if(response.status == 'success'){
-                                   location.reload();
+                if (response.status === 'success') {
+                    $('#editObservationModal').modal('hide');
+                    document.dispatchEvent(new CustomEvent('observationEdited'));
 
-                 } else if (response.status == 'error') {
-                     alert('Error: ' + response.message);
-                 }
-             }
+                } else {
+                    // Display errors in the modal
+                    displayErrors(response.errors, 'edit-observation', 'editObservationModal');
+                }
+            },
+            error: function(xhr, status, error) {
+                // Check if the error is a 400 Bad Request (validation error)
+                if (xhr.status === 400) {
+                    displayErrors(xhr.responseJSON.errors, 'edit-observation', 'editObservationModal');
+                } else {
+                    // Handle non-validation errors (e.g., network issues)
+                    $('#editObservationModal').find('.modal-body').prepend('<div class="alert alert-danger form-edit-observation-general-error" role="alert">An error occurred. Please try again.</div>');
+                }
+            }
          });
     });
 
     // Handle the DogStance delete button click
     $(".delete-stance-btn").click(function(){
-       var stanceId = $(this).data('stance-id');
-       var observationId = $(this).data('observation-id'); // Get the observation id
-       $('#deleteStanceModal').data('stance-id', stanceId);
-       $('#deleteStanceModal').data('observation-id', observationId); // Store the observation_id
-       $('#deleteStanceModal').modal('show');
+        var stanceId = $(this).data('stance-id');
+        var observationId = $(this).data('observation-id'); // Get the observation id
+        var currentPage = new URLSearchParams(window.location.search).get('page'); // Get current page number
+
+        $('#deleteStanceModal').data('stance-id', stanceId);
+        $('#deleteStanceModal').data('observation-id', observationId); // Store the observation_id
+        $('#deleteStanceModal').data('current-page', currentPage); // Store current page number
+        $('#deleteStanceModal').modal('show');
     });
 
     // Handle the DogStance delete button click
     $('#confirmStanceDeleteBtn').click(function(){
-       var stanceId = $('#deleteStanceModal').data('stance-id');
-       var observationId = $('#deleteStanceModal').data('observation-id'); // Retrieve the observation id
-       $('#deleteStanceModal').modal('hide');
-       deleteStance(stanceId, observationId);
+        var stanceId = $('#deleteStanceModal').data('stance-id');
+        var observationId = $('#deleteStanceModal').data('observation-id'); // Retrieve the observation id
+        var currentPage = $('#deleteStanceModal').data('current-page'); // Retrieve the current page number
+
+        $('#deleteStanceModal').modal('hide');
+
+        deleteStance(stanceId, observationId, currentPage);
     });
 
-    function deleteStance(stanceId, observationId){
-       var stanceRow = $('#stance-' + stanceId); // the main stance row
+    function deleteStance(stanceId, observationId, currentPage){
+        var stanceRow = $('#stance-' + stanceId); // the main stance row
 
-       $.ajax({
-           url: '/delete_stance/',
-           type: 'post',
-           headers: { 'X-CSRFToken': getCookie('csrftoken') },
-           data: {
-               stance_id: stanceId,
-           },
-           success: function(response) {
+        $.ajax({
+            url: '/delete_stance/',
+            type: 'post',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            data: {
+                stance_id: stanceId,
+            },
+            success: function(response) {
                if(response.status == 'success'){
-                   // Reload the page with a parameter indicating which observation to expand
-                   window.location.href = window.location.pathname + '?expandObservation=' + observationId;
-                   // Show toast instead of alert
-                   var toastEl = new bootstrap.Toast(document.getElementById('successToast'));
-                   toastEl.show();
+                    // Construct URL with parameters for expanded observation and current page
+                    var reloadUrl = window.location.pathname;
+                    var queryParams = '?expandObservation=' + observationId;
+                    if (currentPage) {
+                        queryParams += '&page=' + currentPage;
+                    }
+                    window.location.href = reloadUrl + queryParams;
                } else if (response.status == 'error') {
-                   alert('Error: ' + response.message);
+                     alert('Error: ' + response.message);
                }
-           }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                alert('Error: ' + response.message);
+            }
        });
     }
 
     // Handle the DogStance edit button click
     $(".edit-stance-btn").click(function(){
+        // Empty the form errors
+        $('.form-error-row').remove();
+        $('.form-general-error').remove();
+
        var stanceId = $(this).data('stance-id');
 
        $.ajax({
@@ -229,17 +418,29 @@ $(document).ready(function() {
            success: function(response) {
                if(response.status == 'success'){
 
-                   // Populate the form fields with the current stance data
-                   $('#editStanceModal select[name="dogStance"]').prop('value', response.stance.dogStance);
-                   $('#editStanceModal select[name="dogLocation"]').prop('value', response.stance.dogLocation);
-                   $('#editStanceModal input[name="stanceStartTime"]').prop('value', response.stance.stanceStartTime);
-                   // Store the stance ID so it can be used when submitting the form
-                   $('#editStanceModal').data('stance-id', stanceId);
+                    // Populate the flatpickr time-only picker with the current stanceStartTime
+                    let hour = response.stance.stanceStartTime.split(':')[0];
+                    let minute = response.stance.stanceStartTime.split(':')[1];
+                    let second = response.stance.stanceStartTime.split(':')[2];
+                    let time = new Date();
+                    time.setHours(hour, minute, second, 0); // Set the time to the current stanceStartTime
+                    initializeTimeFlatpickr(time);
 
-                   // Show the modal
-                   $('#editStanceModal').modal('show');
+                    // Populate the form fields with the current stance data
+                    $('#editDogStanceModal select[name="dogStance"]').val(response.stance.dogStance);
+                    $('#editDogStanceModal select[name="dogLocation"]').val(response.stance.dogLocation);
+
+                    // Store the stance ID so it can be used when submitting the form
+                    $('#editDogStanceModal').data('stance-id', stanceId);
+
+                    // Show the modal
+                    $('#editDogStanceModal').modal('show');
+
+                    // Store the current page number for later use
+                    var currentPage = new URLSearchParams(window.location.search).get('page');
+                    $('#editDogStanceModal').data('current-page', currentPage);
                } else if (response.status == 'error') {
-                   alert('Error: ' + response.message);
+                     alert('Error: ' + response.message);
                }
            },
            error: function(jqXHR, textStatus, errorThrown) {
@@ -248,10 +449,11 @@ $(document).ready(function() {
        });
     });
 
-    $('#editStanceModal form').submit(function(e){
+    $('#editDogStanceModal form').submit(function(e){
        e.preventDefault();
        var formData = $(this).serialize();
-       var stanceId = $('#editStanceModal').data('stance-id');
+       var stanceId = $('#editDogStanceModal').data('stance-id');
+       var currentPage = $('#editDogStanceModal').data('current-page');
 
        $.ajax({
            url: '/edit_dog_stance/' + stanceId + '/',
@@ -260,12 +462,27 @@ $(document).ready(function() {
            data: formData,
            success: function(response) {
                if(response.status == 'success'){
-                   // Reload the page with the observation expanded
-                window.location.href = window.location.pathname + '?expandObservation=' + response.observationId;
-               } else if (response.status == 'error') {
-                   alert('Error: ' + response.message);
-               }
-           }
+                   // Reload the page with the observation expanded and the current page number
+                   var reloadUrl = window.location.pathname;
+                   var queryParams = '?expandObservation=' + response.observationId;
+                   if (currentPage) {
+                       queryParams += '&page=' + currentPage;
+                   }
+                   window.location.href = reloadUrl + queryParams;
+               } else {
+                    // Display errors in the modal
+                    displayErrors(response.errors, 'edit-stance', 'editDogStanceModal');
+                }
+            },
+            error: function(xhr, status, error) {
+                // Check if the error is a 400 Bad Request (validation error)
+                if (xhr.status === 400) {
+                    displayErrors(xhr.responseJSON.errors, 'edit-stance', 'editDogStanceModal');
+                } else {
+                    // Handle non-validation errors (e.g., network issues)
+                    $('#editDogStanceModal').find('.modal-body').prepend('<div class="alert alert-danger form-edit-stance-general-error" role="alert">An error occurred. Please try again.</div>');
+                }
+            }
        });
     });
 
@@ -286,98 +503,89 @@ function getCookie(name) {
    return cookieValue;
 }
 
+// Listen for the observationAdded success event
+document.addEventListener('observationAdded', function() {
+    // Check if messages are already present
+    if (!$('#messageContainer').find('.alert').length) {
+        // If not, create and append a success message
+        var successMessage = $('<div class="alert alert-success alert-dismissible fade show text-center" role="alert">New observation added successfully!<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>');
+        $('#messageContainer').append(successMessage);
+    }
 
-// Style the Observation submission success message when a successful Observation form is submitted
-document.addEventListener('DOMContentLoaded', function() {
-  const successAlert = document.querySelector('.alert-warning');
-  if (successAlert) {
-    successAlert.classList.remove('alert-warning');
-    successAlert.classList.remove('col-md-6');
-    successAlert.classList.remove('offset-md-3');
-    successAlert.classList.add('alert-success');
-    setTimeout(() => {
-      successAlert.style.opacity = '0';
-      setTimeout(() => {
-        successAlert.style.display = 'none';
-      }, 600);  // Fading duration, can be adjusted
-    }, 4000);  // Time before fade starts, in milliseconds
-  }
+    // Reload to update the table and display the Django message
+    location.reload();
+});
+
+// Listen for the observationEdited success event
+document.addEventListener('observationEdited', function() {
+    // Check if messages are already present
+    if (!$('#messageContainer').find('.alert').length) {
+        // If not, create and append a success message
+        var successMessage = $('<div class="alert alert-success alert-dismissible fade show text-center" role="alert">Observation has been edited successfully!<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>');
+        $('#messageContainer').append(successMessage);
+    }
+
+    // Reload to update the table and display the Django message
+    location.reload();
 });
 
 
 // Add click listener to the Add Dog Stance button
 $(".add-stance-btn").click(function() {
+    // Empty Errors
+    $('.form-error-row').remove();
+    $('.form-general-error').remove();
+
     const observationId = $(this).data("observation-id");
     $("#observation_id").val(observationId);
+
+    // Store the current page number
+    var currentPage = new URLSearchParams(window.location.search).get('page');
+    $("#addDogStanceModal").data('current-page', currentPage);
+
+    // Initialize Flatpick Time picker for the stanceStartTime attribute in the form
+    const defaultTime = new Date();
+    defaultTime.setHours(0, 0, 0, 0); // Set the time to 00:00:00
+    initializeTimeFlatpickr(defaultTime);
+    // Set the default values for the form fields
+
+    $('#addDogStanceModal select[name="dogStance"]').val('');
+    $('#addDogStanceModal select[name="dogLocation"]').val('');
     $("#addDogStanceModal").modal('show');
 });
 
 // Handle form submission
 $("#saveDogStanceBtn").click(function() {
-    const formData = $("#dogStanceForm").serialize() + "&observation_id=" + $("#observation_id").val();
+    const formData = $("#add-stance-form").serialize() + "&form_type=dog_stance&observation_id=" + $("#observation_id").val();
+    var currentPage = $("#addDogStanceModal").data('current-page'); // Retrieve the current page number
+
     $.post({
         url: window.location.href,
         data: formData,
         headers: { 'X-CSRFToken': '{{ csrf_token }}' },
         success: function(response) {
             if (response.status === "success") {
-                const newStance = response.new_stance;
-                const observationId = newStance.observation;
-                const startTime = newStance.stanceStartTime;
-                const dogStance = newStance.dogStance;
-                const dogLocation = newStance.dogLocation;
 
-                let table = $(`#stances-${observationId} table`).DataTable();
-
-                table.row.add([
-                    startTime,
-                    dogStance,
-                    dogLocation,
-                    `
-                    <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-outline-info btn-sm" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Edit this Stance">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Delete this Stance">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                    `
-                ]).draw();
-
-                // Close the modal
-                $("#addDogStanceModal").modal('hide');
-
-                // Reload the page with a parameter indicating which observation to expand
-                window.location.href = window.location.pathname + '?expandObservation=' + observationId;
+                // Construct URL with parameters for expanded observation and current page
+                var reloadUrl = window.location.pathname;
+                var queryParams = '?expandObservation=' + response.new_stance.observation;
+                if (currentPage) {
+                    queryParams += '&page=' + currentPage;
+                }
+                window.location.href = reloadUrl + queryParams;
+            }
+            else {
+                // Display errors in the modal
+                displayErrors(response.errors, 'add-stance', 'addDogStanceModal');
             }
         },
-        error: function(response) {
-            const jsonResp = response.responseJSON;
-            if (jsonResp && jsonResp.errors) {
-                if (typeof jsonResp.errors === 'string') {
-                    // Handle string errors
-                    $("#errorText").html(jsonResp.errors);
-                } else {
-                    // Handle object errors
-                    const fieldMapping = {
-                        'stanceStartTime': 'Stance Start Time',
-                        'dogStance': 'Dog Stance',
-                        'dogLocation': 'Dog Location',
-                    };
-
-                    let errorMessages = [];
-                    for (let [field, errors] of Object.entries(jsonResp.errors)) {
-                        const displayName = fieldMapping[field] || field;
-                        const errorMsg = Array.isArray(errors) ? errors.join(', ') : errors;
-                        errorMessages.push(`${displayName}: ${errorMsg}`);
-                    }
-                    const formattedErrors = errorMessages.join('<br>');
-                    $("#errorText").html(formattedErrors);
-                }
-                $("#errorModal").modal('show');
+        error: function(xhr, status, error) {
+            // Check if the error is a 400 Bad Request (validation error)
+            if (xhr.status === 400) {
+                displayErrors(xhr.responseJSON.errors, 'add-stance', 'addDogStanceModal');
             } else {
-                alert('An unknown error occurred');
+                // Handle non-validation errors (e.g., network issues)
+                $('#addDogStanceModal').find('.modal-body').prepend('<div class="alert alert-danger form-add-stance-general-error" role="alert">An error occurred. Please try again.</div>');
             }
         }
 
@@ -388,13 +596,24 @@ $(document).ready(function(){
     $('.dog-stance-table').each(function() {
         $(this).DataTable({
             "scrollCollapse": true,
-            "pageLength": 6,
-                    "autoWidth": false, // Disables auto width calculation
+            "pageLength": 8,
+            "lengthMenu": [[5, 8, 10, 25, -1], [5, 8, 10, 25, "All"]],
+            "autoWidth": false, // Disables auto width calculation
             "order": [[0, 'asc']],
             "stateSave": true,
             "language": {
-            "emptyTable": "No Dog Stances found."
-        }
+                "emptyTable": "No Dog Stances found."
+            },
+            "columnDefs": [
+                {
+                    "targets": 3,
+                    "orderable": false,
+                    "searchable": false,
+                    "className": "text-center"
+                }
+            ],
+            "pagingType": "simple_numbers",
         });
     });
+    $('.dataTables_length select').val('8');
 });

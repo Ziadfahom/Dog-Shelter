@@ -1,7 +1,14 @@
 {% load dog_filters %}
+{% load date_filters %}
+{% load static %}
+{% load tz %}
+
 
 <!-- Observation Head Things -->
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+{% block head %}
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+    <link href="{% static 'dogs_app/css/_observation_row.css' %}" rel="stylesheet">
+{% endblock %}
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
 
 <!-- Observation Row -->
@@ -13,7 +20,7 @@
             <i class="fas fa-angle-down"></i>
             <!-- Date Time centered -->
             <div>
-                {{ observation.obsDateTime }}
+                {{ observation.obsDateTime|localtime|format_european_datetime }}
             </div>
             <!-- Spacer for symmetry -->
             <div></div>
@@ -62,7 +69,7 @@
                 <caption class="stances-caption bg-dark">
                     <div class="caption-wrapper">
                         <div class="text-center">
-                            Dog Stances for Observation ({{ observation.obsDateTime }})
+                            Dog Stances for Observation ({{ observation.obsDateTime|localtime|format_datetime }})
                         </div>
                         <button
                             data-observation-id="{{ observation.id }}"
@@ -113,19 +120,22 @@
 <!-- Bootstrap Modal for Adding Dog Stance -->
 {% include 'modals/observations/__add_new_dag_stance_modal.html' %}
 
+<!-- Edit Dog Stance Modal -->
+{% include 'modals/observations/__edit_dog_stance_modal.html' %}
+
 <!-- "Delete Observation" Confirmation Modal -->
 {% include 'modals/observations/__delete_observation_modal.html' %}
 
 <!-- "Delete Dog Stance" Confirmation Modal -->
 {% include 'modals/observations/__delete_dog_stance_modal.html' %}
 
-<!-- Toast Notification for Success -->
+<!-- Toast Notification for Observation deletion Success -->
 <div aria-live="polite" aria-atomic="true" class="position-relative">
     <div class="toast-container position-absolute top-0 end-0 p-3" id="toastPlacement">
-        <div class="toast" id="successToast">
+        <div class="toast success-toast" id="obsSuccessToast">
             <div class="toast-header">
-                <strong class="me-auto">Notification</strong>
-                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                <i class="fa fa-check me-2" aria-hidden="true"></i>
+                <strong class="me-auto">Success</strong>
             </div>
             <div class="toast-body">
                 Observation deleted successfully!

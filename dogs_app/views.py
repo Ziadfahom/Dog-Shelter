@@ -2,8 +2,10 @@ import json
 import math
 from collections import defaultdict, Counter
 from datetime import datetime, time
+
+from django.middleware.csrf import get_token
 from django.utils.dateparse import parse_datetime
-from django.utils.timezone import localtime
+from django.utils.timezone import localtime, make_aware
 from openpyxl import Workbook, load_workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
@@ -25,13 +27,16 @@ from .models import *
 from django.conf import settings
 import os
 from django.core import serializers
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, EmptyPage
 from django.template.loader import render_to_string
 from datetime import date, timedelta
 from django.db import IntegrityError, transaction
 from io import BytesIO
 from .serializers import DogSerializer
 from django.views.decorators.http import require_POST
+from django.core.serializers.json import DjangoJSONEncoder
+from django.forms.utils import ErrorList
+
 
 # Location of the default User profile picture if they don't have a picture
 DEFAULT_IMAGE_SOURCE = '/profile_pictures/default.jpg'
@@ -68,7 +73,7 @@ def set_israel_branch(request):
 def get_current_branch(request):
     # Get the current Branch (Israel/Italy)
     branch_name = request.session.get('branch', 'Israel')  # Default to Israel
-    branch = Branch.objects.get(branchName=branch_name)  # Get the branch object
+    branch = Branch.objects.get(branchName=branch_name if branch_name else 'Israel')  # Get the branch object
 
     return branch
 
@@ -296,8 +301,8 @@ def dog_record_view(request, pk):
         # Fetch all observations for the dog in one query
         # Fetch all observations for the dog in UTC
         local_tz = pytz.timezone('Asia/Jerusalem')
-        utc_first_date = timezone.make_aware(datetime.combine(first_date, time.min), local_tz).astimezone(pytz.utc)
-        utc_last_date = timezone.make_aware(datetime.combine(last_date, time.max), local_tz).astimezone(pytz.utc)
+        utc_first_date = timezone.make_aware(datetime.datetime.combine(first_date, time.min), local_tz).astimezone(pytz.utc)
+        utc_last_date = timezone.make_aware(datetime.datetime.combine(last_date, time.max), local_tz).astimezone(pytz.utc)
 
         # Fetch observations in UTC
         observations = Observation.objects.filter(
@@ -437,54 +442,69 @@ def dog_record_view(request, pk):
 
             # Check if it's a Placement form
             elif form_type == 'placement_form':
-                if placement_form.is_valid():
-                    new_placement = placement_form.save(commit=False)
-                    new_placement.dog = dog_record
-                    new_placement.save()
+                try:
+                    if placement_form.is_valid():
+                        new_placement = placement_form.save(commit=False)
+                        new_placement.dog = dog_record
+                        new_placement.save()
 
-                    # If this is an AJAX request, send back the new Placement data
-                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                        placements_data = DogPlacement.objects.filter(dog=dog_record).order_by('-entranceDate')[
-                                          :MAX_PER_PAGE]
-                        data = {
-                            'data': [render_to_string('_placement_row.html',
-                                                      {'placement': placement}) for placement in placements_data],
-                            'pagination': render_to_string('_dog_record_pagination.html',
-                                                           {'paginated_data': placements,
-                                                            'param_name': 'placements_page'})
-                        }
-                        return JsonResponse(data)
+                        # If this is an AJAX request, send back the new Placement data
+                        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                            placements_data = DogPlacement.objects.filter(dog=dog_record).order_by('-entranceDate')[
+                                              :MAX_PER_PAGE]
+                            data = {
+                                'data': [render_to_string('_placement_row.html',
+                                                          {'placement': placement}) for placement in placements_data],
+                                'pagination': render_to_string('_dog_record_pagination.html',
+                                                               {'paginated_data': placements,
+                                                                'param_name': 'placements_page'})
+                            }
+                            return JsonResponse(data)
+                        else:
+                            # Redirect back to the dog_record_view to see the new placement.
+                            return redirect('dogs_app:dog_record', pk=dog_record.pk)
                     else:
-                        # Redirect back to the dog_record_view to see the new placement.
-                        return redirect('dogs_app:dog_record', pk=dog_record.pk)
-                else:
-                    errors = placement_form.errors.as_json()
-                    return JsonResponse({'status': 'fail', 'errors': errors}, status=400)
-
+                        errors = placement_form.errors.as_json()
+                        return JsonResponse({'status': 'fail', 'errors': errors}, status=400)
+                except IntegrityError as e:
+                    error_message = "Duplicate Kennel Placement, this dog already has this kennel on that date."
+                    # Construct the error structure
+                    errors_dict = {'__all__': [{'message': error_message}]}
+                    # Convert the error dictionary to a JSON string
+                    errors_json_string = json.dumps(errors_dict, cls=DjangoJSONEncoder)
+                    return JsonResponse({'status': 'fail', 'errors': errors_json_string}, status=400)
             # Check if it's a Session (Observes) form
             elif form_type == 'session_form':
-                if session_form.is_valid():
-                    new_session = session_form.save(commit=False)
-                    new_session.dog = dog_record
-                    new_session.save()
+                try:
+                    if session_form.is_valid():
+                        new_session = session_form.save(commit=False)
+                        new_session.dog = dog_record
+                        new_session.save()
 
-                    # If this is an AJAX request, send back the new Session data
-                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                        sessions_data = Observes.objects.filter(dog=dog_record).order_by('-sessionDate')[:MAX_PER_PAGE]
-                        data = {
-                            'data': [render_to_string('_session_row.html',
-                                                      {'session': session}) for session in sessions_data],
-                            'pagination': render_to_string('_dog_record_pagination.html',
-                                                           {'paginated_data': sessions,
-                                                            'param_name': 'sessions_page'})
-                        }
-                        return JsonResponse(data)
+                        # If this is an AJAX request, send back the new Session data
+                        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                            sessions_data = Observes.objects.filter(dog=dog_record).order_by('-sessionDate')[:MAX_PER_PAGE]
+                            data = {
+                                'data': [render_to_string('_session_row.html',
+                                                          {'session': session}) for session in sessions_data],
+                                'pagination': render_to_string('_dog_record_pagination.html',
+                                                               {'paginated_data': sessions,
+                                                                'param_name': 'sessions_page'})
+                            }
+                            return JsonResponse(data)
+                        else:
+                            # Redirect back to the dog_record_view to see the new placement.
+                            return redirect('dogs_app:dog_record', pk=dog_record.pk)
                     else:
-                        # Redirect back to the dog_record_view to see the new placement.
-                        return redirect('dogs_app:dog_record', pk=dog_record.pk)
-                else:
-                    errors = session_form.errors.as_json()
-                    return JsonResponse({'status': 'fail', 'errors': errors}, status=400)
+                        errors = session_form.errors.as_json()
+                        return JsonResponse({'status': 'fail', 'errors': errors}, status=400)
+                except IntegrityError as e:
+                    error_message = "Duplicate Camera Sessions, this dog already has this camera on that date."
+                    # Construct the error structure
+                    errors_dict = {'__all__': [{'message': error_message}]}
+                    # Convert the error dictionary to a JSON string
+                    errors_json_string = json.dumps(errors_dict, cls=DjangoJSONEncoder)
+                    return JsonResponse({'status': 'fail', 'errors': errors_json_string}, status=400)
 
         # Check if request is AJAX call for switching pages
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -693,6 +713,10 @@ def edit_placement(request, placement_id):
                     return JsonResponse({'status': 'fail', 'errors': errors})
             except DogPlacement.DoesNotExist:
                 return JsonResponse({'status': 'fail'})
+            # Handle IntegrityError for duplicate kennel placements
+            except IntegrityError:
+                error_message = 'Duplicate Kennel Placement, this dog already has this kennel on that date.'
+                return JsonResponse({'status': 'fail', 'errors': {'__all__': [error_message]}})
             except Exception as e:
                 return JsonResponse({'status': 'fail', 'message': str(e)})
         elif request.method == 'GET':
@@ -709,6 +733,7 @@ def edit_placement(request, placement_id):
                 return JsonResponse(placement_data)
             except DogPlacement.DoesNotExist:
                 return JsonResponse({'status': 'fail', 'message': 'Placement not found'})
+                # Handle IntegrityError for duplicate kennel placements
             except Exception as e:
                 return JsonResponse({'status': 'fail', 'message': str(e)})
         else:
@@ -733,6 +758,9 @@ def edit_session(request, session_id):
                     return JsonResponse({'status': 'fail', 'errors': errors})
             except Observes.DoesNotExist:
                 return JsonResponse({'status': 'fail'})
+            except IntegrityError:
+                error_message = 'Duplicate Camera Session, this dog already has this camera on that date.'
+                return JsonResponse({'status': 'fail', 'errors': {'__all__': [error_message]}})
             except Exception as e:
                 return JsonResponse({'status': 'fail', 'message': str(e)})
         elif request.method == 'GET':
@@ -814,24 +842,33 @@ def edit_owner(request, owner_id):
 
 # Handle Observations display
 def view_observations(request, session_id):
+    observation_form = None
+    stance_form = None
     if request.user.is_authenticated:
-        print("5555555555555")
-        dog_stances = DogStance.objects.all().order_by('stanceStartTime')
+        dog_stances = DogStance.objects.filter(observation__observes_id=session_id).order_by('stanceStartTime')
         observations = Observation.objects.filter(observes_id=session_id).prefetch_related(
             Prefetch('dogstance_set', queryset=dog_stances, to_attr='related_dog_stances')
         ).order_by('-obsDateTime')
         session_instance = Observes.objects.get(pk=session_id)
 
-        if request.method == 'POST':
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        # Check if user is on the correct branch
+        branch = get_current_branch(request)
+        dog = session_instance.dog
+        if dog.branch != branch:
+            messages.error(request, "You must be in the correct branch to view this dog's observations...")
+            return redirect('dogs_app:home')
+        elif request.method == 'POST':
+            # Check the form type to determine which form is being submitted
+            form_type = request.POST.get('form_type')
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest' and form_type == 'dog_stance':
                 # Handle DogStance form submission via AJAX
                 stance_form = DogStanceForm(request.POST or None)
                 if stance_form.is_valid():
-                    print("1111111111")
                     try:
                         new_stance = stance_form.save(commit=False)
                         new_stance.observation_id = request.POST.get('observation_id')
                         new_stance.save()
+                        messages.success(request, 'Stance has been added successfully!')
                         return JsonResponse({
                             "status": "success",
                             "new_stance": {
@@ -842,31 +879,44 @@ def view_observations(request, session_id):
                                 'observation': new_stance.observation_id,
                             }
                         }, status=201)
+                    except ValidationError as e:
+                        return JsonResponse({"status": "error", "errors": e.message_dict}, status=400)
                     except IntegrityError:
-                        print("3333333333")
                         return JsonResponse({"status": "error",
                                              "errors": "Duplicate Stance Start Time"}, status=400)
                     except Exception as e:
-                        print("4444444444444")
                         return JsonResponse({"status": "error", "errors": str(e)}, status=400)
                 else:
-                    print("22222222222222")
                     return JsonResponse({"status": "error", "errors": stance_form.errors}, status=400)
+            elif request.headers.get('X-Requested-With') == 'XMLHttpRequest' and form_type == 'add_observation':
+                # Handle Observation form submission via AJAX
+                observation_form = ObservationForm(request.POST or None, request.FILES or None)
+                if observation_form.is_valid():
+                    try:
+                        new_observation = observation_form.save(commit=False)
+                        new_observation.observes = session_instance
 
-            else:
-                print("66666666666666")
-                stance_form = DogStanceForm()
+                        # Convert to naive datetime
+                        naive_dt = new_observation.obsDateTime.replace(tzinfo=None)
+                        # Apply the correct timezone
+                        local_tz = pytz.timezone('Asia/Jerusalem')
+                        local_dt = local_tz.localize(naive_dt)
+                        # Convert to UTC
+                        utc_dt = local_dt.astimezone(pytz.utc)
+                        new_observation.obsDateTime = utc_dt
 
-            observation_form = ObservationForm(request.POST or None, request.FILES or None)
-            if observation_form.is_valid():
-                print("777777777777777777")
-                new_observation = observation_form.save(commit=False)
-                new_observation.observes = session_instance
-                new_observation.save()
-                messages.success(request, 'Success! Observation has been successfully added.')
-                return redirect('dogs_app:view_observations', session_id=session_id)
+                        new_observation.save()
+                        messages.success(request, 'Observation has been added successfully!')
+                        return JsonResponse({"status": "success"}, status=201)
+                    except ValidationError as e:
+                        return JsonResponse({"status": "error", "errors": e.message_dict}, status=400)
+                    except IntegrityError:
+                        return JsonResponse({"status": "error", "errors": "Duplicate Observation Date"}, status=400)
+                    except Exception as e:
+                        return JsonResponse({"status": "error", "errors": str(e)}, status=400)
+                else:
+                    return JsonResponse({"status": "error", "errors": observation_form.errors}, status=400)
         else:
-            print("888888888888888888888888888")
             observation_form = ObservationForm()
             stance_form = DogStanceForm()
 
@@ -878,8 +928,8 @@ def view_observations(request, session_id):
             'observations': observations,
             'paginated_observations': paginated_observations,
             'session_instance': session_instance,
-            'observation_form': observation_form,
-            'stance_form': stance_form,
+            'observation_form': observation_form if observation_form else None,
+            'stance_form': stance_form if stance_form else None,
         }
 
         return render(request, 'view_observations.html', context=context)
@@ -894,10 +944,31 @@ def delete_observation(request):
     if request.method == 'POST' and request.user.is_authenticated and request.headers.get(
             'X-Requested-With') == 'XMLHttpRequest':
         observation_id = request.POST.get('observation_id')
+
+        session_id = Observes.objects.get(observation__id=observation_id).id
+        dog_stances = DogStance.objects.filter(observation_id=observation_id).order_by('stanceStartTime')
+        observations = Observation.objects.filter(observes_id=session_id).prefetch_related(
+            Prefetch('dogstance_set', queryset=dog_stances, to_attr='related_dog_stances')
+        ).order_by('-obsDateTime')
+
+        # Get the current page number
+        page_number = request.POST.get('page_number', 1)  # Get the current page number
+        paginator = Paginator(observations, ENTRIES_PER_PAGE)
+
+        # Check if the current page is empty
+        try:
+            current_page = paginator.page(page_number)
+            is_current_page_empty = len(current_page.object_list)-1 == 0
+        except EmptyPage:
+            is_current_page_empty = True
+
         try:
             observation = Observation.objects.get(id=observation_id)
             observation.delete()
-            return JsonResponse({"status": "success"})
+
+            return JsonResponse({"status": "success",
+                                 "is_current_page_empty": is_current_page_empty
+                                 })
         except Observation.DoesNotExist:
             return JsonResponse({"status": "error", "message": "Observation not found"}, status=404)
     else:
@@ -907,32 +978,53 @@ def delete_observation(request):
 # Handle editing an Observation
 def edit_observation(request, observation_id):
     if request.method == 'GET':
-        print("99999999999999999")
         observation = Observation.objects.get(id=observation_id)
         observation_form = ObservationForm(instance=observation)
+
         # Exclude the file field from the JSON response
         observation_data = observation_form.initial
+
         # Temporary! Remove the file fields from the JSON response
         del observation_data['jsonFile']  # TODO: Remove this line once the JSON file is implemented
         del observation_data['rawVideo']  # TODO: Remove this line once the raw video is implemented
+
         return JsonResponse({"status": "success", "observation": observation_data}, status=200)
 
     elif request.method == 'POST':
-        print("000000000000000000")
-        observation_form = ObservationForm(request.POST or None, instance=Observation.objects.get(id=observation_id))
-        if observation_form.is_valid():
-            print("valid!!")
-            observation_form.save()
-            # Get the updated observation
-            updated_observation = Observation.objects.get(id=observation_id)
-            # Render the _observation_row.html template with the updated observation
-            new_row_html = render_to_string('_observation_row.html', {'observation': updated_observation})
-            return JsonResponse(
-                {"status": "success", "observation": observation_form.cleaned_data, "newRowHtml": new_row_html},
-                status=200)
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            observation_form = ObservationForm(request.POST or None, instance=Observation.objects.get(id=observation_id))
+            if observation_form.is_valid():
+                try:
+                    new_observation = observation_form.save(commit=False)
+
+                    # Convert to naive datetime
+                    naive_dt = new_observation.obsDateTime.replace(tzinfo=None)
+                    # Apply the correct timezone
+                    local_tz = pytz.timezone('Asia/Jerusalem')
+                    local_dt = local_tz.localize(naive_dt)
+                    # Convert to UTC
+                    utc_dt = local_dt.astimezone(pytz.utc)
+                    new_observation.obsDateTime = utc_dt
+
+                    new_observation.save()
+                    # Get the updated observation
+                    updated_observation = Observation.objects.get(id=observation_id)
+                    # Render the _observation_row.html template with the updated observation
+                    new_row_html = render_to_string('_observation_row.html', {'observation': updated_observation}, request=request)
+                    messages.success(request, 'Observation has been edited successfully!')
+                    return JsonResponse(
+                        {"status": "success", "observation": observation_form.cleaned_data, "newRowHtml": new_row_html},
+                        status=200)
+                except ValidationError as e:
+                    return JsonResponse({"status": "error", "errors": e.message_dict}, status=400)
+                except IntegrityError as e:
+                    return JsonResponse({"status": "error", "errors": "Duplicate Observation Date"}, status=400)
+                except Exception as e:
+                    return JsonResponse({"status": "error", "errors": str(e)}, status=400)
+            else:
+                return JsonResponse({"status": "error", "errors": observation_form.errors}, status=400)
         else:
-            print("Not valid!!")
-            return JsonResponse({"status": "error", "errors": observation_form.errors}, status=400)
+            return HttpResponseNotAllowed(['POST', 'GET'])
 
 
 # Handle deleting a DogStance
@@ -954,27 +1046,39 @@ def delete_stance(request):
 # Handle editing a DogStance
 def edit_dog_stance(request, stance_id):
     if request.method == 'GET':
-        stance = DogStance.objects.get(id=stance_id)
-        stance_form = DogStanceForm(instance=stance)
-        stance_data = stance_form.initial
-        return JsonResponse({"status": "success", "stance": stance_data}, status=200)
-
+        try:
+            stance = DogStance.objects.get(id=stance_id)
+            stance_form = DogStanceForm(instance=stance)
+            stance_data = stance_form.initial
+            return JsonResponse({"status": "success", "stance": stance_data}, status=200)
+        except DogStance.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Dog Stance not found"}, status=404)
     elif request.method == 'POST':
         stance_form = DogStanceForm(request.POST or None, instance=DogStance.objects.get(id=stance_id))
         if stance_form.is_valid():
-            saved_stance = stance_form.save()
-            observation_id = saved_stance.observation.id
-
-            updated_stance = DogStance.objects.get(id=stance_id)
-            new_row_html = render_to_string('_observation_row.html', {'stance': updated_stance})
-            return JsonResponse(
-                {"status": "success",
-                 "stance": stance_form.cleaned_data,
-                 "newRowHtml": new_row_html,
-                 "observationId": observation_id},
-                status=200)
+            try:
+                saved_stance = stance_form.save()
+                observation_id = saved_stance.observation.id
+                observation = Observation.objects.get(id=observation_id)
+                updated_stance = DogStance.objects.get(id=stance_id)
+                new_row_html = render_to_string('_observation_row.html', {'stance': updated_stance, 'observation': observation}, request=request)
+                messages.success(request, 'Stance has been edited successfully!')
+                return JsonResponse(
+                    {"status": "success",
+                     "stance": stance_form.cleaned_data,
+                     "newRowHtml": new_row_html,
+                     "observationId": observation_id},
+                    status=200)
+            except ValidationError as e:
+                return JsonResponse({"status": "error", "errors": e.message_dict}, status=400)
+            except IntegrityError:
+                return JsonResponse({"status": "error", "errors": "Duplicate Stance Start Time"}, status=400)
+            except Exception as e:
+                return JsonResponse({"status": "error", "errors": str(e)}, status=400)
         else:
             return JsonResponse({"status": "error", "errors": stance_form.errors}, status=400)
+    else:
+        return HttpResponseNotAllowed(['POST', 'GET'])
 
 
 # Deleting a dog record
@@ -1407,17 +1511,22 @@ def delete_news(request, news_id):
 
 # Render Graphs page
 def graphs(request):
-    return render(request, 'graphs.html')
+    # Get the maximum number of stance options used in the DogStance in the website
+    # For the slider max limit above the "Top Dog Stances Across The Week" chart
+    max_dog_stances_count = get_max_dog_stances_count(request=request)
+    return render(request, 'graphs.html', {'max_dog_stances_count': max_dog_stances_count})
 
 
 # View for the Dynamic Graphs page
 def chart_data(request):
     branch = get_current_branch(request)
-    # Prepare a dictionary in JSON for distribution of dogs by gender,  vaccination, isneutered, and isdangerous
-    health_metrics = get_health_metrics_dict(request=request)
 
     # Get all the Dogs that have received a Kong Toy
     dogs_with_kong = Dog.objects.filter(branch=branch, kongDateAdded__isnull=False)
+    # ---Comprehensive Health & Safety Profile of Our Canines Chart---
+    # Prepare a dictionary in JSON for distribution of dogs by gender, vaccination and isneutered
+    health_metrics = get_health_metrics_dict(request=request)
+    # -----------------------------------
 
     # ---Dog Stances With/Without Kong Charts---
     # Get all Observations with and without a Kong Toy
@@ -1440,20 +1549,36 @@ def chart_data(request):
     years_without_kong = sorted(yearly_stances_without_kong.keys(), reverse=True)
     # -----------------------------------------
 
+    # ---Most Common General Behaviors Chart---
     # Fetch a dictionary of the top combined stance+position in DogStances,
     # with their counts of "with" and "without" kong individually
     top_stance_position_combos = fetch_top_stance_position_combos(obs_with_kong, obs_without_kong, request=request)
+    # -----------------------------------
 
+    # ---Dog Breeds Distribution Chart---
     # Getting breeds and their counts
     dog_breeds = Dog.objects.filter(branch=branch).values('breed').annotate(total=Count('breed')).exclude(breed='').exclude(
         breed__isnull=True).order_by('-total')
+    # -----------------------------------
 
-    # Define the limit for the required top dog stances then fetch
-    # those values for "Dog Stances Across The Week" Graph
-    TOP_STANCES_LIMIT = 5
-    top_dog_stances = get_top_dog_stances(TOP_STANCES_LIMIT, request=request)
+    # ---Dog Stances by Day (Across The Week) Chart---
+    top_dog_stances = get_top_dog_stances(request)
+    top_dog_stances_limit = get_max_dog_stances_count(request)
+    # Switch the Stances names to the front-end friendly version
+    DOG_STANCE_DICT = dict(DogStance.DOG_STANCE_CHOICES)
+    top_dog_stances_names = []
+    for stance in top_dog_stances:
+        top_dog_stances_names.append(DOG_STANCE_DICT[stance])
 
     stance_count_by_day = get_stance_count_by_day(top_dog_stances, request=request)
+
+    # Set Up the yearly data for the yearly drop-down selection
+    # Fetch the top stances per year and their limits
+    top_stances_per_year, top_stances_per_year_limits = get_top_dog_stances_per_year(request)
+
+    # Fetch the top stances per year dictionary for the chart dataset
+    yearly_stance_count_by_day = get_yearly_stance_count_by_day(request)
+    # -----------------------------------
 
     # Preparing data to be used in the frontend
     data = {
@@ -1465,8 +1590,13 @@ def chart_data(request):
         'yearly_stances_without_kong': yearly_stances_without_kong,  # Dog Stances Without Kong (2) Chart
         'years_without_kong': years_without_kong,  # Dog Stances Without Kong (3) Chart (for drop-down yearly selection)
         'dog_breeds': list(dog_breeds),  # Dog Breeds Distribution Chart
-        'stance_count_by_day': stance_count_by_day,  # Dog Stances by Day (Across The Week)
-        'top_stance_position_combos': top_stance_position_combos, # Most Common General Behaviors Chart
+        'stance_count_by_day': stance_count_by_day,  # Dog Stances by Day (Across The Week) Chart (1)
+        'top_dog_stances': top_dog_stances_names,  # Dog Stances by Day (Across The Week) Chart (2)
+        'top_dog_stances_limit': top_dog_stances_limit,  # Dog Stances by Day (Across The Week) Chart (3)
+        'yearly_stance_count_by_day': yearly_stance_count_by_day,  # Dog Stances by Day (Across The Week) Chart (4)
+        'top_stances_per_year': top_stances_per_year,  # Dog Stances by Day (Across The Week) Chart (5)
+        'top_stances_per_year_limits': top_stances_per_year_limits,  # Dog Stances by Day (Across The Week) Chart (6)
+        'top_stance_position_combos': top_stance_position_combos,  # Most Common General Behaviors Chart
         'health_metrics': health_metrics,  # Comprehensive Health & Safety Profile of Our Canines Chart
     }
 
@@ -1542,11 +1672,13 @@ def get_stances_count_by_year(request):
     return formatted_stances_with_kong, formatted_stances_without_kong
 
 
-# Returns the top dog stances, parameter to set limit
-def get_top_dog_stances(limit=5, request=None):
-    branch = get_current_branch(request) if request else 'Israel'
+# Returns the overall top dog stances
+def get_top_dog_stances(request=None):
+    branch = get_current_branch(request)
 
+    # Get all the dogs in the current branch
     dogs = Dog.objects.filter(branch=branch)
+
     # Fetch and count the occurrences of each dogStance from the database for Dog Stances Across The Week
     dog_stance_counts = DogStance.objects.values('dogStance').filter(observation__observes__dog__in=dogs).annotate(total_count=Count('dogStance')).order_by(
         '-total_count')
@@ -1556,18 +1688,71 @@ def get_top_dog_stances(limit=5, request=None):
 
     # Collect the top X dogStances
     for i, entry in enumerate(dog_stance_counts):
-        if i >= limit:
-            break
         top_dog_stances.append(entry['dogStance'])
 
     return top_dog_stances
 
 
-# Get a dictionary of each Dog Stance's occurrences in every day of the week, for a selected list of Stances
-def get_stance_count_by_day(top_dog_stances, request):
+# Returns the top dog stances for each year and another dictionary for the limits of stances per year
+def get_top_dog_stances_per_year(request):
     branch = get_current_branch(request)
     dogs = Dog.objects.filter(branch=branch)
-    days_of_week = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday']
+
+    # Fetch all DogStance instances with their observation dates
+    stances_with_datetime = DogStance.objects.filter(observation__observes__dog__in=dogs).select_related(
+        'observation').values('observation__obsDateTime', 'dogStance')
+
+    # Initialize a dictionary to group stances by year
+    stances_by_year = {}
+
+    # Loop through the stances and group them by year
+    for entry in stances_with_datetime:
+        # Extract the year from the observation datetime
+        year = timezone.localtime(entry['observation__obsDateTime']).year
+
+        # Append the stance to the corresponding year
+        if year not in stances_by_year:
+            stances_by_year[year] = []
+        stances_by_year[year].append(entry['dogStance'])
+
+    # Calculate top dog stances for each year
+    top_stances_per_year = {}
+    for year, stances in stances_by_year.items():
+        stance_count = Counter(stances)
+        top_stances = [stance for stance, _ in stance_count.most_common()]
+        top_stances_per_year[year] = top_stances
+
+    # Get the mapping from the DOG_STANCE_CHOICES
+    stance_name_mapping = {backend: frontend for backend, frontend in DogStance.DOG_STANCE_CHOICES}
+
+    # Replace back-end names with front-end friendly names
+    for year, stances in top_stances_per_year.items():
+        front_end_stances = [stance_name_mapping.get(stance, "Unknown") for stance in stances]
+        top_stances_per_year[year] = front_end_stances
+
+    # Initialize the dictionary to hold the stance limits for the slider per year
+    top_stances_per_year_limits = {}
+
+    # Loop through the top_dog_stances_per_year dictionary
+    for year, stances in top_stances_per_year.items():
+        # Calculate the length of the stances list and assign it to the corresponding year
+        top_stances_per_year_limits[year] = len(stances)
+
+    # Order the dictionary keys in descending order
+    top_stances_per_year = dict(sorted(top_stances_per_year.items(), reverse=True))
+    top_stances_per_year_limits = dict(sorted(top_stances_per_year_limits.items(), reverse=True))
+
+    return top_stances_per_year, top_stances_per_year_limits
+
+
+# Get a dictionary of each DogStance's occurrences in every day of the week, for a selected list of Stances
+def get_stance_count_by_day(top_dog_stances, request):
+    branch = get_current_branch(request)
+
+    # Get all the dogs in the current branch
+    dogs = Dog.objects.filter(branch=branch)
+
+    days_of_week = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
     # Initialize a dictionary to hold the stance count for each day of the week
     stance_count_by_day = {}
@@ -1597,17 +1782,12 @@ def get_stance_count_by_day(top_dog_stances, request):
         # Map the weekday index to its string name
         day_name = days_of_week_mapping[day_index]
 
-        # Skip Friday and Saturday
-        if day_name in ['Friday', 'Saturday']:
-            continue  # Skip to next iteration of the loop, ignoring this entry
-
         # Fetch the stance for this particular record
         stance = entry['dogStance']
 
         # If this stance is among the top stances we are tracking, update the count
         if stance in top_dog_stances:
             stance_count_by_day[day_name][stance] += 1
-
 
     transformed_stance_count_by_day = {}
 
@@ -1618,6 +1798,74 @@ def get_stance_count_by_day(top_dog_stances, request):
             transformed_stances[transformed_key] = count
         transformed_stance_count_by_day[day] = transformed_stances
     return transformed_stance_count_by_day
+
+
+# Get a yearly dictionary of each DogStance's occurrences in every day of the week, for a selected list of Stances
+def get_yearly_stance_count_by_day(request):
+    branch = get_current_branch(request)
+    dogs = Dog.objects.filter(branch=branch)
+
+    # Fetch all DogStance instances with their observation dates
+    stances_with_datetime = DogStance.objects.filter(observation__observes__dog__in=dogs).select_related('observation').values('observation__obsDateTime', 'dogStance')
+
+    # Initialize a nested dictionary to hold the data
+    stance_count_by_year_and_day = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
+
+    # Mapping of Python's datetime.weekday() indexes to actual day names
+    days_of_week_mapping = {0: 'Monday', 1: 'Tuesday', 2: 'Wednesday', 3: 'Thursday', 4: 'Friday', 5: 'Saturday',
+                            6: 'Sunday'}
+
+    # Loop through the stances and group them by year and day
+    for entry in stances_with_datetime:
+        # Extract the year and day from the observation datetime
+        observation_datetime = timezone.localtime(entry['observation__obsDateTime'])
+        year = observation_datetime.year
+        day_index = observation_datetime.weekday()
+        day_name = days_of_week_mapping[day_index]
+
+        # Fetch the stance for this particular record
+        stance = entry['dogStance']
+
+        # Increment the count for this stance in the specific year and day
+        stance_count_by_year_and_day[year][day_name][stance] += 1
+
+    # Convert defaultdicts to regular dicts
+    stance_count_by_year_and_day = {year: {day: dict(stances) for day, stances in days.items()} for year, days in stance_count_by_year_and_day.items()}
+
+    # Order the dictionary keys in descending order
+    stance_count_by_year_and_day = dict(sorted(stance_count_by_year_and_day.items(), reverse=True))
+
+    # Get the mapping from the DOG_STANCE_CHOICES
+    stance_name_mapping = {backend: frontend for backend, frontend in DogStance.DOG_STANCE_CHOICES}
+
+    # Replace back-end names with front-end friendly names
+    for year, days in stance_count_by_year_and_day.items():
+        for day, stances in days.items():
+            front_end_stances = {stance_name_mapping.get(stance, "Unknown"): count for stance, count in stances.items()}
+            stance_count_by_year_and_day[year][day] = front_end_stances
+
+    # Convert defaultdicts to regular dicts
+    stance_count_by_year_and_day = {year: {day: dict(stances) for day, stances in days.items()} for year, days in
+                                    stance_count_by_year_and_day.items()}
+
+    return stance_count_by_year_and_day
+
+
+# Get the maximum number of stance options used in the DogStance in the current branch
+# For the slider max limit above the "Top Dog Stances Across The Week" chart
+def get_max_dog_stances_count(request):
+    branch = get_current_branch(request)
+
+    # Fetch all Dogs in the current branch
+    dogs = Dog.objects.filter(branch=branch)
+
+    # Fetch all DogStance objects in current branch
+    all_stances = DogStance.objects.filter(observation__observes__dog__in=dogs)
+
+    # Extract distinct dogStance values
+    used_stances = set([stance.dogStance for stance in all_stances])
+
+    return len(used_stances)
 
 
 # Helper function for fetching a top 10 list of combined dogStances + dogPositions and their counts with/without kongs
@@ -1717,19 +1965,19 @@ def get_health_metrics_dict(request):
 
     # Initialize data structure
     health_metrics_dict = {
-        'gender': {'M': 0, 'F': 0, '-': 0},
-        'vaccinated': {'M': {'Y': 0, 'N': 0}, 'F': {'Y': 0, 'N': 0}, '-': {'Y': 0, 'N': 0}},
+        'gender': {'M': 0, 'F': 0},
+        'vaccinated': {'M': {'Y': 0, 'N': 0}, 'F': {'Y': 0, 'N': 0}},
         'neutered': {
             'M': {'Y': {'Y': 0, 'N': 0, '-': 0}, 'N': {'Y': 0, 'N': 0, '-': 0}},
-            'F': {'Y': {'Y': 0, 'N': 0, '-': 0}, 'N': {'Y': 0, 'N': 0, '-': 0}},
-            '-': {'Y': {'Y': 0, 'N': 0, '-': 0}, 'N': {'Y': 0, 'N': 0, '-': 0}}
+            'F': {'Y': {'Y': 0, 'N': 0, '-': 0}, 'N': {'Y': 0, 'N': 0, '-': 0}}
         }
     }
 
     # Loop through each dog entry to populate chart_data
     for gender, dateOfVaccination, isNeutered, isDangerous in dogs_data:
-        # Handle Null/empty gender
-        gender = gender if gender in ['M', 'F'] else '-'
+        # Skip dogs with unknown gender
+        if gender not in ['M', 'F']:
+            continue
 
         # Calculate if vaccination is within the last 365 days or not, if null set as No as well
         if dateOfVaccination:

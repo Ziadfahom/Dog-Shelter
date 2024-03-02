@@ -1,12 +1,128 @@
 const loadingElement = document.getElementById('loading');
 
+// Global variable to hold the fetched data
+let globalData;
 
+// Global variable to store the chart data for the Dog Stances With/Without Kong Charts
 var chart_with_kong;
 var chart_without_kong;
 
+// Global variables to hold chart and data for Dog Stances by Day Chart
+let globalMaxDogStancesCount;
+let globalTopStancesPerYearLimits;
+let globalStanceData;
+let globalDaysOfWeek;
+let globalTopDogStances;
+let chart_stances_by_days;
+
+// Set Up the colors for the charts
+const colors = [
+    'rgba(54, 162, 235, 1)',  // Blue
+    'rgba(255, 99, 132, 1)',  // Red
+    'rgba(75, 192, 192, 1)',  // Green
+    'rgba(255, 206, 86, 1)',  // Yellow
+    'rgba(153, 102, 255, 1)', // Purple
+    'rgba(128, 0, 0, 1)',     // Maroon
+    'rgba(0, 128, 0, 1)',     // Green
+    'rgba(255, 159, 64, 1)',  // Orange
+    'rgba(128, 0, 128, 1)',   // Purple
+    'rgba(128, 128, 0, 1)',   // Olive
+    'rgba(0, 128, 128, 1)',   // Teal
+    'rgba(0, 0, 128, 1)',     // Navy
+    'rgba(255, 0, 255, 1)',   // Fuchsia
+    'rgba(192, 192, 192, 1)', // Silver
+    'rgba(0, 0, 0, 1)',       // Black
+    'rgba(255, 105, 180, 1)'  // Hot Pink
+];
+
+const backgroundColors = colors.map(color => color.replace('1)', '0.6)')); // Corresponding lighter colors for background
 
 $(document).ready(function() {
-    function fetchDataAndCreateCharts() {
+
+    // Show loading spinner and fetch data
+    loadingElement.style.display = 'flex';
+    fetchDataAndCreateCharts();
+
+    // Populate the Dog Stances With/Without Kong dropdowns with available year options
+    // Fetch data for the dropdowns
+    $.getJSON('/chart_data/', function(data) {
+        // Populate years for with-kong dropdown
+        data.years_with_kong.forEach(function(year) {
+            $('#year-select-with-kong').append(new Option(year, year));
+        });
+
+        // Event listener for changes in with-kong dropdown
+        $('#year-select-with-kong').on('change', function() {
+            // Get the selected year
+            var selectedYear = $(this).val();
+
+            // Determine the dataset based on the selected year
+            var newData;
+            if (selectedYear === 'total') {
+                newData = data.stances_with_kong;
+            } else {
+                newData = data.yearly_stances_with_kong[selectedYear] || [];
+            }
+
+            // Update chart data
+            chart_with_kong.data.labels = newData.map(item => item.dogStance);
+            chart_with_kong.data.datasets[0].data = newData.map(item => item.total);
+
+            // Redraw the chart
+            chart_with_kong.update();
+        });
+
+        // Populate years for without-kong dropdown
+        data.years_without_kong.forEach(function(year) {
+            $('#year-select-without-kong').append(new Option(year, year));
+        });
+
+        // Event listener for changes in without-kong dropdown
+        $('#year-select-without-kong').on('change', function() {
+            // Get the selected year
+            var selectedYear = $(this).val();
+
+            // Determine the dataset based on the selected year
+            var newData;
+            if (selectedYear === 'total') {
+                newData = data.stances_without_kong;
+            } else {
+                newData = data.yearly_stances_without_kong[selectedYear] || [];
+            }
+
+            // Update chart data
+            chart_without_kong.data.labels = newData.map(item => item.dogStance);
+            chart_without_kong.data.datasets[0].data = newData.map(item => item.total);
+
+            // Redraw the chart
+            chart_without_kong.update();
+        });
+    });
+
+    // Add event listener for year dropdown change in the "Top Stances by Day" chart
+    $('#year-select-stances').change(function() {
+        var selectedYear = $(this).val();
+        updateSliderForYear(selectedYear);
+    });
+
+    // Add event listener for "Show All" checkbox in the "Top Stances by Day" chart
+    $('#showAllStances').change(function() {
+        var selectedYear = $('#year-select-stances').val();
+        updateSliderForYear(selectedYear);
+    });
+
+    // Add event listener for slider change in the "Top Stances by Day" chart
+    $('#stanceSlider').on('input', function() {
+        var slider = document.getElementById('stanceSlider');
+        var showAllCheckBox = document.getElementById('showAllStances')
+        if (slider.value !== slider.max) {
+            showAllCheckBox.checked = false;
+        }
+        updateStanceLimit(this.value);
+    });
+});
+
+function fetchDataAndCreateCharts() {
         Chart.register(ChartDataLabels);
         fetch(chartDataUrl)
             .then(response => {
@@ -16,15 +132,35 @@ $(document).ready(function() {
                 return response.json();
             })
             .then(data => {
+                // Set the global data variable
+                globalData = data;
+
+                // Set Up the Charts
+
+                // Dog Stances With/Without Kong Bar Charts
                 var ctx_with_kong = document.getElementById('chart_dogStances_with_kong').getContext('2d');
                 var ctx_without_kong = document.getElementById('chart_dogStances_without_kong').getContext('2d');
+
+                // Dog Breeds Pie Chart
                 var ctx_breeds = document.getElementById('chart_dogBreeds').getContext('2d');
-                var stance_count_by_day = data.stance_count_by_day;
-                var daysOfWeek = Object.keys(stance_count_by_day);
-                var stances = Object.keys(stance_count_by_day[daysOfWeek[0]]);
+
+                // Dog Stances by Day Chart
+                // Initialize global variables
+                initializeGlobalStancesVariables(data);
+                // Populate Year Dropdown
+                populateYearDropdown(data.top_stances_per_year_limits);
+
+                // Initialize the chart with the fetched data
+                updateStanceLimit(document.getElementById('stanceSlider').value);
+
+                // Stance+Position With/Without Kong Radar Chart
                 var ctx_stance_position = document.getElementById('chart_dogStance_dogPosition_with_without').getContext('2d');
+
+                // Health Metrics Multi-Series Pie Chart
                 var ctx_health_metrics = document.getElementById('chart_health_metrics').getContext('2d');
 
+
+                // Define Colors
                 var gradient_with_kong = ctx_with_kong.createLinearGradient(0, 0, 0, 400);
                 gradient_with_kong.addColorStop(0, 'rgba(75, 192, 192, 1)');
                 gradient_with_kong.addColorStop(1, 'rgba(75, 192, 192, 0.5)');
@@ -32,34 +168,6 @@ $(document).ready(function() {
                 var gradient_without_kong = ctx_without_kong.createLinearGradient(0, 0, 0, 400);
                 gradient_without_kong.addColorStop(0, 'rgba(255, 99, 132, 1)');
                 gradient_without_kong.addColorStop(1, 'rgba(255, 99, 132, 0.5)');
-
-
-                const colors = [
-                    'rgba(255, 99, 132, 1)',  // Red
-                    'rgba(75, 192, 192, 1)',  // Green
-                    'rgba(255, 206, 86, 1)',  // Yellow
-                    'rgba(54, 162, 235, 1)',  // Blue
-                    'rgba(153, 102, 255, 1)', // Purple
-                    'rgba(128, 0, 0, 1)',     // Maroon
-                    'rgba(0, 128, 0, 1)',     // Green
-                    'rgba(255, 159, 64, 1)',  // Orange
-                    'rgba(128, 0, 128, 1)',   // Purple
-                    'rgba(128, 128, 0, 1)',   // Olive
-                    'rgba(0, 128, 128, 1)',   // Teal
-                    'rgba(0, 0, 128, 1)',     // Navy
-                    'rgba(255, 0, 255, 1)',   // Fuchsia
-                    'rgba(192, 192, 192, 1)', // Silver
-                    'rgba(0, 0, 0, 1)',       // Black
-                    'rgba(255, 105, 180, 1)'  // Hot Pink
-                ];
-
-
-                const backgroundColors = colors.map(color => color.replace('1)', '0.6)')); // Corresponding lighter colors for background
-
-                var ctx_by_day = document.getElementById('chart_dogStances_by_day').getContext('2d');
-                var gradient_by_day = ctx_by_day.createLinearGradient(0, 0, 0, 400);
-                gradient_by_day.addColorStop(0, 'rgba(128, 0, 128, 1)');
-                gradient_by_day.addColorStop(1, 'rgba(128, 0, 128, 0.5)');
 
 
                 chart_with_kong = new Chart(ctx_with_kong, {
@@ -252,7 +360,8 @@ $(document).ready(function() {
                         title: {
                             display: true,
                             text: 'Distribution of Dog Breeds',
-                            fontSize: 24
+                            fontSize: 24,
+                            position: 'top'
                         },
                         plugins: {
                             datalabels: {
@@ -271,112 +380,14 @@ $(document).ready(function() {
                             legend: {
                                 labels: {
                                     font: {
-                                        size: 17,
+                                        size: 18,
                                         weight: 'bold'
                                     },
                                     color: '#333333'
-                                }
+                                },
+                                position: 'bottom'
                             }
                         },
-                    }
-                });
-
-                var datasets = stances.map((stance, index) => {
-                    const colorIndex = index % colors.length;
-                    return {
-                        label: stance,
-                        data: daysOfWeek.map(day => stance_count_by_day[day][stance]),
-                        borderColor: colors[colorIndex],
-                        borderWidth: 3,
-                        backgroundColor: backgroundColors[colorIndex],
-                        stack: 'stack1'
-                    };
-                });
-
-
-                var chart_stances_by_days = new Chart(ctx_by_day, {
-                    type: 'bar',
-                    data: {
-                        labels: daysOfWeek,
-                        datasets: datasets
-                    },
-
-                    options: {
-                        responsive: true,
-                        title: {
-                            display: true,
-                            text: 'Dog Stances by Day (Across The Week)',
-                            fontSize: 24
-                        },
-                        plugins: {
-                            datalabels: {
-                                display: true,
-                                color: '#333333',
-                                font: {
-                                    size: 20,
-                                    weight: 'bold',
-                                },
-                                textShadowColor: 'rgba(255, 255, 255, 0.5)',
-                                textShadowBlur: 5,
-                                formatter: (value, context) => {
-                                    return value !== 0 ? value : null;  // Display label only if value is not zero
-                                },
-                            },
-                            tooltip: {
-                                backgroundColor: '#333333',
-                                titleColor: '#FFFFFF',
-                                bodyColor: '#FFFFFF'
-                            },
-                            legend: {
-                                labels: {
-                                    font: {
-                                        size: 17,
-                                        weight: 'bold'
-                                    },
-                                    color: '#333333'
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                stacked: true, // Enables stacking on the Y-axis
-                                pointLabels: {
-                                    color: '#333333',
-                                    font: {
-                                        size: 20
-                                    }
-                                },
-                                grid: {
-                                    color: '#666666'
-                                },
-                                ticks: {
-                                    color: '#333333',
-                                    font: {
-                                        size: 20,
-                                        weight: 'bold'
-                                    }
-                                }
-                            },
-                            x: {
-                                stacked: true, // Enables stacking on the X-axis
-                                pointLabels: {
-                                    color: '#333333',
-                                    font: {
-                                        size: 20
-                                    }
-                                },
-                                grid: {
-                                    color: '#666666'
-                                },
-                                ticks: {
-                                    color: '#333333',
-                                    font: {
-                                        size: 20,
-                                        weight: 'bold'
-                                    }
-                                }
-                            }
-                        }
                     }
                 });
 
@@ -476,8 +487,7 @@ $(document).ready(function() {
                 const genderLabels = ['Total Male Dogs', 'Total Female Dogs'];
 
                 // Extract vaccination data for each gender
-                const vaccinatedMaleData = [health_metrics.vaccinated.M.Y, health_metrics.vaccinated.M.N];
-                const vaccinatedFemaleData = [health_metrics.vaccinated.F.Y, health_metrics.vaccinated.F.N];
+                const vaccinatedData = [].concat(health_metrics.vaccinated.M.Y, health_metrics.vaccinated.M.N, health_metrics.vaccinated.F.Y, health_metrics.vaccinated.F.N);
 
                 // Extract neutered data for each gender
                 const neuteredMaleData = [
@@ -497,6 +507,8 @@ $(document).ready(function() {
                     health_metrics.neutered.F.N.N,
                     health_metrics.neutered.F.N['-']
                 ];
+
+                const neuteredData = [].concat.apply([], [neuteredMaleData, neuteredFemaleData]);
 
                 // Takes a base color in RGB format and a factor by which to lighten or darken the color
                 function adjustColor(color, factor) {
@@ -556,38 +568,41 @@ $(document).ready(function() {
                     'Female Vaccinated Neutered', 'Female Vaccinated Not Neutered', 'Female Vaccinated Unknown',
                     'Female Not Vaccinated Neutered', 'Female Not Vaccinated Not Neutered', 'Female Not Vaccinated Unknown'
                 ];
-
-                // Flatten the arrays to include all possible combinations
-                const vaccinationData = [].concat.apply([], [vaccinatedMaleData, vaccinatedFemaleData]);
-                const neuteredData = [].concat.apply([], [neuteredMaleData, neuteredFemaleData]);
+                // Combined labels
+                const combinedLabels = [...genderLabels, ...vaccinationLabels, ...neuteredLabels];
 
                 // Initialize Chart.js Data and Config based on health metrics
                 var chart_health_metrics = new Chart(ctx_health_metrics, {
                     type: 'pie',
                     data: {
-                        labels: [...genderLabels, ...vaccinationLabels, ...neuteredLabels],
+                        labels: combinedLabels,
                         datasets: [
                             {
                                 label: 'Neutered',
                                 backgroundColor: health_backgroundColors.slice(6, 6 + neuteredData.length),
-                                borderColor: 'black',
+                                borderColor: '#1F2633',
+                                borderWidth: 3,
                                 data: neuteredData,
                             },
                             {
                                 label: 'Vaccinated',
-                                backgroundColor: health_backgroundColors.slice(2, 2 + vaccinationData.length),
-                                borderColor: 'black',
-                                data: vaccinationData
+                                backgroundColor: health_backgroundColors.slice(2, 2 + vaccinatedData.length),
+                                borderColor: '#1F2633',
+                                borderWidth: 3,
+                                data: vaccinatedData
                             },
                             {
                                 label: 'Gender',
                                 backgroundColor: health_backgroundColors.slice(0, genderData.length),
-                                borderColor: 'black',
+                                borderColor: '#1F2633',
+                                borderWidth: 3,
                                 data: genderData
                             }
+
                         ]
                     },
                     options: {
+                        events: ['mousemove', 'mouseout', 'touchstart', 'touchmove'], //Exclude click event on Legends
                         responsive: true,
                         plugins: {
                             datalabels: {
@@ -599,13 +614,36 @@ $(document).ready(function() {
                                 anchor: 'center',
                                 align: 'center',
                                 formatter: function (value, context) {
-                                    if (value === 0) {
-                                        return null;
-                                    }
+                                    // show each context.dataset.label on the first value for that dataset
+                                    // Also show all values that are not zero
                                     if (context.dataIndex === 0) {
-                                        return context.dataset.label + '  \n        ' + value;
+                                        if (value !== 0) {
+                                            if (context.dataset.label === 'Gender') {
+                                                return ' ' + context.dataset.label + '  \n      ' + value + '\n';
+                                            }
+                                            else if (context.dataset.label === 'Vaccinated') {
+                                                return '     ' + context.dataset.label + '  \n            ' + value;
+                                            }
+                                            else {
+                                                return context.dataset.label + '  \n      ' + value;
+                                            }
+                                        }
+                                        else {
+                                            if (context.dataset.label === 'Gender') {
+                                                return '             ' + context.dataset.label;
+                                            }
+                                            else {
+                                                return '                     ' + context.dataset.label;
+                                            }
+                                        }
+                                    } else {
+                                        if (value !== 0) {
+                                            return value;
+                                        }
+                                        else {
+                                            return '';
+                                        }
                                     }
-                                    return value;
                                 }
                             },
                             tooltip: {
@@ -631,6 +669,7 @@ $(document).ready(function() {
                             },
                             legend: {
                                 display: true,
+                                reverse: true,
                                 position: 'bottom',
                                 labels: {
                                     font: {
@@ -639,30 +678,43 @@ $(document).ready(function() {
                                     },
                                     color: '#333333',
                                     generateLabels: function (chart) {
-                                        const datasets = chart.data.datasets;
-                                        const labels = [];
-                                        let cumulativeLength = 0;
-                                        for (let i = 0; i < datasets.length; i++) {
-                                            const dataset = datasets[i];
-                                            for (let j = 0; j < dataset.data.length; j++) {
-                                                if (dataset.data[j] !== 0) {
-                                                    labels.push({
-                                                        datasetIndex: i,
-                                                        text: chart.data.labels[cumulativeLength + j],
-                                                        fillStyle: health_backgroundColors[cumulativeLength + j], // Corrected here
-                                                        hidden: !chart.isDatasetVisible(i),
-                                                        index: j
+                                        let labels = [];
+                                        let cumulativeIndex = 0;
+
+                                        chart.data.datasets.slice().reverse().forEach((dataset, datasetIndexRev) => {
+                                            let datasetIndex = chart.data.datasets.length - 1 - datasetIndexRev;
+
+                                            dataset.data.slice().reverse().forEach((dataValue, dataIndexRev) => {
+                                                if (dataValue !== 0) {
+                                                    // Calculate the actual label index in the combinedLabels array
+                                                    let dataIndex = dataset.data.length - 1 - dataIndexRev;
+                                                    let actualLabelIndex = cumulativeIndex + dataIndex;
+
+                                                    labels.unshift({ // Unshift to add to the beginning of the array
+                                                        text: chart.data.labels[actualLabelIndex],
+                                                        fillStyle: dataset.backgroundColor[dataIndex],
+                                                        hidden: !chart.isDatasetVisible(datasetIndex),
+                                                        datasetIndex: datasetIndex,
+                                                        index: dataIndex
                                                     });
                                                 }
-                                            }
-                                            cumulativeLength += dataset.data.length;
-                                        }
+                                            });
+
+                                            // Update cumulative index for the next dataset
+                                            cumulativeIndex += dataset.data.length;
+                                        });
+
                                         return labels;
                                     },
-                                    onClick: function (mouseEvent, legendItem, legend) {
-                                        legend.chart.getDatasetMeta(legendItem.datasetIndex).hidden = legend.chart.isDatasetVisible(legendItem.datasetIndex);
-                                        legend.chart.update();
-                                    }
+                                    onClick: function (event, legendItem, legend) {
+                                        // Explicitly do nothing and prevent default action
+                                        null;
+
+                                        // const ci = legend.chart;
+                                        // const datasetMeta = ci.getDatasetMeta(legendItem.datasetIndex);
+                                        // datasetMeta.hidden = !datasetMeta.hidden;
+                                        // ci.update();
+                                    },
                                 }
                             }
                         }
@@ -677,66 +729,248 @@ $(document).ready(function() {
                 console.error("Error fetching data.");
                 loadingElement.innerHTML = "<p>Error fetching data. </p>";
             });
+}
+
+// Function to create the Dog Stances by Day Chart
+function createChartStancesByDay(topDogStances, daysOfWeek, stanceData) {
+    if (chart_stances_by_days) {
+        chart_stances_by_days.destroy(); // Destroy the old chart instance before creating a new one
     }
 
-    // Show loading spinner and fetch data
-    loadingElement.style.display = 'flex';
-    fetchDataAndCreateCharts();
+    var ctx_by_day = document.getElementById('chart_dogStances_by_day').getContext('2d');
+    var sliderValue = parseInt(document.getElementById('stanceSlider').value);
+    var filteredStances = topDogStances.slice(0, sliderValue);
 
-    // Populate the Dog Stances With/Without Kong dropdowns with available year options
-    // Fetch data for the dropdowns
-    $.getJSON('/chart_data/', function(data) {
-        // Populate years for with-kong dropdown
-        data.years_with_kong.forEach(function(year) {
-            $('#year-select-with-kong').append(new Option(year, year));
-        });
+    var gradient_by_day = ctx_by_day.createLinearGradient(0, 0, 0, 400);
+    gradient_by_day.addColorStop(0, 'rgba(128, 0, 128, 1)');
+    gradient_by_day.addColorStop(1, 'rgba(128, 0, 128, 0.5)');
 
-        // Event listener for changes in with-kong dropdown
-        $('#year-select-with-kong').on('change', function() {
-            // Get the selected year
-            var selectedYear = $(this).val();
-
-            // Determine the dataset based on the selected year
-            var newData;
-            if (selectedYear === 'total') {
-                newData = data.stances_with_kong;
-            } else {
-                newData = data.yearly_stances_with_kong[selectedYear] || [];
-            }
-
-            // Update chart data
-            chart_with_kong.data.labels = newData.map(item => item.dogStance);
-            chart_with_kong.data.datasets[0].data = newData.map(item => item.total);
-
-            // Redraw the chart
-            chart_with_kong.update();
-        });
-
-        // Populate years for without-kong dropdown
-        data.years_without_kong.forEach(function(year) {
-            $('#year-select-without-kong').append(new Option(year, year));
-        });
-
-        // Event listener for changes in without-kong dropdown
-        $('#year-select-without-kong').on('change', function() {
-            // Get the selected year
-            var selectedYear = $(this).val();
-
-            // Determine the dataset based on the selected year
-            var newData;
-            if (selectedYear === 'total') {
-                newData = data.stances_without_kong;
-            } else {
-                newData = data.yearly_stances_without_kong[selectedYear] || [];
-            }
-
-            // Update chart data
-            chart_without_kong.data.labels = newData.map(item => item.dogStance);
-            chart_without_kong.data.datasets[0].data = newData.map(item => item.total);
-
-            // Redraw the chart
-            chart_without_kong.update();
-        });
-    });
-
+    var datasets = filteredStances.map((stance, index) => {
+    const colorIndex = index % colors.length;
+    return {
+        label: stance,
+        data: daysOfWeek.map(day => stanceData[day] ? (stanceData[day][stance] || 0) : 0),
+        borderColor: colors[colorIndex],
+        borderWidth: 3,
+        backgroundColor: backgroundColors[colorIndex],
+        stack: 'stack1'
+    };
 });
+
+
+
+    chart_stances_by_days = new Chart(ctx_by_day, {
+        type: 'bar',
+        data: {
+            labels: daysOfWeek,
+            datasets: datasets
+        },
+
+        options: {
+            responsive: true,
+            title: {
+                display: true,
+                text: 'Dog Stances by Day (Across The Week)',
+                fontSize: 24
+            },
+            plugins: {
+                datalabels: {
+                    display: true,
+                    color: '#333333',
+                    font: {
+                        size: 20,
+                        weight: 'bold',
+                    },
+                    textShadowColor: 'rgba(255, 255, 255, 0.5)',
+                    textShadowBlur: 5,
+                    formatter: (value, context) => {
+                        return value !== 0 ? value : null;  // Display label only if value is not zero
+                    },
+                },
+                tooltip: {
+                    backgroundColor: '#333333',
+                    titleColor: '#FFFFFF',
+                    bodyColor: '#FFFFFF'
+                },
+                legend: {
+                    labels: {
+                        font: {
+                            size: 17,
+                            weight: 'bold'
+                        },
+                        color: '#333333'
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    stacked: true, // Enables stacking on the Y-axis
+                    pointLabels: {
+                        color: '#333333',
+                        font: {
+                            size: 20
+                        }
+                    },
+                    grid: {
+                        color: '#666666'
+                    },
+                    ticks: {
+                        color: '#333333',
+                        font: {
+                            size: 20,
+                            weight: 'bold'
+                        }
+                    }
+                },
+                x: {
+                    stacked: true, // Enables stacking on the X-axis
+                    pointLabels: {
+                        color: '#333333',
+                        font: {
+                            size: 20
+                        }
+                    },
+                    grid: {
+                        color: '#666666'
+                    },
+                    ticks: {
+                        color: '#333333',
+                        font: {
+                            size: 20,
+                            weight: 'bold'
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Initialize global variables for the Dog Stances by Day Chart
+function initializeGlobalStancesVariables(data) {
+    globalMaxDogStancesCount = data.top_dog_stances_limit;
+    globalTopStancesPerYearLimits = data.top_stances_per_year_limits;
+    globalStanceData = data.stance_count_by_day;
+    globalDaysOfWeek = Object.keys(globalStanceData);
+    globalTopDogStances = data.top_dog_stances;
+}
+
+// Populate the year dropdown for the "Top Stances by Day" chart
+function populateYearDropdown(yearLimits) {
+    var yearSelect = document.getElementById('year-select-stances');
+
+    // Sort years in descending order
+    var sortedYears = Object.keys(yearLimits).sort((a, b) => b - a);
+
+    sortedYears.forEach(year => {
+        var option = document.createElement('option');
+        option.value = year;
+        option.text = year;
+        yearSelect.appendChild(option);
+    });
+}
+
+// Update the stances limit for the "Top Stances by Day" chart slider and redraw the chart
+function updateStanceLimit(value) {
+    var sliderValueDisplay = document.getElementById('stanceSliderValue');
+    var stanceChartTitleTop = document.getElementById('stanceChartTitleTop');
+    var stanceChartTitleMiddle = document.getElementById('stanceChartTitleMiddle');
+    var slider = document.getElementById('stanceSlider');
+    var sliderLabel = document.getElementById('stanceSliderLabel');
+    var showAllCheckBox = document.getElementById('showAllStances')
+    var showAllLabel = document.getElementById('showAllStancesLabel')
+
+    // Disable or enable the slider and its title and the checkbox based on the max value
+    slider.disabled = slider.max === '1';
+    if (slider.disabled) {
+        slider.style.cursor = 'not-allowed';
+        sliderLabel.style.color = '#aaa';
+        sliderLabel.style.cursor = 'not-allowed';
+        showAllCheckBox.disabled = true;
+        showAllCheckBox.checked = true;
+        showAllLabel.style.color = '#aaa';
+        showAllLabel.style.cursor = 'not-allowed';
+    }
+    else {
+        slider.style.cursor = 'default';
+        sliderLabel.style.color = 'initial';
+        sliderLabel.style.cursor = 'default';
+        showAllCheckBox.disabled = false;
+        showAllCheckBox.checked = slider.value === slider.max;
+        showAllLabel.style.color = 'initial';
+        showAllLabel.style.cursor = 'default';
+    }
+
+    // Update the chart title
+    if (value === '1') {
+        sliderValueDisplay.innerText = '';
+        stanceChartTitleTop.innerText = '';
+        stanceChartTitleMiddle.innerText = 'Activity';
+    }
+    else {
+        sliderValueDisplay.innerText = value;
+        stanceChartTitleTop.innerText = 'Top';
+        stanceChartTitleMiddle.innerText = 'Activities';
+    }
+
+    createChartStancesByDay(globalTopDogStances, globalDaysOfWeek, globalStanceData);
+}
+
+// Update the slider max value based on the selected year in the "Top Stances by Day" chart
+function updateSliderForYear(year) {
+    var slider = document.getElementById('stanceSlider');
+    var sliderValueDisplay = document.getElementById('stanceSliderValue');
+    var sliderLabel = document.getElementById('stanceSliderLabel')
+    var showAllCheckBox = document.getElementById('showAllStances')
+
+    // Get the chart title for adjustments
+    var stanceChartTitleTop = document.getElementById('stanceChartTitleTop');
+    var stanceChartTitleMiddle = document.getElementById('stanceChartTitleMiddle');
+
+    // Check if 'All Years' is selected
+    if (year === 'total') {
+        slider.max = globalMaxDogStancesCount;
+        globalTopDogStances = globalData.top_dog_stances;
+        globalStanceData = globalData.stance_count_by_day;
+    } else {
+        slider.max = globalTopStancesPerYearLimits[year];
+        globalTopDogStances = globalData.top_stances_per_year[year];
+        globalStanceData = globalData.yearly_stance_count_by_day[year];
+    }
+
+    // Disable or enable the slider based on the max value
+    slider.disabled = slider.max === '1';
+
+    if (slider.disabled) {
+        sliderLabel.style.color = '#aaa'; // Light grey color for disabled
+        sliderLabel.style.cursor = 'not-allowed'; // Change cursor
+
+        // Adjust the chart title accordingly
+        stanceChartTitleTop.innerText = '';
+        sliderValueDisplay.innerText = '';
+        stanceChartTitleMiddle.innerText = 'Activity';
+
+    } else {
+        sliderLabel.style.color = 'initial'; // Default color
+        sliderLabel.style.cursor = 'default'; // Default cursor
+
+        // Adjust the chart title accordingly
+        stanceChartTitleTop.innerText = 'Top';
+        sliderValueDisplay.innerText = slider.value;
+        stanceChartTitleMiddle.innerText = 'Activities';
+
+    }
+
+    // Set slider value within new max limit
+    slider.value = slider.value > slider.max ? slider.max : slider.value;
+
+    if (showAllCheckBox.checked) {
+        slider.value = slider.max;
+    }
+
+
+    // Update the displayed slider value and redraw the chart
+    updateStanceLimit(slider.value);
+    createChartStancesByDay(globalTopDogStances, globalDaysOfWeek, globalStanceData);
+
+}

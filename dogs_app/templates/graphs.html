@@ -19,7 +19,7 @@
         </div>
 
         <div id="carouselExampleIndicators" class="carousel carousel-dark slide">
-            <div class="carousel-indicators">
+            <div class="carousel-indicators" style="bottom: -1rem;">
                 <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
                 <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1" aria-label="Slide 2"></button>
                 <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2" aria-label="Slide 3"></button>
@@ -29,42 +29,39 @@
             </div>
             <div class="carousel-inner">
                 <div class="carousel-item active">
-                    <div class="card chart-container chart-container-stance-pos d-block w-100">
-                        <div class="card-body">
-                            <h2 class="card-title" id="stance-pos-title">
-                                Most Common General Behaviors -
-                                <br>Comparison
-                                <span class="with-color">
-                                    With
-                                </span>
-                                /
-                                <span class="without-color">
-                                    Without
-                                </span>
-                                Kongs
-                            </h2>
-                            <canvas id="chart_dogStance_dogPosition_with_without" width="800" height="450"></canvas>
-                        </div>
-                    </div>
-                </div>
-                <div class="carousel-item">
-                    <div class="card chart-container chart-container-health-metrics d-block w-100">
-                        <div class="card-body">
-                            <h2 class="card-title-metrics">
-                                Comprehensive Health & Safety Profile of Our Canines
-                                <br>
-                                Categorized by Gender, Vaccination Status and Neutering
-                            </h2>
-                            <div style="width: 80%; margin-left: 5rem;">
-                                <canvas id="chart_health_metrics" ></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="carousel-item">
                     <div class="card chart-container chart-container-day d-block w-100">
                         <div class="card-body">
-                            <h2 class="card-title">Dog Stances by Day (Across The Week)</h2>
+                            <div class="controls-container">
+                                <div class="slider-container">
+                                    <div class="form-check form-switch" style="display: flex;">
+                                        <label for="showAllStances" id="showAllStancesLabel">
+                                            <strong>
+                                                Show All
+                                            </strong>
+                                        </label>
+                                        <input class="form-check-input" id="showAllStances" type="checkbox" role="switch">
+                                    </div>
+                                    <label for="stanceSlider" id="stanceSliderLabel">
+                                        <strong>
+                                            Number of Stances:
+                                        </strong>
+                                    </label>
+                                    <input type="range" id="stanceSlider" min="1" max="{{ max_dog_stances_count }}" value="{% if max_dog_stances_count > 4 %}5{% else %}{{ max_dog_stances_count }}{% endif %}" step="1" oninput="updateStanceLimit(this.value)">
+                                </div>
+
+                                <div class="dropdown-container">
+                                    <label for="year-select-stances" id="year-select-stances-label">
+                                        <strong>Year Selection:</strong>
+                                    </label>
+                                    <select id="year-select-stances" class="centered-content">
+                                        <option value="total">All Years</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <h2 class="card-title" id="stanceChartTitle">
+                                <span id="stanceChartTitleTop">Top</span> <span id="stanceSliderValue">{% if max_dog_stances_count > 4 %}5{% else %}{{ max_dog_stances_count }}{% endif %}</span> Dog <span id="stanceChartTitleMiddle">Activities</span> Across The Week
+                            </h2>
                             <canvas id="chart_dogStances_by_day"  width="800" height="450"></canvas>
                         </div>
                     </div>
@@ -88,7 +85,7 @@
                                 </span>
                                     Kong
                             </h2>
-                            <canvas id="chart_dogStances_with_kong"></canvas>
+                            <canvas id="chart_dogStances_with_kong" width="800" height="450"></canvas>
                         </div>
                     </div>
                 </div>
@@ -111,7 +108,26 @@
                                 </span>
                                 Kong
                             </h2>
-                            <canvas id="chart_dogStances_without_kong"></canvas>
+                            <canvas id="chart_dogStances_without_kong" width="800" height="450"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="card chart-container chart-container-stance-pos d-block w-100">
+                        <div class="card-body">
+                            <h2 class="card-title" id="stance-pos-title">
+                                Most Common Behaviors -
+                                <br>Comparison
+                                <span class="with-color">
+                                    With
+                                </span>
+                                /
+                                <span class="without-color">
+                                    Without
+                                </span>
+                                Kongs
+                            </h2>
+                            <canvas id="chart_dogStance_dogPosition_with_without" width="800" height="550"></canvas>
                         </div>
                     </div>
                 </div>
@@ -119,17 +135,31 @@
                     <div class="card chart-container chart-container-breeds d-block w-100 ">
                         <div class="card-body breed-distribution-container">
                             <h2 class="card-title">Distribution of Dog Breeds</h2>
-                            <canvas id="chart_dogBreeds"></canvas>
+                            <canvas id="chart_dogBreeds" width="650" height="650"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="card chart-container chart-container-health-metrics d-block w-100">
+                        <div class="card-body">
+                            <h2 class="card-title-metrics">
+                                Comprehensive Health & Safety Profile of Our Canines
+                                <br>
+                                Categorized by Gender, Vaccination and Neutering Statuses
+                            </h2>
+                            <div style="width: 65%;  margin-left: 12rem;">
+                                <canvas id="chart_health_metrics"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
+            <button class="carousel-control-prev" style="left: -10rem;" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
                 <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                 <span class="visually-hidden">Previous</span>
             </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
+            <button class="carousel-control-next" style="right: -10rem;" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
                 <span class="carousel-control-next-icon" aria-hidden="true"></span>
                 <span class="visually-hidden">Next</span>
             </button>

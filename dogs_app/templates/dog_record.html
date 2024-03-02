@@ -92,17 +92,27 @@
                                 <td>{{ dog_record.dateOfVaccination|handle_none }}</td>
                             </tr>
                             <tr>
-                                <td><strong>Neutered?</strong></td>
+                                <td><strong>Is the Dog Neutered?</strong></td>
                                 <td>{{ dog_record.isNeutered|yes_no_filter }}</td>
                             </tr>
                             <tr>
-                                <td><strong>Dangerous?</strong></td>
+                                <td><strong>Is the Dog Dangerous?</strong></td>
                                 <td>{{ dog_record.isDangerous|yes_no_filter }}</td>
                             </tr>
                             <tr>
-                                <td><strong>Date Given Last Kong Toy</strong></td>
+                                <td><strong>Last Date Given Kong</strong></td>
                                 <td>{{ dog_record.kongDateAdded|handle_none }}</td>
                             </tr>
+                            <tr>
+                                <td><strong>Dog Status</strong></td>
+                                <td>{% if dog_record.adoptionDate %}Adopted{% else %}Active{% endif %}</td>
+                            </tr>
+                            {% if dog_record.adoptionDate %}
+                                <tr>
+                                    <td><strong>Date of Adoption</strong></td>
+                                    <td>{{ dog_record.adoptionDate|handle_none }}</td>
+                                </tr>
+                            {% endif %}
                             <tr>
                                 <td class="attr-name" style="{% if dog_record.owner %}padding-top: 1.4rem;{% endif %}"><strong>Owner</strong></td>
                                 <td>
@@ -126,7 +136,7 @@
                     </table>
 
                     <!-- View Sample Video Button -->
-                    <div class="sample-button-group">
+                    <div class="sample-button">
                         <a  class="btn btn-dark" target="_blank">Sample Video</a>
                     </div>
 
@@ -179,7 +189,7 @@
 
                     <!-- Expand/Collapse All Button -->
                     <div class="d-flex justify-content-end">
-                        <button id="toggleTables" class="btn btn-dark btn-sm">
+                        <button id="toggleTables" class="btn btn-dark">
                             Expand All
                         </button>
                     </div>

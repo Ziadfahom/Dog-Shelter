@@ -20,25 +20,61 @@
             <hr>
 
             {% comment %} Content {% endcomment %}
-            <form id="dogStanceForm">
-                <!-- CSRF Token -->
+            <form method="post" id="add-stance-form">
                 {% csrf_token %}
+                <!-- General Error Display Area -->
+                <div class="form-general-error add-stance-form" id="add-stance-general-error">
+                    <span class="text-danger form-error">
+                        {% if non_field_errors %}
+                                {% for error in non_field_errors %}
+                                    {{ error }}<br>
+                                {% endfor %}
+                        {% endif %}
+                    </span>
+                </div>
 
                 <!-- Hidden input to hold the Observation ID Field -->
                 <input type="hidden" id="observation_id" name="observation_id">
 
-                <!-- Time Field -->
-                {{ stance_form.stanceStartTime.label_tag }}
-                <input class="form-control" type="text" id="timepicker" name="stanceStartTime" placeholder="Select Time">
+                <div class="modal-body" style="padding-bottom: 0;">
+                    {% if stance_form.stanceStartTime.errors %}
+                        <div class="form-error-row">
+                            <span class="text-danger form-error">{{ stance_form.stanceStartTime.errors }}</span>
+                        </div>
+                    {% endif %}
+                    <div class="form-row">
+                        <label for="timepicker">Stance Start Time:</label>
+                        <input type="text" id="timepicker" class="form-control {{ stance_form.stanceStartTime.name }}" name="{{ stance_form.stanceStartTime.name }}" value="{{ stance_form.stanceStartTime.value }}">
+                    </div>
 
+                    {% if stance_form.dogStance.errors %}
+                        <div class="form-error-row">
+                            <span class="text-danger form-error">{{ stance_form.dogStance.errors }}</span>
+                        </div>
+                    {% endif %}
+                    <div class="form-row">
+                        <label for="stance-choice">Stance:</label>
+                        <select id="stance-choice" class="form-control {{ stance_form.dogStance.name }}" name="{{ stance_form.dogStance.name }}">
+                            {% for value, display in stance_form.dogStance.field.choices %}
+                                <option value="{{ value }}" {% if stance_form.dogStance.value == value %}selected{% endif %}>{{ display }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
 
-                <!-- Dog Stance Field -->
-                {{ stance_form.dogStance.label_tag }}
-                {{ stance_form.dogStance }}
-
-                <!-- Dog Location Field -->
-                {{ stance_form.dogLocation.label_tag }}
-                {{ stance_form.dogLocation }}
+                    {% if stance_form.dogLocation.errors %}
+                        <div class="form-error-row">
+                            <span class="text-danger form-error">{{ stance_form.dogLocation.errors }}</span>
+                        </div>
+                    {% endif %}
+                    <div class="form-row">
+                        <label for="location-choice">Location:</label>
+                        <select id="location-choice" class="form-control {{ stance_form.dogLocation.name }}" name="{{ stance_form.dogLocation.name }}">
+                            {% for value, display in stance_form.dogLocation.field.choices %}
+                                <option value="{{ value }}" {% if stance_form.dogLocation.value == value %}selected{% endif %}>{{ display }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
             </form>
             
             {% comment %} Footer {% endcomment %}

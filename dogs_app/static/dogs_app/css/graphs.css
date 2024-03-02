@@ -32,8 +32,13 @@ body {
     background-color: #ADD8E6;  /* Light Blue */
 }
 
+.chart-container-stance-pos canvas {
+    margin: 0 auto;
+    display: block;
+}
 .chart-container-health-metrics {
     background-color: #FFE4E1;  /* Misty Rose */
+
 }
 
 /* Title container styling */
@@ -81,7 +86,8 @@ h1 {
     text-align: center;
     color: #333;
     font-weight: bold;
-    align-self: center; /* Adjust vertical alignment */
+    align-self: center;
+    margin-bottom: 2rem;
 }
 /* Add styles for a hover effect on each chart */
 .chart-container:hover {
@@ -102,18 +108,34 @@ h1 {
     bottom: 2rem;
 }
 
-.carousel-control-prev {
-    left: -2.5rem;
+
+.carousel-control-prev, .carousel-control-next {
+    background-color: #333; /* Dark background */
+    color: #fff; /* Icon color */
+    border-radius:  50%; /* Rounded corners */
+    opacity:  0.7; /* Transparency */
+    transition: opacity  0.5s ease-in-out; /* Smooth transition for hover effect */
+}
+.carousel-control-prev-icon {
+ background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23fff' viewBox='0 0 8 8'%3E%3Cpath d='M5.25 0l-4 4 4 4 1.5-1.5-2.5-2.5 2.5-2.5-1.5-1.5z'/%3E%3C/svg%3E") !important;
 }
 
-.carousel-control-next {
-    right: -2.5rem;
+.carousel-control-next-icon {
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23fff' viewBox='0 0 8 8'%3E%3Cpath d='M2.75 0l-1.5 1.5 2.5 2.5-2.5 2.5 1.5 1.5 4-4-4-4z'/%3E%3C/svg%3E") !important;
+}
+.carousel-control-prev:hover, .carousel-control-next:hover {
+    opacity:  1; /* Full opacity on hover */
 }
 
-.breed-distribution-container {
-    display: flex;
-    align-items: flex-start; /* Vertical alignment */
+
+.carousel-item *:hover {
+    transform: scale(1);
 }
+
+.chart-container {
+    transition: all 0.5s ease; /* Adjust the timing and easing function as needed */
+}
+
 
 .card-title {
     margin-right: 2rem; /* Space between h2 and canvas */
@@ -121,10 +143,9 @@ h1 {
 }
 
 #chart_dogBreeds {
-    height: 30rem;
-    width: 30rem;
     display: block;
-    box-sizing: border-box;
+    margin: 0 auto;
+
 }
 
 .with-color {
@@ -160,7 +181,80 @@ h1 {
     margin-bottom: 1rem;
     margin-top: -1rem;
 }
+
 .dropdown-container label {
     margin-right: 2rem;
-    font-size: 1.4em;
+    font-size: 1.3em;
+}
+
+.slider-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    margin-bottom: 1rem;
+    margin-top: -1rem;
+}
+
+
+#stanceSliderValue {
+    text-decoration: underline;
+}
+
+.controls-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.slider-container,
+.dropdown-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Adjust spacing between slider and dropdown */
+    margin: -1rem 2rem 1rem;
+}
+
+.slider-container label,
+.dropdown-container label {
+    margin-right: 1rem;
+    font-size: 1.3em;
+
+}
+
+#year-select-stances-label {
+    margin-left: 1rem;
+}
+
+.form-check {
+    align-items: center; /* This ensures vertical center alignment */
+}
+
+#showAllStances {
+    transform: scale(1.4);
+    cursor: pointer;
+    margin-left: 1rem;
+    margin-right: 6rem;
+    background-color: black;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='white'/%3e%3c/svg%3e");
+    vertical-align: middle;
+}
+
+#showAllStances:focus {
+    border-color: rgba(255, 255, 255, 0.5);
+    outline: 0;
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+    background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='white'/></svg>");
+}
+
+#showAllStances:checked {
+    background-color: #4CAF50; /* Green background for checked state */
+    border: none;
+    background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='white'/></svg>"); /* White circle for checked state */
+}
+
+#showAllStancesLabel {
+    margin-right: 0;
 }

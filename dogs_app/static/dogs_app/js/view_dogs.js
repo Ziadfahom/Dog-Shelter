@@ -503,3 +503,7 @@ function getCookie(name) {
   return cookieValue;
 }
 
+// Set a timeout to hide success message after 3 seconds
+setTimeout(function() {
+    $('#messageContainer .alert').fadeOut('slow');
+}, 3000);

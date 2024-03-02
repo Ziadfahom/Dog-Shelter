@@ -21,8 +21,19 @@
             <hr>
 
             {% comment %} Content {% endcomment %}
-            <form method="post" enctype="multipart/form-data">
+            <form method="post" enctype="multipart/form-data" id="edit-observation-form">
                 {% csrf_token %}
+                <!-- General Error Display Area -->
+                <div class="form-general-error" id="edit-observation-general-error">
+                    <span class="text-danger form-error">
+                        {% if non_field_errors %}
+                                {% for error in non_field_errors %}
+                                    {{ error }}<br>
+                                {% endfor %}
+                        {% endif %}
+                    </span>
+                </div>
+
                 <div class="modal-body" style="padding-bottom: 0;">
                         {% if observation_form.obsDateTime.errors %}
                             <div class="form-error-row">

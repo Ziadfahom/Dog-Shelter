@@ -1,3 +1,4 @@
+import pytz
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -7,6 +8,7 @@ from .models import (Dog, Owner, Profile, Treatment, EntranceExamination,
                      Observation, DogPlacement, Kennel, Observes, DogStance, News, Camera, Branch)
 from django.core.exceptions import ValidationError
 from datetime import date
+from django.utils.dateparse import parse_datetime
 
 
 # Helper function to get the user's current branch object (Israel/Italy)
@@ -118,12 +120,12 @@ class AddDogForm(forms.ModelForm):
                                    required=False,
                                    widget=forms.widgets.Select(attrs={"class": "form-control",
                                                                       "title": "Select if the dog is neutered"}),
-                                   label="Neutered?")
+                                   label="Is the dog neutered?")
     isDangerous = forms.ChoiceField(choices=Dog.IS_DANGEROUS_CHOICES,
                                     required=False,
                                     widget=forms.widgets.Select(attrs={"class": "form-control",
                                                                        "title": "Select if the dog is dangerous"}),
-                                    label="Dangerous?")
+                                    label="Is the dog dangerous?")
     dogImage = forms.ImageField(required=False,
                                 widget=forms.widgets.ClearableFileInput(attrs={"class": "form-control",
                                                                                "title": "Upload the dog's image."}),
@@ -140,10 +142,17 @@ class AddDogForm(forms.ModelForm):
                                    widget=forms.widgets.Select(attrs={"class": "form-control",
                                                                       "title": "Select the dog's owner"}),
                                    label="Dog's Owner")
+    adoptionDate = forms.DateField(required=False,
+                                   widget=forms.widgets.DateInput(format='%Y-%m-%d',
+                                                                  attrs={"type": "date",
+                                                                         "class": "form-control",
+                                                                         "title": "Please enter a valid date",
+                                                                         "id": "id_adoptionDate"}),
+                                   label="Adoption Date")
 
     class Meta:
         model = Dog
-        exclude = ['branch']
+        exclude = ['branch', 'dogID']
 
     def __init__(self, *args, **kwargs):
         request = kwargs.pop('request', None)  # Extract the request object
@@ -451,7 +460,7 @@ class DogPlacementForm(forms.ModelForm):
                                                      'type': 'text',
                                                      'data-provide': 'datepicker',
                                                      'readonly': 'readonly',
-                                                     'title': 'Please enter a valid date'}),
+                                                     'title': 'Please enter a valid date',}),
             'placementReason': forms.Textarea(attrs={'class': 'form-control',
                                                      'title': 'Please enter a maximum of 75 characters',
                                                      'rows': 4}),
@@ -465,6 +474,15 @@ class DogPlacementForm(forms.ModelForm):
             current_branch = get_current_branch(request)
             # Set the queryset to the current branch's kennels
             self.fields['kennel'].queryset = Kennel.objects.filter(branch=current_branch)
+
+    def clean(self):
+        # Make sure expiration date is after entrance date
+        cleaned_data = super().clean()
+        entrance_date = cleaned_data.get('entranceDate')
+        expiration_date = cleaned_data.get('expirationDate')
+        if entrance_date and expiration_date and entrance_date > expiration_date:
+            raise forms.ValidationError("Expiration Date must be after the Entrance Date")
+
 
 
 # Form for adding new Camera Session (Observes)

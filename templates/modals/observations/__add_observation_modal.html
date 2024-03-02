@@ -20,8 +20,19 @@
             <hr>
 
             {% comment %} Content {% endcomment %}
-            <form method="post" enctype="multipart/form-data">
+            <form method="post" enctype="multipart/form-data" id="add-observation-form">
                 {% csrf_token %}
+                <!-- General Error Display Area -->
+                <div class="form-general-error" id="add-observation-general-error">
+                    <span class="text-danger form-error">
+                        {% if non_field_errors %}
+                                {% for error in non_field_errors %}
+                                    {{ error }}<br>
+                                {% endfor %}
+                        {% endif %}
+                    </span>
+                </div>
+
                 <div class="modal-body" style="padding-bottom: 0;">
                     {% if observation_form.obsDateTime.errors %}
                         <div class="form-error-row">
@@ -73,13 +84,6 @@
                         <input type="file" id="video-upload" class="form-control-file" name="{{ observation_form.rawVideo.name }}" value="{{ observation_form.rawVideo.value }}">
                     </div>
 
-                    <div class="w-100">
-                        <label for="video_here" class="d-block"><b>Video Preview</b></label>
-                        <video style="width:100%" controls>
-                            <source src="mov_bbb.mp4" id="video_here">
-                            Your browser does not support HTML5 video.
-                        </video>
-                    </div>
                 </div>
 
                 {% comment %} Footer {% endcomment %}
@@ -87,7 +91,7 @@
                 <hr>
                 <div class="text-right mt-4">
                     <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success px-4">Save</button>
+                    <button type="submit" class="btn btn-success px-4" id="submitObservationButton">Save</button>
                 </div>
             </form>
         </div>
