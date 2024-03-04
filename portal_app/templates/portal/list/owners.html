@@ -66,7 +66,7 @@
                     <!-- Check if table is empty -->
                     {% if table.page.object_list %}
                         <!-- Render table with Bootstrap class -->
-                        {% render_table table %}
+                        {% render_table table 'tables/table.html' %}
                     {% else %}
                         <!-- Display a custom message if the table is empty -->
                         <div class="alert alert-info" role="alert">

@@ -1,7 +1,7 @@
 {% load static %}
 {% load group_check %}
 
-<nav class="navbar navbar-expand-lg p-3 custom-navbar">
+<nav {% if request.session.branch == "Italy" %} class="navbar navbar-expand-lg p-3 custom-navbar" {% else %} class="navbar navbar-expand-lg p-3" {% endif %}>
   <div class="container-fluid">
     {% include 'components/logo.html' %}
 
