@@ -1,28 +1,45 @@
+{% load django_tables2 %}
 {% load querystring from django_tables2 %}
 {% load i18n %}
 
-<div class="pagination">
-    {% if table.page %}
-        {% if table.page.has_previous %}
-            <a class="btn btn-outline-secondary" href="?{% querystring table.prefixed_page_field=table.page.previous_page_number %}">{% trans "Previous" %}</a>
-        {% else %}
-            <span class="btn btn-outline-secondary disabled">{% trans "Previous" %}</span>
-        {% endif %}
+<nav class="d-flex justify-content-center mt-4">
+    <ul class="pagination">
+        {% if table.page %}
 
-        {% for page in table.page.paginator.page_range %}
-            {% if page == table.page.number %}
-                <span class="btn btn-outline-secondary active">{{ page }}</span>
-            {% elif page %}
-                <a class="btn btn-outline-secondary" href="?{% querystring table.prefixed_page_field=page %}">{{ page }}</a>
+            {% if table.page.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="{% querystring table.prefixed_page_field=table.page.previous_page_number %}">{% trans "Previous" %}</a>
+                </li>
             {% else %}
-                <span class="btn btn-outline-secondary disabled">&hellip;</span>
+                <li class="page-item">
+                    <span class="page-link disabled">{% trans "Previous" %}</span>
+                </li>
             {% endif %}
-        {% endfor %}
 
-        {% if table.page.has_next %}
-            <a class="btn btn-outline-secondary" href="?{% querystring table.prefixed_page_field=table.page.next_page_number %}">{% trans "Next" %}</a>
-        {% else %}
-            <span class="btn btn-outline-secondary disabled">{% trans "Next" %}</span>
+            {% block pagination.range %}
+                {% for p in table.page|table_page_range:table.paginator %}
+                    <li {% if p == table.page.number %} class="page-item active" {% else %}  class="page-item" {% endif %}>
+                        {% if p == '...' %}
+                            <a href="#" class="page-link" >{{ p }}</a>
+                        {% else %}
+                            <a href="{% querystring table.prefixed_page_field=p %}" class="page-link">
+                                {{ p }}
+                            </a>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            {% endblock pagination.range %}
+
+            {% if table.page.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{% querystring table.prefixed_page_field=table.page.next_page_number %}">{% trans "Next" %}</a>
+                </li>
+            {% else %}
+                <li class="page-item">
+                    <span class="page-link disabled">{% trans "Next" %}</span>
+                </li>
+            {% endif %}
+
         {% endif %}
-    {% endif %}
-</div>
+    </ul>
+</nav>

@@ -186,6 +186,21 @@
   position: relative;
 }
 
+.custom-navbar {
+  background-color: #198754 !important;
+
+  .nav-item .nav-link,
+  .dropdown-link,
+  .navbar-title {
+    color: white !important;
+  }
+
+  .dropdown-link::after {
+    background-color: whitesmoke !important;
+    color: black !important;
+  }
+}
+
 @keyframes gradient {
 	0% {
 		background-position: 0% 50%;  
