@@ -143,16 +143,16 @@
                     <hr>
                     <div class="chart-outer-border">
                         <!-- Container for dropdown elements -->
-                        <div class="dropdown-container">
+                        <div class="d-flex align-items-center overflow-auto">
                             <!-- First dropdown group -->
-                            <div class="dropdown-group">
+                            <div class="">
                                 <label for="year-selector" class="form-label year-label">Year:</label>
                                 <select id="year-selector" class="year-dropdown">
                                     <!-- Options will be populated dynamically using JavaScript -->
                                 </select>
                             </div>
                             <!-- Second dropdown group -->
-                            <div class="dropdown-group">
+                            <div class="">
                                 <label for="granularity-selector" class="form-label granularity-label">Granularity:</label>
                                 <select id="granularity-selector" class="granularity-dropdown">
                                     <option value="daily" selected>Daily</option>
@@ -168,8 +168,10 @@
                         </div>
                         <br>
                         <!-- Summary Heatmap Chart -->
-                        <div id="chart-data" data-daily-heatmap='{{ daily_heatmap_data|safe }}' data-weekly-heatmap='{{ weekly_heatmap_data|safe }}' data-first-date='{{ heatmap_first_date|safe }}' data-last-date='{{ heatmap_last_date|safe }}' data-first-weekly-date='{{ heatmap_first_weekly_date|safe }}' class="heatmap-styles"></div>
-                        <div id="heatmap-legend">
+                        <div class="w-100 overflow-x-scroll">
+                            <div id="chart-data" data-daily-heatmap='{{ daily_heatmap_data|safe }}' data-weekly-heatmap='{{ weekly_heatmap_data|safe }}' data-first-date='{{ heatmap_first_date|safe }}' data-last-date='{{ heatmap_last_date|safe }}' data-first-weekly-date='{{ heatmap_first_weekly_date|safe }}' class="heatmap-styles"></div>
+                        </div>
+                        <div id="heatmap-legend" class="mt-3">
                             <div class="color-gradient-legend">
                                 <span class="low-count"></span> - Low Count (Few Observations)
                                 <span class="medium-count"></span> - Medium Count (Moderate Observations)

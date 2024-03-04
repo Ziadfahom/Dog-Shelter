@@ -3,6 +3,13 @@
 <div class="logo">
     <a class="navbar-brand d-flex align-items-center" href="{% url 'dogs_app:home' %}">
         <img src="{% static 'dogs_app/img/dogswatch.jpg' %}" width="50" height="50" />
-        <span class="font-oswald ms-2">DogsWatch - {% if request.session.branch == 'Italy' %}Italy{% else %}Lod{% endif %}</span>
+        <span class="font-oswald ms-2 d-flex align-items-center">DogsWatch -
+            {% if request.session.branch %}
+                <div class="badge ms-2 d-flex align-items-center">
+                    <span>{{ request.session.branch }}</span>
+                    <img src="{% static 'dogs_app/img/' %}{{ request.session.branch }}.png" width="20" height="20" class="ms-2" />
+                </div>
+            {% endif %}
+        </span>
     </a>
 </div>

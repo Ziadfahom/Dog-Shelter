@@ -33,7 +33,7 @@ class OwnerTable(tables.Table):
                                   args=[record.pk]) + '?page=' + current_page
                           + '&sort=' + current_sort + '&search=' + current_search)
             return format_html('<a href="{}" class="btn btn-danger" onclick="return confirm(\'Are you sure you want '
-                               'to delete this owner?\');">Delete</a>', delete_url)
+                               'to delete this owner?\');"><span class="icon-delete text-white"></span></a>', delete_url)
         return ''
 
     def render_edit(self, record):
@@ -44,7 +44,7 @@ class OwnerTable(tables.Table):
             edit_url = (reverse('portal_app:edit-owner',
                                 args=[record.pk]) + '?page=' + current_page
                         + '&sort=' + current_sort + '&search=' + current_search)
-            return format_html('<a href="{}" class="btn btn-secondary">Edit</a>', edit_url)
+            return format_html('<a href="{}" class="btn btn-light shadowed-light" title="Edit"><span class="icon-edit text-dark"></span></a>', edit_url)
 
     class Meta:
         model = Owner
@@ -72,8 +72,8 @@ class CameraTable(tables.Table):
             delete_url = (reverse('portal_app:delete-camera',
                                   args=[record.pk]) + '?page=' + current_page
                           + '&sort=' + current_sort + '&search=' + current_search)
-            return format_html('<a href="{}" class="btn btn-danger" onclick="return confirm(\'Are you sure you want '
-                               'to delete this camera?\');">Delete</a>', delete_url)
+            return format_html('<a href="{}" class="btn btn-danger" title="Delete" onclick="return confirm(\'Are you sure you want '
+                               'to delete this camera?\');"><span class="icon-delete text-white"></span></a>', delete_url)
         return ''
 
     def render_edit(self, record):
@@ -84,7 +84,7 @@ class CameraTable(tables.Table):
             edit_url = (reverse('portal_app:edit-camera',
                                 args=[record.pk]) + '?page=' + current_page
                         + '&sort=' + current_sort + '&search=' + current_search)
-            return format_html('<a href="{}" class="btn btn-secondary">Edit</a>', edit_url)
+            return format_html('<a href="{}" class="btn btn-light shadowed-light" title="Edit"><span class="icon-edit text-dark"></span></a>', edit_url)
 
     class Meta:
         model = Camera
@@ -110,8 +110,8 @@ class KennelTable(tables.Table):
             delete_url = (reverse('portal_app:delete-kennel',
                                   args=[record.pk]) + '?page=' + current_page
                           + '&sort=' + current_sort + '&search=' + current_search)
-            return format_html('<a href="{}" class="btn btn-danger" onclick="return confirm(\'Are you sure you want '
-                               'to delete this kennel?\');">Delete</a>', delete_url)
+            return format_html('<a href="{}" class="btn btn-danger" title="Delete" onclick="return confirm(\'Are you sure you want '
+                               'to delete this kennel?\');"><span class="icon-delete text-white"></span></a>', delete_url)
         return ''
 
     def render_edit(self, record):
@@ -122,12 +122,13 @@ class KennelTable(tables.Table):
             edit_url = (reverse('portal_app:edit-kennel',
                                 args=[record.pk]) + '?page=' + current_page
                         + '&sort=' + current_sort + '&search=' + current_search)
-            return format_html('<a href="{}" class="btn btn-secondary">Edit</a>', edit_url)
+            return format_html('<a href="{}" class="btn btn-light shadowed-light" title="Edit"><span class="icon-edit text-dark"></span></a>', edit_url)
 
     class Meta:
         model = Kennel
         template_name = 'django_tables2/bootstrap.html'
         fields = ('kennelNum', 'kennelImage', 'edit', 'delete')
+        pagination_template = 'tables/pagination.html'
 
 
 # Treatments Table
@@ -149,7 +150,7 @@ class TreatmentTable(tables.Table):
                                   args=[record.pk]) + '?page=' + current_page
                           + '&sort=' + current_sort + '&search=' + current_search)
             return format_html('<a href="{}" class="btn btn-danger" onclick="return confirm(\'Are you sure you want '
-                               'to delete this treatment?\');">Delete</a>', delete_url)
+                               'to delete this treatment?\');"><span class="icon-delete text-white"></span></a>', delete_url)
         return ''
 
     def render_edit(self, record):
@@ -160,7 +161,7 @@ class TreatmentTable(tables.Table):
             edit_url = (reverse('portal_app:edit-treatment',
                                 args=[record.pk]) + '?page=' + current_page
                         + '&sort=' + current_sort + '&search=' + current_search)
-            return format_html('<a href="{}" class="btn btn-secondary">Edit</a>', edit_url)
+            return format_html('<a href="{}" class="btn btn-light shadowed-light" title="Edit"><span class="icon-edit text-dark"></span></a>', edit_url)
 
     # Format date in DD/MM/YYYY format
     def render_treatmentDate(self, record):
@@ -195,7 +196,7 @@ class ExaminationTable(tables.Table):
                                   args=[record.pk]) + '?page=' + current_page
                           + '&sort=' + current_sort + '&search=' + current_search)
             return format_html('<a href="{}" class="btn btn-danger" onclick="return confirm(\'Are you sure you want '
-                               'to delete this examination?\');">Delete</a>', delete_url)
+                               'to delete this examination?\');"><span class="icon-delete text-white"></span></a>', delete_url)
         return '—'
 
     def render_edit(self, record):
@@ -206,7 +207,7 @@ class ExaminationTable(tables.Table):
             edit_url = (reverse('portal_app:edit-examination',
                                 args=[record.pk]) + '?page=' + current_page
                         + '&sort=' + current_sort + '&search=' + current_search)
-            return format_html('<a href="{}" class="btn btn-secondary">Edit</a>', edit_url)
+            return format_html('<a href="{}" class="btn btn-light shadowed-light" title="Edit"><span class="icon-edit text-dark"></span></a>', edit_url)
 
     # Format date in DD/MM/YYYY format
     def render_examinationDate(self, record):
@@ -242,8 +243,8 @@ class DogPlacementTable(tables.Table):
             delete_url = (reverse('portal_app:delete-placement',
                                   args=[record.pk]) + '?page=' + current_page
                           + '&sort=' + current_sort + '&search=' + current_search)
-            return format_html('<a href="{}" class="btn btn-danger" onclick="return confirm(\'Are you sure you want '
-                               'to delete this placement?\');">Delete</a>', delete_url)
+            return format_html('<a href="{}" class="btn btn-danger" title="Delete" onclick="return confirm(\'Are you sure you want '
+                               'to delete this placement?\');"><span class="icon-delete text-white"></a>', delete_url)
         return ''
 
     def render_edit(self, record):
@@ -254,7 +255,7 @@ class DogPlacementTable(tables.Table):
             edit_url = (reverse('portal_app:edit-placement',
                                 args=[record.pk]) + '?page=' + current_page
                         + '&sort=' + current_sort + '&search=' + current_search)
-            return format_html('<a href="{}" class="btn btn-secondary">Edit</a>', edit_url)
+            return format_html('<a href="{}" class="btn btn-light shadowed-light" title="Edit"><span class="icon-edit text-dark"></span></a>', edit_url)
 
     # Retrieve the duration of stay
     def render_duration(self, record):
@@ -305,7 +306,7 @@ class ObservesTable(tables.Table):
                                   args=[record.pk]) + '?page=' + current_page
                           + '&sort=' + current_sort + '&search=' + current_search)
             return format_html('<a href="{}" class="btn btn-danger" onclick="return confirm(\'Are you sure you want '
-                               'to delete this session?\');">Delete</a>', delete_url)
+                               'to delete this session?\');"><span class="icon-delete text-white"></span></a>', delete_url)
         return ''
 
     def render_edit(self, record):
@@ -316,7 +317,7 @@ class ObservesTable(tables.Table):
             edit_url = (reverse('portal_app:edit-observes',
                                 args=[record.pk]) + '?page=' + current_page
                         + '&sort=' + current_sort + '&search=' + current_search)
-            return format_html('<a href="{}" class="btn btn-secondary">Edit</a>', edit_url)
+            return format_html('<a href="{}" class="btn btn-light shadowed-light" title="Edit"><span class="icon-edit text-dark"></span></a>', edit_url)
 
     # Format dates in DD/MM/YYYY format
     def render_sessionDate(self, record):
@@ -363,8 +364,8 @@ class ObservationTable(tables.Table):
             delete_url = (reverse('portal_app:delete-observation',
                                   args=[record.pk]) + '?page=' + current_page
                           + '&sort=' + current_sort + '&search=' + current_search)
-            return format_html('<a href="{}" class="btn btn-danger" onclick="return confirm(\'Are you sure you want '
-                               'to delete this observation?\');">Delete</a>', delete_url)
+            return format_html('<a href="{}" class="btn btn-danger" title="Delete" onclick="return confirm(\'Are you sure you want '
+                               'to delete this observation?\');"><span class="icon-delete text-white"></span></a>', delete_url)
         return ''
 
     def render_edit(self, record):
@@ -375,7 +376,7 @@ class ObservationTable(tables.Table):
             edit_url = (reverse('portal_app:edit-observation',
                                 args=[record.pk]) + '?page=' + current_page
                         + '&sort=' + current_sort + '&search=' + current_search)
-            return format_html('<a href="{}" class="btn btn-secondary">Edit</a>', edit_url)
+            return format_html('<a href="{}" class="btn btn-light shadowed-light" title="Edit"><span class="icon-edit text-dark"></span></a>', edit_url)
 
     # Format DateTime in DD/MM/YYYY HH:MM:SS format and convert to local time
     def render_obsDateTime(self, record):
@@ -413,7 +414,7 @@ class DogStanceTable(tables.Table):
                                   args=[record.pk]) + '?page=' + current_page
                           + '&sort=' + current_sort + '&search=' + current_search)
             return format_html('<a href="{}" class="btn btn-danger" onclick="return confirm(\'Are you sure you want '
-                               'to delete this stance?\');">Delete</a>', delete_url)
+                               'to delete this stance?\');"><span class="icon-delete text-white"></span></a>', delete_url)
         return ''
 
     def render_edit(self, record):
@@ -424,7 +425,7 @@ class DogStanceTable(tables.Table):
             edit_url = (reverse('portal_app:edit-stance',
                                 args=[record.pk]) + '?page=' + current_page
                         + '&sort=' + current_sort + '&search=' + current_search)
-            return format_html('<a href="{}" class="btn btn-secondary">Edit</a>', edit_url)
+            return format_html('<a href="{}" class="btn btn-light shadowed-light" title="Edit"><span class="icon-edit text-dark"></span></a>', edit_url)
 
     # Format Time in HH:MM:SS format
     def render_stanceStartTime(self, record):

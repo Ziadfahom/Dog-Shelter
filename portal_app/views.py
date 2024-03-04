@@ -78,11 +78,19 @@ def add_owner_portal(request):
                 return redirect('portal_app:list-owners')
             else:
                 messages.error(request, "Invalid form data. Please correct the listed errors.")
-                return render(request, 'portal/add/owner.html', {'form': form})
+                return render(request, 'portal/add/__add_template.html', {
+                    'form': form,
+                    'title': "Owner",
+                    'list_page': reverse('portal_app:list-owners')
+                })
         else:
             form = OwnerForm()
         # Render the add page
-        return render(request, 'portal/add/owner.html', {'form': form})
+        return render(request, 'portal/add/__add_template.html', {
+            'form': form,
+            'title': "Owner",
+            'list_page': reverse('portal_app:list-owners')
+        })
     else:
         messages.error(request, "You must be logged in to add an Owner.")
         return redirect('dogs_app:home')
@@ -139,9 +147,12 @@ def edit_owner_portal(request, pk):
         else:
             form = OwnerForm(instance=owner)
         # Render the edit page with the captured parameters
-        return render(request,
-                      'portal/edit/owner.html',
-                      {'form': form, 'page': page, 'sort': sort, 'search': search})
+        return render(request, 'portal/edit/__edit_template.html', {
+            'form': form,
+            'title': "Owner",
+            'list_page': reverse('portal_app:list-owners'),
+            'page': page, 'sort': sort, 'search': search
+        })
     else:
         messages.error(request, "You must be logged in to edit an Owner.")
         return redirect('dogs_app:home')
@@ -195,12 +206,19 @@ def add_camera_portal(request):
                     messages.error(request, f"Error occurred while adding Camera: {str(e)}")
                 return redirect('portal_app:list-cameras')
             else:
-                messages.error(request, "Invalid form data. Please correct the listed errors.")
-                return render(request, 'portal/add/camera.html', {'form': form})
+                return render(request, 'portal/add/__add_template.html', {
+                    'form': form,
+                    'title': "Camera",
+                    'list_page': reverse('portal_app:list-cameras')
+                })
         else:
             form = CameraForm()
         # Render the add page
-        return render(request, 'portal/add/camera.html', {'form': form})
+        return render(request, 'portal/add/__add_template.html', {
+            'form': form,
+            'title': "Camera",
+            'list_page': reverse('portal_app:list-cameras')
+        })
     else:
         messages.error(request, "You must be logged in to add a Camera.")
         return redirect('dogs_app:home')
@@ -258,9 +276,12 @@ def edit_camera_portal(request, pk):
         else:
             form = CameraForm(instance=camera)
         # Render the edit page with the captured parameters
-        return render(request,
-                      'portal/edit/camera.html',
-                      {'form': form, 'page': page, 'sort': sort, 'search': search})
+        return render(request, 'portal/edit/__edit_template.html', {
+            'form': form,
+            'title': "Camera",
+            'list_page': reverse('portal_app:list-cameras'),
+            'page': page, 'sort': sort, 'search': search
+        })
     else:
         messages.error(request, "You must be logged in to edit a Camera.")
         return redirect('dogs_app:home')
@@ -314,15 +335,27 @@ def add_kennel_portal(request):
                     messages.success(request, "Kennel added successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while adding Kennel: {str(e)}")
-                    return render(request, 'portal/add/kennel.html', {'form': form})
+                    return render(request, 'portal/add/__add_template.html', {
+                        'form': form,
+                        'title': "Kennel",
+                        'list_page': reverse('portal_app:list-kennels')
+                    })
                 return redirect('portal_app:list-kennels')
             else:
                 messages.error(request, "Invalid form data. Please correct the listed errors.")
-                return render(request, 'portal/add/kennel.html', {'form': form})
+                return render(request, 'portal/add/__add_template.html', {
+                    'form': form,
+                    'title': "Kennel",
+                    'list_page': reverse('portal_app:list-kennels')
+                })
         else:
             form = KennelForm()
         # Render the add page
-        return render(request, 'portal/add/kennel.html', {'form': form})
+        return render(request, 'portal/add/__add_template.html', {
+            'form': form,
+            'title': "Kennel",
+            'list_page': reverse('portal_app:list-kennels')
+        })
     else:
         messages.error(request, "You must be logged in to add a Kennel.")
         return redirect('dogs_app:home')
@@ -373,10 +406,12 @@ def edit_kennel_portal(request, pk):
                     messages.success(request, "Kennel updated successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while updating Kennel: {str(e)}")
-                    return render(request, 'portal/edit/kennel.html', {'form': form,
-                                                                       'page': page,
-                                                                       'sort': sort,
-                                                                       'search': search})
+                    return render(request, 'portal/edit/__edit_template.html', {
+                        'form': form,
+                        'title': "kennel",
+                        'list_page': reverse('portal_app:list-kennels'),
+                        'page': page, 'sort': sort, 'search': search
+                    })
                 return HttpResponseRedirect(reverse('portal_app:list-kennels') + '?page=' + page
                                             + '&sort=' + sort + '&search=' + search)
             else:
@@ -384,9 +419,12 @@ def edit_kennel_portal(request, pk):
         else:
             form = KennelEditForm(instance=kennel)
         # Render the edit page with the captured parameters
-        return render(request,
-                      'portal/edit/kennel.html',
-                      {'form': form, 'page': page, 'sort': sort, 'search': search})
+        return render(request, 'portal/edit/__edit_template.html', {
+            'form': form,
+            'title': "kennel",
+            'list_page': reverse('portal_app:list-kennels'),
+            'page': page, 'sort': sort, 'search': search
+        })
     else:
         messages.error(request, "You must be logged in to edit a Kennel.")
         return redirect('dogs_app:home')
@@ -456,15 +494,27 @@ def add_treatment_portal(request):
                     messages.success(request, "Treatment added successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while adding Treatment: {str(e)}")
-                    return render(request, 'portal/add/treatment.html', {'form': form})
+                    return render(request, 'portal/add/__add_template.html', {
+                        'form': form,
+                        'title': "Treatment",
+                        'list_page': reverse('portal_app:list-treatments')
+                    })
                 return redirect('portal_app:list-treatments')
             else:
                 messages.error(request, "Invalid form data. Please correct the listed errors.")
-                return render(request, 'portal/add/treatment.html', {'form': form})
+                return render(request, 'portal/add/__add_template.html', {
+                    'form': form,
+                    'title': "Treatment",
+                    'list_page': reverse('portal_app:list-treatments')
+                })
         else:
             form = TreatmentPortalForm(request=request)
         # Render the add page
-        return render(request, 'portal/add/treatment.html', {'form': form})
+        return render(request, 'portal/add/__add_template.html', {
+            'form': form,
+            'title': "Treatment",
+            'list_page': reverse('portal_app:list-treatments')
+        })
     else:
         messages.error(request, "You must be logged in to add a Treatment.")
         return redirect('dogs_app:home')
@@ -514,8 +564,12 @@ def edit_treatment_portal(request, pk):
                     messages.success(request, "Treatment updated successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while updating Treatment: {str(e)}")
-                    return render(request, 'portal/edit/treatment.html', {'form': form, 'page': page, 'sort': sort,
-                                                                          'search': search})
+                    return render(request, 'portal/edit/__edit_template.html', {
+                        'form': form,
+                        'title': "Treatment",
+                        'list_page': reverse('portal_app:list-treatments'),
+                        'page': page, 'sort': sort, 'search': search
+                    })
                 return HttpResponseRedirect(reverse('portal_app:list-treatments') + '?page=' + page
                                             + '&sort=' + sort + '&search=' + search)
             else:
@@ -523,9 +577,12 @@ def edit_treatment_portal(request, pk):
         else:
             form = TreatmentPortalForm(instance=treatment, request=request)
         # Render the edit page with the captured parameters
-        return render(request,
-                      'portal/edit/treatment.html',
-                      {'form': form, 'page': page, 'sort': sort, 'search': search})
+        return render(request, 'portal/edit/__edit_template.html', {
+            'form': form,
+            'title': "Treatment",
+            'list_page': reverse('portal_app:list-treatments'),
+            'page': page, 'sort': sort, 'search': search
+        })
     else:
         messages.error(request, "You must be logged in to edit a Treatment.")
         return redirect('dogs_app:home')
@@ -599,15 +656,27 @@ def add_examination_portal(request):
                     messages.success(request, "Examination added successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while adding Examination: {str(e)}")
-                    return render(request, 'portal/add/examination.html', {'form': form})
+                    return render(request, 'portal/add/__add_template.html', {
+                        'form': form,
+                        'title': "Examination",
+                        'list_page': reverse('portal_app:list-examinations')
+                    })
                 return redirect('portal_app:list-examinations')
             else:
                 messages.error(request, "Invalid form data. Please correct the listed errors.")
-                return render(request, 'portal/add/examination.html', {'form': form})
+                return render(request, 'portal/add/__add_template.html', {
+                    'form': form,
+                    'title': "Examination",
+                    'list_page': reverse('portal_app:list-examinations')
+                })
         else:
             form = ExaminationPortalForm(request=request)
         # Render the add page
-        return render(request, 'portal/add/examination.html', {'form': form})
+        return render(request, 'portal/add/__add_template.html', {
+            'form': form,
+            'title': "Examination",
+            'list_page': reverse('portal_app:list-examinations')
+        })
     else:
         messages.error(request, "You must be logged in to add an Examination.")
         return redirect('dogs_app:home')
@@ -657,10 +726,12 @@ def edit_examination_portal(request, pk):
                     messages.success(request, "Examination updated successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while updating Examination: {str(e)}")
-                    return render(request, 'portal/edit/examination.html', {'form': form,
-                                                                            'page': page,
-                                                                            'sort': sort,
-                                                                            'search': search})
+                    return render(request, 'portal/edit/__edit_template.html', {
+                        'form': form,
+                        'title': "Examination",
+                        'list_page': reverse('portal_app:list-examinations'),
+                        'page': page, 'sort': sort, 'search': search
+                    })
                 return HttpResponseRedirect(reverse('portal_app:list-examinations') + '?page=' + page
                                             + '&sort=' + sort + '&search=' + search)
             else:
@@ -668,9 +739,12 @@ def edit_examination_portal(request, pk):
         else:
             form = ExaminationPortalForm(instance=examination, request=request)
         # Render the edit page with the captured parameters
-        return render(request,
-                      'portal/edit/examination.html',
-                      {'form': form, 'page': page, 'sort': sort, 'search': search})
+        return render(request, 'portal/edit/__edit_template.html', {
+            'form': form,
+            'title': "Examination",
+            'list_page': reverse('portal_app:list-examinations'),
+            'page': page, 'sort': sort, 'search': search
+        })
     else:
         messages.error(request, "You must be logged in to edit an Examination.")
         return redirect('dogs_app:home')
@@ -751,15 +825,27 @@ def add_placement_portal(request):
                     messages.success(request, "Placement added successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while adding Placement: {str(e)}")
-                    return render(request, 'portal/add/placement.html', {'form': form})
+                    return render(request, 'portal/add/__add_template.html', {
+                        'form': form,
+                        'title': "Placement",
+                        'list_page': reverse('portal_app:list-placements')
+                    })
                 return redirect('portal_app:list-placements')
             else:
                 messages.error(request, "Invalid form data. Please correct the listed errors.")
-                return render(request, 'portal/add/placement.html', {'form': form})
+                return render(request, 'portal/add/__add_template.html', {
+                    'form': form,
+                    'title': "Placement",
+                    'list_page': reverse('portal_app:list-placements')
+                })
         else:
             form = PlacementPortalForm(request=request)
         # Render the add page
-        return render(request, 'portal/add/placement.html', {'form': form})
+        return render(request, 'portal/add/__add_template.html', {
+            'form': form,
+            'title': "Placement",
+            'list_page': reverse('portal_app:list-placements')
+        })
     else:
         messages.error(request, "You must be logged in to add a Placement.")
         return redirect('dogs_app:home')
@@ -810,8 +896,12 @@ def edit_placement_portal(request, pk):
                     messages.success(request, "Placement updated successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while updating Placement: {str(e)}")
-                    return render(request, 'portal/edit/placement.html', {'form': form, 'page': page, 'sort': sort,
-                                                                          'search': search})
+                    return render(request, 'portal/edit/__edit_template.html', {
+                        'form': form,
+                        'title': "Placement",
+                        'list_page': reverse('portal_app:list-placements'),
+                        'page': page, 'sort': sort, 'search': search
+                    })
                 return HttpResponseRedirect(reverse('portal_app:list-placements') + '?page=' + page
                                             + '&sort=' + sort + '&search=' + search)
             else:
@@ -819,9 +909,12 @@ def edit_placement_portal(request, pk):
         else:
             form = PlacementPortalForm(instance=placement, request=request)
         # Render the edit page with the captured parameters
-        return render(request,
-                      'portal/edit/placement.html',
-                      {'form': form, 'page': page, 'sort': sort, 'search': search})
+        return render(request, 'portal/edit/__edit_template.html', {
+            'form': form,
+            'title': "Placement",
+            'list_page': reverse('portal_app:list-placements'),
+            'page': page, 'sort': sort, 'search': search
+        })
     else:
         messages.error(request, "You must be logged in to edit a Placement.")
         return redirect('dogs_app:home')
@@ -887,15 +980,27 @@ def add_observes_portal(request):
                     messages.success(request, "Session added successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while adding Session: {str(e)}")
-                    return render(request, 'portal/add/observes.html', {'form': form})
+                    return render(request, 'portal/add/__add_template.html', {
+                        'form': form,
+                        'title': "Camera Session",
+                        'list_page': reverse('portal_app:list-observes')
+                    })
                 return redirect('portal_app:list-observes')
             else:
                 messages.error(request, "Invalid form data. Please correct the listed errors.")
-                return render(request, 'portal/add/observes.html', {'form': form})
+                return render(request, 'portal/add/__add_template.html', {
+                    'form': form,
+                    'title': "Camera Session",
+                    'list_page': reverse('portal_app:list-observes')
+                })
         else:
             form = ObservesPortalForm(request=request)
         # Render the add page
-        return render(request, 'portal/add/observes.html', {'form': form})
+        return render(request, 'portal/add/__add_template.html', {
+            'form': form,
+            'title': "Camera Session",
+            'list_page': reverse('portal_app:list-observes')
+        })
     else:
         messages.error(request, "You must be logged in to add a Session.")
         return redirect('dogs_app:home')
@@ -945,10 +1050,12 @@ def edit_observes_portal(request, pk):
                     messages.success(request, "Session updated successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while updating Session: {str(e)}")
-                    return render(request, 'portal/edit/observes.html', {'form': form,
-                                                                         'page': page,
-                                                                         'sort': sort,
-                                                                         'search': search})
+                    return render(request, 'portal/edit/__edit_template.html', {
+                        'form': form,
+                        'title': "Camera Session",
+                        'list_page': reverse('portal_app:list-observes'),
+                        'page': page, 'sort': sort, 'search': search
+                    })
                 return HttpResponseRedirect(reverse('portal_app:list-observes') + '?page=' + page
                                             + '&sort=' + sort + '&search=' + search)
             else:
@@ -956,9 +1063,12 @@ def edit_observes_portal(request, pk):
         else:
             form = ObservesPortalForm(instance=observes, request=request)
         # Render the edit page with the captured parameters
-        return render(request,
-                      'portal/edit/observes.html',
-                      {'form': form, 'page': page, 'sort': sort, 'search': search})
+        return render(request, 'portal/edit/__edit_template.html', {
+            'form': form,
+            'title': "Camera Session",
+            'list_page': reverse('portal_app:list-observes'),
+            'page': page, 'sort': sort, 'search': search
+        })
     else:
         messages.error(request, "You must be logged in to edit a Session.")
         return redirect('dogs_app:home')
@@ -1032,15 +1142,30 @@ def add_observation_portal(request):
                     messages.success(request, "Observation added successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while adding Observation: {str(e)}")
-                    return render(request, 'portal/add/observation.html', {'form': form})
+                    return render(request, 'portal/add/__add_template.html', {
+                        'form': form,
+                        'title': "Observation",
+                        'list_page': reverse('portal_app:list-observations'),
+                        'flatpicker_col': "obsDateTime"
+                    })
                 return redirect('portal_app:list-observations')
             else:
                 messages.error(request, "Invalid form data. Please correct the listed errors.")
-                return render(request, 'portal/add/observation.html', {'form': form})
+                return render(request, 'portal/add/__add_template.html', {
+                    'form': form,
+                    'title': "Observation",
+                    'list_page': reverse('portal_app:list-observations'),
+                    'flatpicker_col': "obsDateTime"
+                })
         else:
             form = ObservationPortalForm(request=request)
         # Render the add page
-        return render(request, 'portal/add/observation.html', {'form': form})
+        return render(request, 'portal/add/__add_template.html', {
+            'form': form,
+            'title': "Observation",
+            'list_page': reverse('portal_app:list-observations'),
+            'flatpicker_col': "obsDateTime"
+        })
     else:
         messages.error(request, "You must be logged in to add an Observation.")
         return redirect('dogs_app:home')
@@ -1090,10 +1215,15 @@ def edit_observation_portal(request, pk):
                     messages.success(request, "Observation updated successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while updating Observation: {str(e)}")
-                    return render(request, 'portal/edit/observation.html', {'form': form,
-                                                                            'page': page,
-                                                                            'sort': sort,
-                                                                            'search': search})
+                    return render(request, 'portal/edit/__edit_template.html', {
+                        'form': form,
+                        'title': "Observation",
+                        'list_page': reverse('portal_app:list-observations'),
+                        'flatpicker_col': "obsDateTime",
+                        'page': page,
+                        'sort': sort,
+                        'search': search
+                    })
                 return HttpResponseRedirect(reverse('portal_app:list-observations') + '?page=' + page
                                             + '&sort=' + sort + '&search=' + search)
             else:
@@ -1101,9 +1231,15 @@ def edit_observation_portal(request, pk):
         else:
             form = ObservationPortalForm(instance=observation, request=request)
         # Render the edit page with the captured parameters
-        return render(request,
-                      'portal/edit/observation.html',
-                      {'form': form, 'page': page, 'sort': sort, 'search': search})
+        return render(request, 'portal/edit/__edit_template.html', {
+            'form': form,
+            'title': "Observation",
+            'list_page': reverse('portal_app:list-observations'),
+            'flatpicker_col': "obsDateTime",
+            'page': page,
+            'sort': sort,
+            'search': search
+        })
     else:
         messages.error(request, "You must be logged in to edit an Observation.")
         return redirect('dogs_app:home')
@@ -1174,15 +1310,30 @@ def add_stance_portal(request):
                     messages.success(request, "Stance added successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while adding Stance: {str(e)}")
-                    return render(request, 'portal/add/dogstance.html', {'form': form})
+                    return render(request, 'portal/add/__add_template.html', {
+                        'form': form,
+                        'title': "Stance",
+                        'list_page': reverse('portal_app:list-stances'),
+                        'flatpicker_col': "stanceStartTime"
+                    })
                 return redirect('portal_app:list-stances')
             else:
                 messages.error(request, "Invalid form data. Please correct the listed errors.")
-                return render(request, 'portal/add/dogstance.html', {'form': form})
+            return render(request, 'portal/add/__add_template.html', {
+                'form': form,
+                'title': "Stance",
+                'list_page': reverse('portal_app:list-stances'),
+                'flatpicker_col': "stanceStartTime"
+            })
         else:
             form = DogStancePortalForm(request=request)
         # Render the add page
-        return render(request, 'portal/add/dogstance.html', {'form': form})
+        return render(request, 'portal/add/__add_template.html', {
+            'form': form,
+            'title': "Stance",
+            'list_page': reverse('portal_app:list-stances'),
+            'flatpicker_col': "stanceStartTime"
+        })
     else:
         messages.error(request, "You must be logged in to add a Stance.")
         return redirect('dogs_app:home')
@@ -1232,10 +1383,15 @@ def edit_stance_portal(request, pk):
                     messages.success(request, "Stance updated successfully.")
                 except Exception as e:
                     messages.error(request, f"Error occurred while updating Stance: {str(e)}")
-                    return render(request, 'portal/edit/dogstance.html', {'form': form,
-                                                                          'page': page,
-                                                                          'sort': sort,
-                                                                          'search': search})
+                    return render(request, 'portal/edit/__edit_template.html', {
+                        'form': form,
+                        'title': "Stance",
+                        'list_page': reverse('portal_app:list-stances'),
+                        'flatpicker_col': "stanceStartTime",
+                        'page': page,
+                        'sort': sort,
+                        'search': search
+                    })
                 return HttpResponseRedirect(reverse('portal_app:list-stances') + '?page=' + page
                                             + '&sort=' + sort + '&search=' + search)
             else:
@@ -1247,9 +1403,15 @@ def edit_stance_portal(request, pk):
         else:
             form = DogStancePortalForm(instance=dogstance, request=request)
         # Render the edit page with the captured parameters
-        return render(request,
-                      'portal/edit/dogstance.html',
-                      {'form': form, 'page': page, 'sort': sort, 'search': search})
+        return render(request, 'portal/edit/__edit_template.html', {
+            'form': form,
+            'title': "Stance",
+            'list_page': reverse('portal_app:list-stances'),
+            'flatpicker_col': "stanceStartTime",
+            'page': page,
+            'sort': sort,
+            'search': search
+        })
     else:
         messages.error(request, "You must be logged in to edit a Stance.")
         return redirect('dogs_app:home')
