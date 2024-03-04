@@ -527,18 +527,41 @@ class ObservesForm(forms.ModelForm):
 
 # Form for adding new Observation
 class ObservationForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        request = kwargs.pop('request', None)
+        super(ObservationForm, self).__init__(*args, **kwargs)
+        if request:
+            # Get the current branch
+            current_branch = get_current_branch(request)
+
+            # If the current branch is not Italy, then exclude the isDog and isHuman fields
+            if current_branch.branchName != "Italy":
+                self.fields.pop('isDog')
+                self.fields.pop('isHuman')
+
     class Meta:
         model = Observation
-        fields = ['obsDateTime', 'sessionDurationInMins', 'isKong', 'jsonFile', 'rawVideo']
+        fields = ['obsDateTime', 'sessionDurationInMins', 'isKong', 'isDog', 'isHuman', 'jsonFile', 'rawVideo']
         widgets = {
             'sessionDurationInMins': forms.NumberInput(attrs={'class': 'form-control',
                                                               'title': 'Please enter a duration (in minutes)',}),
             'isKong': forms.Select(choices=Observation.IS_KONG_CHOICES, attrs={'class': 'form-control',
-                                                                               'title': 'Select if the dog is with a Kong',
+                                                                               'title': 'Select if the dog is with a '
+                                                                                        'Kong',
                                                                                'required': 'required'}),
+            'isDog': forms.Select(choices=Observation.IS_DOG_CHOICES, attrs={'class': 'form-control',
+                                                                             'title': 'Select if the dog is with '
+                                                                                      'another dog',
+                                                                             'required': 'required'}),
+            'isHuman': forms.Select(choices=Observation.IS_HUMAN_CHOICES, attrs={'class': 'form-control',
+                                                                                 'title': 'Select if the dog is with '
+                                                                                          'a human',
+                                                                                 'required': 'required'}),
             'jsonFile': forms.FileInput(attrs={'class': 'form-control-file'}),
             'rawVideo': forms.FileInput(attrs={'class': 'form-control-file'})
         }
+
 
 
 # Form for adding new Dog Stance
@@ -808,9 +831,22 @@ class ObservationPortalForm(forms.ModelForm):
                                                min_value=0)
     isKong = forms.ChoiceField(choices=Observation.IS_KONG_CHOICES,
                                required=False,
+                               initial='N',
                                widget=forms.widgets.Select(attrs={"class": "form-control",
                                                                   "title": "Select if the dog is with a Kong"}),
                                label="With Kong?")
+    isDog = forms.ChoiceField(choices=Observation.IS_DOG_CHOICES,
+                              required=False,
+                              initial='N',
+                              widget=forms.widgets.Select(attrs={"class": "form-control",
+                                                                 "title": "Select if the dog is with another Dog"}),
+                              label="With Another Dog?")
+    isHuman = forms.ChoiceField(choices=Observation.IS_HUMAN_CHOICES,
+                                required=False,
+                                initial='N',
+                                widget=forms.widgets.Select(attrs={"class": "form-control",
+                                                                   "title": "Select if the dog is with a Human"}),
+                                label="With a Human?")
     jsonFile = forms.FileField(required=False,
                                widget=forms.widgets.FileInput(attrs={"class": "form-control-file",
                                                                      "title": "Upload a JSON file"}),
@@ -829,9 +865,14 @@ class ObservationPortalForm(forms.ModelForm):
             # Set the queryset to the current branch's Observations (Sessions)
             self.fields['observes'].queryset = Observes.objects.filter(dog__branch=current_branch).order_by('-sessionDate')
 
+            # If the current branch is not Italy, then exclude the isDog and isHuman fields
+            if current_branch.branchName != "Italy":
+                self.fields.pop('isDog')
+                self.fields.pop('isHuman')
+
     class Meta:
         model = Observation
-        fields = ['observes', 'obsDateTime', 'sessionDurationInMins', 'isKong', 'jsonFile', 'rawVideo']
+        fields = ['observes', 'obsDateTime', 'sessionDurationInMins', 'isKong', 'isDog', 'isHuman', 'jsonFile', 'rawVideo']
 
 
 # DogStance Form in Portal

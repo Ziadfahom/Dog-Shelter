@@ -34,6 +34,7 @@
                 </div>
 
                 <div class="modal-body" style="padding-bottom: 0;">
+
                     {% if observation_form.obsDateTime.errors %}
                         <div class="form-error-row">
                             <span class="text-danger form-error">{{ observation_form.obsDateTime.errors }}</span>
@@ -43,6 +44,7 @@
                         <label for="datetimepicker">Observation Date/Time:</label>
                         <input type="text" id="datetimepicker" class="form-control" name="{{ observation_form.obsDateTime.name }}" value="{{ observation_form.obsDateTime.value }}">
                     </div>
+
                     {% if observation_form.sessionDurationInMins.errors %}
                         <div class="form-error-row">
                             <span class="text-danger form-error">{{ observation_form.sessionDurationInMins.errors }}</span>
@@ -52,6 +54,7 @@
                         <label for="sessionDuration">Session Duration (Minutes):</label>
                         <input type="number" id="sessionDuration" class="form-control" name="{{ observation_form.sessionDurationInMins.name }}" value="{{ observation_form.sessionDurationInMins.value }}">
                     </div>
+
                     {% if observation_form.isKong.errors %}
                         <div class="form-error-row">
                             <span class="text-danger form-error">{{ observation_form.isKong.errors }}</span>
@@ -65,6 +68,38 @@
                             {% endfor %}
                         </select>
                     </div>
+
+                    <!-- Italy Branch Specific Fields (isDog and isHuman) -->
+                    {% if request.session.branch == 'Italy' %}
+                        {% if observation_form.isDog.errors %}
+                            <div class="form-error-row">
+                                <span class="text-danger form-error">{{ observation_form.isDog.errors }}</span>
+                            </div>
+                        {% endif %}
+                        <div class="form-row">
+                            <label for="with-dog-status">With Another Dog:</label>
+                            <select id="with-dog-status" class="form-control" name="{{ observation_form.isDog.name }}">
+                                {% for value, display in observation_form.isDog.field.choices %}
+                                    <option value="{{ value }}" {% if observation_form.isDog.value == value %}selected{% endif %}>{{ display }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        {% if observation_form.isHuman.errors %}
+                            <div class="form-error-row">
+                                <span class="text-danger form-error">{{ observation_form.isHuman.errors }}</span>
+                            </div>
+                        {% endif %}
+                        <div class="form-row">
+                            <label for="with-human-status">With a Human:</label>
+                            <select id="with-human-status" class="form-control" name="{{ observation_form.isHuman.name }}">
+                                {% for value, display in observation_form.isHuman.field.choices %}
+                                    <option value="{{ value }}" {% if observation_form.isHuman.value == value %}selected{% endif %}>{{ display }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    {% endif %}
+
                     {% if observation_form.jsonFile.errors %}
                         <div class="form-error-row">
                             <span class="text-danger form-error">{{ observation_form.jsonFile.errors }}</span>
@@ -74,6 +109,7 @@
                         <label for="json-upload">Upload JSON File:</label>
                         <input type="file" id="json-upload" class="form-control-file" name="{{ observation_form.jsonFile.name }}" value="{{ observation_form.jsonFile.value }}">
                     </div>
+
                     {% if observation_form.rawVideo.errors %}
                         <div class="form-error-row">
                             <span class="text-danger form-error">{{ observation_form.rawVideo.errors }}</span>

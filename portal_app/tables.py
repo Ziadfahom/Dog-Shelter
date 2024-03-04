@@ -2,7 +2,16 @@ import django_tables2 as tables
 from django.urls import reverse
 from django.utils.html import format_html
 from dogs_app.models import (Owner, Camera, Kennel, Treatment, EntranceExamination,
-                             DogPlacement, Observes, Observation, DogStance)
+                             DogPlacement, Observes, Observation, DogStance, Branch)
+
+
+# Helper function to get the user's current branch object (Israel/Italy)
+def get_current_branch(request):
+    # Get the current Branch (Israel/Italy)
+    branch_name = request.session.get('branch', 'Israel')  # Default to Israel
+    branch = Branch.objects.get(branchName=branch_name)  # Get the branch object
+
+    return branch
 
 
 # Owner Table
@@ -341,6 +350,11 @@ class ObservationTable(tables.Table):
         self.request = kwargs.pop('request', None)
         super(ObservationTable, self).__init__(*args, **kwargs)
 
+        # Only display isHuman and isDog if the current branch is Italy
+        if get_current_branch(self.request).branchName != 'Italy':
+            self.exclude = ('isHuman', 'isDog')
+
+
     def render_delete(self, record):
         if self.request:
             current_page = self.request.GET.get('page', '1')
@@ -376,7 +390,7 @@ class ObservationTable(tables.Table):
     class Meta:
         model = Observation
         template_name = 'django_tables2/bootstrap.html'
-        fields = ('observes', 'obsDateTime', 'sessionDurationInMins', 'isKong', 'jsonFile', 'rawVideo', 'edit', 'delete')
+        fields = ('observes', 'obsDateTime', 'sessionDurationInMins', 'isKong', 'isDog', 'isHuman', 'jsonFile', 'rawVideo', 'edit', 'delete')
         order_by = '-obsDateTime'
 
 

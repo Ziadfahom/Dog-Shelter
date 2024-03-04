@@ -45,7 +45,12 @@
                             <tr class="">
                                 <th>Date & Time</th>
                                 <th>Duration (Mins)</th>
-                                <th>Kong</th>
+                                <th>With Kong?</th>
+                                <!-- Include isDog and isHuman columns if branch is Italy only -->
+                                {% if request.session.branch == 'Italy' %}
+                                <th>With Dog?</th>
+                                <th>With Human?</th>
+                                {% endif %}
                                 <th>JSON File</th>
                                 <th>Video</th>
                                 <th>Edit/Delete</th>
@@ -82,6 +87,7 @@
 {% block script %}
     <!-- Ensure Back Button takes user back to appropriate dog_record page with Sessions open and scrolled down to -->
     <script type="text/javascript">
+        // Pass the dogId to the goBackWithParam function
         const dogId = "{{ session_instance.dog.dogID }}";
 
         function goBackWithParam() {
@@ -89,6 +95,9 @@
             let dogRecordUrl = `${baseUrl}/dog/${dogId}?from=observations`;
             window.location.href = dogRecordUrl;
         }
+
+        // Pass the current branch value to the view_observations.js file
+        const branch = "{{ request.session.branch }}";
     </script>
     <script src="{% static 'dogs_app/js/view_observations.js' %}"></script>
 {% endblock %}

@@ -143,6 +143,13 @@ $(document).ready(function() {
         // Set the default values for the form fields
         $('#newObservationModal input[name="sessionDurationInMins"]').val('2');
         $('#newObservationModal select[name="isKong"]').val('N');
+
+        // Adjust Italy-specific fields
+        if (branch === 'Italy') {
+            $('#newObservationModal select[name="isDog"]').val('N');
+            $('#newObservationModal select[name="isHuman"]').val('N');
+        }
+
         // $('#newObservationModal select[name="jsonFile"]').val('');
         // $('#newObservationModal select[name="rawVideo"]').val('');
 
@@ -307,6 +314,13 @@ $(document).ready(function() {
                     $('#editObservationModal select[name="isKong"]').val(response.observation.isKong);
                     $('#editObservationModal select[name="jsonFile"]').val(response.observation.jsonFile);
                     $('#editObservationModal select[name="rawVideo"]').val(response.observation.rawVideo);
+
+                    // Adjust Italy-specific fields
+                    if (branch === 'Italy') {
+                        $('#editObservationModal select[name="isDog"]').val(response.observation.isDog);
+                        $('#editObservationModal select[name="isHuman"]').val(response.observation.isHuman);
+                    }
+
                     // Store the observation ID so it can be used when submitting the form
                     $('#editObservationModal').data('observation-id', observationId);
 

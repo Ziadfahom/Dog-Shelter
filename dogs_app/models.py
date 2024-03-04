@@ -374,12 +374,31 @@ class Observation(models.Model):
         ('N', 'No'),
     ]
 
+    IS_DOG_CHOICES = [
+        ('Y', 'Yes'),
+        ('N', 'No'),
+    ]
+
+    IS_HUMAN_CHOICES = [
+        ('Y', 'Yes'),
+        ('N', 'No'),
+    ]
+
     # References the Observes instance
     observes = models.ForeignKey('Observes', on_delete=models.CASCADE, null=True, verbose_name='Session')
     obsDateTime = models.DateTimeField(default=current_timezone_aware_datetime, verbose_name='Starting Date and Time', db_index=True)
     sessionDurationInMins = models.PositiveIntegerField(default=2,
-                                                        validators=[MinValueValidator(0)], verbose_name='Session Duration (mins)')
-    isKong = models.CharField(max_length=1, choices=IS_KONG_CHOICES, blank=True, null=True, default='N', verbose_name='Kong')
+                                                        validators=[MinValueValidator(0)],
+                                                        verbose_name='Session Duration (mins)')
+    isKong = models.CharField(max_length=1, choices=IS_KONG_CHOICES,
+                              blank=True, null=True,
+                              default='N', verbose_name='With Kong')
+    isDog = models.CharField(max_length=1, choices=IS_DOG_CHOICES,
+                             blank=True, null=True,
+                             default=None, verbose_name='With Dog')
+    isHuman = models.CharField(max_length=1, choices=IS_HUMAN_CHOICES,
+                               blank=True, null=True,
+                               default=None, verbose_name='With Human')
     jsonFile = models.FileField(upload_to='json_files',
                                 validators=[validate_json_file_extension],
                                 null=True, blank=True, verbose_name='JSON File')

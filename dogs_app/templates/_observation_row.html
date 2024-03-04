@@ -41,6 +41,32 @@
             {% endif %}
         </div>
     </td>
+
+    <!-- Include isDog and isHuman columns if branch is Italy only -->
+    {% if request.session.branch == 'Italy' %}
+        <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Stances for this Observation">
+            <div class="form-check">
+                {% if observation.isDog == "Y" %}
+                    <input class="form-check-input" type="checkbox" style="transform: scale(1.5);" checked disabled>
+                {% elif observation.isDog == "N" %}
+                    <input class="form-check-input" type="checkbox" style="transform: scale(1.5);" disabled>
+                {% else %}
+                    -
+                {% endif %}
+            </div>
+        </td>
+        <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Stances for this Observation">
+            <div class="form-check">
+                {% if observation.isHuman == "Y" %}
+                    <input class="form-check-input" type="checkbox" style="transform: scale(1.5);" checked disabled>
+                {% elif observation.isHuman == "N" %}
+                    <input class="form-check-input" type="checkbox" style="transform: scale(1.5);" disabled>
+                {% else %}
+                    -
+                {% endif %}
+            </div>
+        </td>
+    {% endif %}
     <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Stances for this Observation">
         {{ observation.jsonFile|handle_none }}
     </td>

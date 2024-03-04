@@ -820,8 +820,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     const currentDateStart = new Date(year, month, (week * 7) + 1);
                     const currentDateEnd = new Date(year, month, (week * 7) + 7);
                     if (currentDateEnd >= firstDate && currentDateStart <= lastDate) {
-                        if (isLeapYear && month === 1 && week === 4) {
-                            // Do Not Add 5th week for leap years
+                        if (!isLeapYear && month === 1 && week === 4) {
+                            // Do Not Add 5th week for February in leap years
                             break;
                         }
                         grid.push([week, month, 0, 0]); // Week, Month, Count, isKong Count
@@ -865,10 +865,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Get the heatmap data for the selected year
-        let heatmapData, xAxisCategories, tooltipFormatter, dataLabelsFormatter;
+        let heatmapData, xAxisCategories, tooltipFormatter, dataLabelsFormatter, maxValue;
         let yAxisCategories = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
         if (granularity === 'daily') {
             heatmapData = allHeatmapData[year];
+
+            // Hold the maximum value in each year
+            maxValue = Math.max(...heatmapData.map(array => array[2]));
+
             xAxisCategories = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'];
 
             // Set up the tooltip and data labels for the daily granularity
@@ -904,6 +908,10 @@ document.addEventListener('DOMContentLoaded', function() {
             };
         } else if (granularity === 'weekly') {
             heatmapData = weeklyHeatmapData[year];
+
+            // Hold the maximum value in each year
+            maxValue = Math.max(...heatmapData.map(array => array[2]));
+
             xAxisCategories = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'];
 
             // Set up the tooltip and data labels for the weekly granularity
@@ -1071,12 +1079,15 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             colorAxis: {
                 min: 0,
-                minColor: '#FFFFFF',
-                maxColor: Highcharts.getOptions().colors[0],
-                stops: [
+                max: maxValue,
+                // Set the color stops based on the maximum value
+                stops: maxValue === 1 ? [
                     [0, '#FF0000'], // Red for zero
-                    [0.5, '#FFFF00'], // Yellow for middle values
-                    [1, '#00FF00'] // Green for high values
+                    [1, '#00FF00']  // Green for one (maxValue is 1)
+                ] : [
+                    [0, '#FF0000'], // Red for zero
+                    [1 / maxValue, '#FFFF00'], // Yellow for one
+                    [1, '#00FF00']  // Green for maxValue
                 ]
             },
             legend: {

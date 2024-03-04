@@ -294,6 +294,8 @@ def dog_record_view(request, pk):
         daily_heatmap_data = {}
         # Initialize dictionary for isKong counts
         kong_daily_counts = defaultdict(int)
+        is_dog_daily_counts = defaultdict(int)
+        is_human_daily_counts = defaultdict(int)
 
         # Initialize dictionary for weekly heatmap data
         weekly_heatmap_data = defaultdict(lambda: defaultdict(lambda: [0, 0]))  # [total count, kong count]
@@ -317,7 +319,8 @@ def dog_record_view(request, pk):
             observation_counts[local_date] += 1
             if obs.isKong == 'Y':
                 kong_daily_counts[local_date] += 1
-
+        print(f"Observation Counts: {observation_counts}")
+        print(f"Kong Counts: {kong_daily_counts}")
         # Count occurrences per day
         observation_counts = Counter(
             timezone.localtime(obs.obsDateTime, local_tz).date() for obs in observations
@@ -350,7 +353,7 @@ def dog_record_view(request, pk):
             year: [[week, month] + counts for (week, month), counts in data.items()]
             for year, data in weekly_heatmap_data.items()
         }
-
+            
         # Initialize Treatment/Examination/Placement/Session(Observes) form when adding new entries
         treatment_form = TreatmentForm(request.POST or None)
         examination_form = EntranceExaminationForm(request.POST or None)
@@ -857,6 +860,7 @@ def view_observations(request, session_id):
         if dog.branch != branch:
             messages.error(request, "You must be in the correct branch to view this dog's observations...")
             return redirect('dogs_app:home')
+
         elif request.method == 'POST':
             # Check the form type to determine which form is being submitted
             form_type = request.POST.get('form_type')
@@ -890,7 +894,7 @@ def view_observations(request, session_id):
                     return JsonResponse({"status": "error", "errors": stance_form.errors}, status=400)
             elif request.headers.get('X-Requested-With') == 'XMLHttpRequest' and form_type == 'add_observation':
                 # Handle Observation form submission via AJAX
-                observation_form = ObservationForm(request.POST or None, request.FILES or None)
+                observation_form = ObservationForm(request.POST or None, request.FILES or None, request=request)
                 if observation_form.is_valid():
                     try:
                         new_observation = observation_form.save(commit=False)
@@ -905,6 +909,11 @@ def view_observations(request, session_id):
                         utc_dt = local_dt.astimezone(pytz.utc)
                         new_observation.obsDateTime = utc_dt
 
+                        # If user is not in Italy branch, set the isDog and isHuman fields to None
+                        if branch.branchName != 'Italy':
+                            new_observation.isDog = None
+                            new_observation.isHuman = None
+
                         new_observation.save()
                         messages.success(request, 'Observation has been added successfully!')
                         return JsonResponse({"status": "success"}, status=201)
@@ -917,7 +926,7 @@ def view_observations(request, session_id):
                 else:
                     return JsonResponse({"status": "error", "errors": observation_form.errors}, status=400)
         else:
-            observation_form = ObservationForm()
+            observation_form = ObservationForm(request=request)
             stance_form = DogStanceForm()
 
         # Pagination
@@ -979,7 +988,7 @@ def delete_observation(request):
 def edit_observation(request, observation_id):
     if request.method == 'GET':
         observation = Observation.objects.get(id=observation_id)
-        observation_form = ObservationForm(instance=observation)
+        observation_form = ObservationForm(instance=observation, request=request)
 
         # Exclude the file field from the JSON response
         observation_data = observation_form.initial
@@ -991,8 +1000,10 @@ def edit_observation(request, observation_id):
         return JsonResponse({"status": "success", "observation": observation_data}, status=200)
 
     elif request.method == 'POST':
+        branch = get_current_branch(request)
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            observation_form = ObservationForm(request.POST or None, instance=Observation.objects.get(id=observation_id))
+            observation_form = ObservationForm(request.POST or None,
+                                               instance=Observation.objects.get(id=observation_id), request=request)
             if observation_form.is_valid():
                 try:
                     new_observation = observation_form.save(commit=False)
@@ -1005,6 +1016,11 @@ def edit_observation(request, observation_id):
                     # Convert to UTC
                     utc_dt = local_dt.astimezone(pytz.utc)
                     new_observation.obsDateTime = utc_dt
+
+                    # If user is not in Italy branch, make sure the isDog and isHuman fields are None
+                    if branch.branchName != 'Italy':
+                        new_observation.isDog = None
+                        new_observation.isHuman = None
 
                     new_observation.save()
                     # Get the updated observation
