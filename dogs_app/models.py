@@ -467,6 +467,7 @@ class DogStance(models.Model):
         ('FLOOR', 'On Floor'),
         ('BENCH', 'On Bench'),
         ('ONBARS', 'On Bars'),
+        ('ONBED', 'On Bed'),
         ('WALLTOWALL', 'From Wall to Wall'),
         ('ELSE', 'Else'),
     ]

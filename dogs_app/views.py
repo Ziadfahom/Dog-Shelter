@@ -273,6 +273,15 @@ def dog_record_view(request, pk):
             'observers__observation_set__dogstance_set',  # For DogStances related to Observations
         ).get(dogID=pk)
 
+        # Get the current Branch from the Dog entity to determine the appropriate chart data to fetch
+        branch = dog_record.branch.branchName
+
+        # Validate that the user is in the correct branch
+        session_branch = get_current_branch(request).branchName
+        if session_branch != branch:
+            messages.error(request, "You must be in the correct branch to view this dog...")
+            return redirect('dogs_app:home')
+
         # Handle displaying the summarization for the dog below the picture
         # Find the oldest observation date
         oldest_observation = Observation.objects.filter(
@@ -294,15 +303,19 @@ def dog_record_view(request, pk):
         daily_heatmap_data = {}
         # Initialize dictionary for isKong counts
         kong_daily_counts = defaultdict(int)
-        is_dog_daily_counts = defaultdict(int)
-        is_human_daily_counts = defaultdict(int)
+        if branch == 'Italy':  # Italy branch has additional fields to prepare: isDog, isHuman, and no Stances
+            is_dog_daily_counts = defaultdict(int)
+            is_human_daily_counts = defaultdict(int)
+            no_dog_stance_counts = defaultdict(int)
 
-        # Initialize dictionary for weekly heatmap data
-        weekly_heatmap_data = defaultdict(lambda: defaultdict(lambda: [0, 0]))  # [total count, kong count]
+        # Initialize dictionary for weekly heatmap data depending on the branch
+        if branch == 'Italy':   # [total count, kong count, dog count, human count, no stance count]
+            weekly_heatmap_data = defaultdict(lambda: defaultdict(lambda: [0, 0, 0, 0, 0]))
+        else:                   # [total count, kong count]
+            weekly_heatmap_data = defaultdict(lambda: defaultdict(lambda: [0, 0]))
 
         # Fetch all observations for the dog in one query
-        # Fetch all observations for the dog in UTC
-        local_tz = pytz.timezone('Asia/Jerusalem')
+        local_tz = pytz.timezone('Asia/Jerusalem')  # Fetch all observations for the dog in UTC
         utc_first_date = timezone.make_aware(datetime.datetime.combine(first_date, time.min), local_tz).astimezone(pytz.utc)
         utc_last_date = timezone.make_aware(datetime.datetime.combine(last_date, time.max), local_tz).astimezone(pytz.utc)
 
@@ -319,8 +332,14 @@ def dog_record_view(request, pk):
             observation_counts[local_date] += 1
             if obs.isKong == 'Y':
                 kong_daily_counts[local_date] += 1
-        print(f"Observation Counts: {observation_counts}")
-        print(f"Kong Counts: {kong_daily_counts}")
+            if branch == 'Italy':  # Italy branch has additional fields to prepare
+                if obs.isDog == 'Y':
+                    is_dog_daily_counts[local_date] += 1  # Ignore interpreter warning, the if statement is correct
+                if obs.isHuman == 'Y':
+                    is_human_daily_counts[local_date] += 1  # Ignore interpreter warning, the if statement is correct
+                if obs.isKong == 'N' and obs.isDog == 'N' and obs.isHuman == 'N':
+                    no_dog_stance_counts[local_date] += 1  # Ignore interpreter warning, the if statement is correct
+
         # Count occurrences per day
         observation_counts = Counter(
             timezone.localtime(obs.obsDateTime, local_tz).date() for obs in observations
@@ -333,27 +352,44 @@ def dog_record_view(request, pk):
                     day = single_date.day - 1
                     month = single_date.month - 1
                     kong_count = kong_daily_counts[single_date]
-                    heatmap_data.append([day, month, count, kong_count])
+                    if branch == 'Italy':  # Italy branch has additional fields to prepare
+                        dog_count = is_dog_daily_counts[single_date]
+                        human_count = is_human_daily_counts[single_date]
+                        no_stance_count = no_dog_stance_counts[single_date]
+                        heatmap_data.append([day, month, count, kong_count, dog_count, human_count, no_stance_count])
+                    else:
+                        heatmap_data.append([day, month, count, kong_count])
 
             daily_heatmap_data[year] = heatmap_data
 
         # Iterate over the daily heatmap data to aggregate into weekly data
         for year, daily_data in daily_heatmap_data.items():
-            for day, month, total_count, kong_count in daily_data:
-                # Calculate week number (1-5) within the month
-                week_number = math.ceil((day + 1) / 7) - 1
-
-                # Aggregate counts by week
-                weekly_key = (week_number, month)
-                weekly_heatmap_data[year][weekly_key][0] += total_count
-                weekly_heatmap_data[year][weekly_key][1] += kong_count
+            if branch == 'Italy':  # Italy branch has additional fields to prepare
+                for day, month, total_count, kong_count, dog_count, human_count, no_dog_stance_counts in daily_data:
+                    # Calculate week number (1-5) within the month
+                    week_number = math.ceil((day + 1) / 7) - 1
+                    # Aggregate counts by week
+                    weekly_key = (week_number, month)
+                    weekly_heatmap_data[year][weekly_key][0] += total_count
+                    weekly_heatmap_data[year][weekly_key][1] += kong_count
+                    weekly_heatmap_data[year][weekly_key][2] += dog_count
+                    weekly_heatmap_data[year][weekly_key][3] += human_count
+                    weekly_heatmap_data[year][weekly_key][4] += no_dog_stance_counts
+            else:
+                for day, month, total_count, kong_count in daily_data:
+                    # Calculate week number (1-5) within the month
+                    week_number = math.ceil((day + 1) / 7) - 1
+                    # Aggregate counts by week
+                    weekly_key = (week_number, month)
+                    weekly_heatmap_data[year][weekly_key][0] += total_count
+                    weekly_heatmap_data[year][weekly_key][1] += kong_count
 
         # Convert to the required format [[week, month, total_count, kong_count], ...]
         formatted_weekly_heatmap_data = {
             year: [[week, month] + counts for (week, month), counts in data.items()]
             for year, data in weekly_heatmap_data.items()
         }
-            
+
         # Initialize Treatment/Examination/Placement/Session(Observes) form when adding new entries
         treatment_form = TreatmentForm(request.POST or None)
         examination_form = EntranceExaminationForm(request.POST or None)
@@ -954,14 +990,18 @@ def delete_observation(request):
             'X-Requested-With') == 'XMLHttpRequest':
         observation_id = request.POST.get('observation_id')
 
-        session_id = Observes.objects.get(observation__id=observation_id).id
-        dog_stances = DogStance.objects.filter(observation_id=observation_id).order_by('stanceStartTime')
-        observations = Observation.objects.filter(observes_id=session_id).prefetch_related(
-            Prefetch('dogstance_set', queryset=dog_stances, to_attr='related_dog_stances')
-        ).order_by('-obsDateTime')
-
+        try:
+            session_id = Observes.objects.get(observation__id=observation_id).id
+            dog_stances = DogStance.objects.filter(observation_id=observation_id).order_by('stanceStartTime')
+            observations = Observation.objects.filter(observes_id=session_id).prefetch_related(
+                Prefetch('dogstance_set', queryset=dog_stances, to_attr='related_dog_stances')
+            ).order_by('-obsDateTime')
+        except Observes.DoesNotExist:
+            return JsonResponse({"status": "error", "message": "Session not found"}, status=404)
         # Get the current page number
         page_number = request.POST.get('page_number', 1)  # Get the current page number
+        if page_number == 'null':
+            page_number = 1
         paginator = Paginator(observations, ENTRIES_PER_PAGE)
 
         # Check if the current page is empty

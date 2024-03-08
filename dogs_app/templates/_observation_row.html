@@ -119,6 +119,20 @@
                     </tr>
                 </thead>
                 <tbody class="table-group-divider">
+                    <!-- Toast Notification for Stance deletion Success -->
+                    <div aria-live="polite" aria-atomic="true" class="position-relative">
+                        <div class="toast-container position-absolute top-0 end-0 p-3" id="stanceToastPlacement">
+                            <div class="toast success-toast" id="stanceSuccessToast">
+                                <div class="toast-header">
+                                    <i class="fa fa-check me-2" aria-hidden="true"></i>
+                                    <strong class="me-auto">Success</strong>
+                                </div>
+                                <div class="toast-body">
+                                    Stance deleted successfully!
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     {% for stance in observation.related_dog_stances %}
                         <tr>
                             <td>{{ stance.stanceStartTime|format_time_24hr }}</td>
@@ -154,21 +168,6 @@
 
 <!-- "Delete Dog Stance" Confirmation Modal -->
 {% include 'modals/observations/__delete_dog_stance_modal.html' %}
-
-<!-- Toast Notification for Observation deletion Success -->
-<div aria-live="polite" aria-atomic="true" class="position-relative">
-    <div class="toast-container position-absolute top-0 end-0 p-3" id="toastPlacement">
-        <div class="toast success-toast" id="obsSuccessToast">
-            <div class="toast-header">
-                <i class="fa fa-check me-2" aria-hidden="true"></i>
-                <strong class="me-auto">Success</strong>
-            </div>
-            <div class="toast-body">
-                Observation deleted successfully!
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- Modal for displaying errors -->
 <div class="modal fade" tabindex="-1" id="errorModal">

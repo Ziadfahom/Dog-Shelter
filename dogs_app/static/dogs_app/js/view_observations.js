@@ -1,9 +1,16 @@
-// Show toast for success messages instead of alert
+// Show toasts for success messages instead of alert when deleting entities
 const obsSuccessToastEl = document.getElementById('obsSuccessToast');
 const obsToastEl = new bootstrap.Toast(obsSuccessToastEl, {
     autohide: true,
     delay: 2000
 });
+
+const stanceSuccessToastEl = document.getElementById('stanceSuccessToast');
+const stanceToastEl = new bootstrap.Toast(stanceSuccessToastEl, {
+    autohide: true,
+    delay: 2000
+});
+
 
 
 // Initialize Flatpick Time picker for the sessionDurationInMins attribute in the form
@@ -114,6 +121,18 @@ $(document).ready(function() {
     setTimeout(function() {
         $('#messageContainer .alert').fadeOut('slow');
     }, 3000);
+
+    // Check if the sessionStorage flag is set to show the toast for deleted observation
+    if (sessionStorage.getItem('obsDeleted') === 'true') {
+        obsToastEl.show();
+        sessionStorage.removeItem('obsDeleted');
+    }
+
+    // Check if the sessionStorage flag is set to show the toast for deleted stance
+    if (sessionStorage.getItem('stanceDeleted') === 'true') {
+        stanceToastEl.show();
+        sessionStorage.removeItem('stanceDeleted');
+    }
 
     // Check for URL parameters to expand a specific observation
     const urlParams = new URLSearchParams(window.location.search);
@@ -237,7 +256,7 @@ $(document).ready(function() {
 
     function performDeletion(observationId){
         var observationRow = $('#observation-' + observationId); // the main observation row
-        var currentPage = new URLSearchParams(window.location.search).get('page');
+        var currentPage = new URLSearchParams(window.location.search).get('page') || 1;
         var expandObservation = new URLSearchParams(window.location.search).get('expandObservation');
 
         $.ajax({
@@ -257,7 +276,6 @@ $(document).ready(function() {
 
                     // Remove expandObservation from URL if it matches the deleted observation
                     if (expandObservation && expandObservation != observationId.toString()) {
-                        console.log('NOT THE SAME');
                         queryParams.push('expandObservation=' + expandObservation);
                     }
 
@@ -265,7 +283,6 @@ $(document).ready(function() {
                     if(!response.is_current_page_empty){
                         queryParams.push('page=' + currentPage);
                         observationRow.remove();
-                        obsToastEl.show();
                     } else {
                         // If no observations left, move to the previous page if possible
                         var prevPage = currentPage > 1 ? currentPage - 1 : 1;
@@ -276,11 +293,17 @@ $(document).ready(function() {
                     if (queryParams.length > 0) {
                         newUrl += '?' + queryParams.join('&');
                     }
-                    console.log(newUrl);
+
+                    // Set flag in the sessionStorage to show the toast
+                    sessionStorage.setItem('obsDeleted', 'true');
+
                     window.location.href = newUrl;
                 } else if (response.status == 'error') {
                     alert('Error: ' + response.message);
                 }
+            },
+            error: function(xhr, status, error) {
+                alert('Error: ' + response.message);
             }
         });
     }
@@ -406,6 +429,10 @@ $(document).ready(function() {
                     if (currentPage) {
                         queryParams += '&page=' + currentPage;
                     }
+
+                    // Set flag in the sessionStorage to show the toast
+                    sessionStorage.setItem('stanceDeleted', 'true');
+
                     window.location.href = reloadUrl + queryParams;
                } else if (response.status == 'error') {
                      alert('Error: ' + response.message);

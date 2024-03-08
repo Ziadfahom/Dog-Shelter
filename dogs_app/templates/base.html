@@ -91,6 +91,7 @@
                         {% endif %}
                         alert-dismissible fade show text-center"
                  role="alert"
+                 id="base-message-alert"
             >
             {{ message }}
             <button
@@ -129,6 +130,6 @@
 
     <script src="{% static 'common/js/main.js' %}"></script>
     {% block script %} {% endblock %}
-  
+
   </body>
 </html>

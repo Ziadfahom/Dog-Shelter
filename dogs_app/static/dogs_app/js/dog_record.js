@@ -4,6 +4,9 @@ let currentExaminationPage = 1;
 let currentPlacementPage = 1;
 let currentSessionPage = 1;
 
+// Hold the heatmap legend for hiding and showing
+const heatmapLegend = document.getElementById('heatmap-legend');
+
 // Handle "Back" button for returning to previous page
 function goBack() {
     const referrer = document.referrer;
@@ -133,10 +136,11 @@ $(document).ready(function(){
         });
 
         if (allVisible) {
-            $('#toggleTables').text('Collapse All');
+            $('#toggleTables').html('Collapse All ' + doubleUpIcon);
         } else if (allHidden) {
-            $('#toggleTables').text('Expand All');
+            $('#toggleTables').html('Expand All ' + doubleDownIcon);
         }
+
     }
     // Call the function immediately after defining it
     checkAllContainersState();
@@ -160,24 +164,24 @@ $(document).ready(function(){
         });
     });
 
-    // Setting the click event for toggleTables
     $('#toggleTables').click(function(){
-        var toggleState = $(this).text();
+        var hasDownIcon = $(this).find('.fa-angle-double-down').length > 0;
 
-        if (toggleState === 'Expand All') {
+        if (hasDownIcon) {
             allContainers.forEach(function(container) {
                 $(container).next().removeClass('hide');
                 $(container).find('i').removeClass('fa-angle-down').addClass('fa-angle-up');
             });
-            $(this).text('Collapse All');
+            $(this).html('Collapse All ' + doubleUpIcon);
         } else {
             allContainers.forEach(function(container) {
                 $(container).next().addClass('hide');
                 $(container).find('i').removeClass('fa-angle-up').addClass('fa-angle-down');
             });
-            $(this).text('Expand All');
+            $(this).html('Expand All ' + doubleDownIcon);
         }
     });
+
 
     // Handle user requesting to empty the expirationDate datefield in Placement modal
     $("#clearExpirationDate").on('click', function(e) {
@@ -779,6 +783,7 @@ $(document).ready(function() {
 });
 
 
+
 // Load Summary Heatmap Chart
 document.addEventListener('DOMContentLoaded', function() {
     const chartContainer = document.getElementById('chart-data');
@@ -787,7 +792,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const weeklyHeatmapData = JSON.parse(chartContainer.getAttribute('data-weekly-heatmap'));
     const granularitySelector = document.getElementById('granularity-selector');
     const iconsSelector = document.getElementById('detailed-check-box');
+    const prevYearButton = document.getElementById('prev-year');
+    const nextYearButton = document.getElementById('next-year');
 
+
+
+    // Function to update the button states based on the current year selection
+    function updateButtonStates() {
+        const currentYearIndex = Array.from(yearSelector.options).findIndex(option => option.value === yearSelector.value);
+        prevYearButton.disabled = currentYearIndex === 0;
+        nextYearButton.disabled = currentYearIndex === yearSelector.options.length - 1;
+    }
 
     // Populate year dropdown and set default selection
     const defaultYear = Object.keys(allHeatmapData).pop(); // Gets the last (most recent) year
@@ -800,6 +815,23 @@ document.addEventListener('DOMContentLoaded', function() {
             yearSelector.value = year; // Set default selection
         }
     });
+    updateButtonStates(); // Update button states based on the default year
+
+
+    // Hide all the elements above the chart if there is no data
+    if (allHeatmapData[yearSelector.value].length === 0) {
+        const yearLabel = document.getElementsByClassName('year-label')[0];
+        const granularityLabel = document.getElementsByClassName('granularity-label')[0];
+        const iconsLabel = document.getElementsByClassName('icons-label')[0];
+        yearLabel.style.display = 'none';
+        granularityLabel.style.display = 'none';
+        iconsLabel.style.display = 'none';
+        yearSelector.style.display = 'none';
+        granularitySelector.style.display = 'none';
+        iconsSelector.style.display = 'none';
+        prevYearButton.style.display = 'none';
+        nextYearButton.style.display = 'none';
+    }
 
     // Function to create a full grid of days and months for a year with zero counts
     function createFullYearGrid(year, firstDate, lastDate, granularity) {
@@ -807,15 +839,25 @@ document.addEventListener('DOMContentLoaded', function() {
         const daysInMonth = [31, isLeapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
         const grid = [];
         for (let month = 0; month < 12; month++) {
-            if (granularity === 'daily') {
+            if (granularity === 'daily' && branch === 'Italy') {
                 for (let day = 0; day < daysInMonth[month]; day++) {
                     const currentDate = new Date(year, month, day + 1);
                     if (currentDate >= firstDate && currentDate <= lastDate) {
-                        grid.push([day, month, 0, 0]); // Day, Month, Count, isKong Count
+                        // Day, Month, Count, isKong Count, isDog Count, isHuman Count, No Stances Count
+                        grid.push([day, month, 0, 0, 0, 0, 0]);
                     }
                 }
             }
-            else if (granularity === 'weekly') {
+            else if (granularity === 'daily' && branch !== 'Italy') {
+                for (let day = 0; day < daysInMonth[month]; day++) {
+                    const currentDate = new Date(year, month, day + 1);
+                    if (currentDate >= firstDate && currentDate <= lastDate) {
+                        // Day, Month, Count, isKong Count
+                        grid.push([day, month, 0, 0]);
+                    }
+                }
+            }
+            else if (granularity === 'weekly' && branch === 'Italy') {
                 for (let week = 0; week < 5; week++) {
                     const currentDateStart = new Date(year, month, (week * 7) + 1);
                     const currentDateEnd = new Date(year, month, (week * 7) + 7);
@@ -824,7 +866,22 @@ document.addEventListener('DOMContentLoaded', function() {
                             // Do Not Add 5th week for February in leap years
                             break;
                         }
-                        grid.push([week, month, 0, 0]); // Week, Month, Count, isKong Count
+                        // Week, Month, Count, isKong Count, isDog Count, isHuman Count, No Stances Count
+                        grid.push([week, month, 0, 0, 0, 0, 0]);
+                    }
+                }
+            }
+            else if (granularity === 'weekly' && branch !== 'Italy') {
+                for (let week = 0; week < 5; week++) {
+                    const currentDateStart = new Date(year, month, (week * 7) + 1);
+                    const currentDateEnd = new Date(year, month, (week * 7) + 7);
+                    if (currentDateEnd >= firstDate && currentDateStart <= lastDate) {
+                        if (!isLeapYear && month === 1 && week === 4) {
+                            // Do Not Add 5th week for February in leap years
+                            break;
+                        }
+                        // Week, Month, Count, isKong Count
+                        grid.push([week, month, 0, 0]);
                     }
                 }
             }
@@ -835,7 +892,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to display a message when there is no data
     function displayNoDataMessage() {
-        document.getElementById('heatmap-legend').innerHTML = '';
+        // Hide the div with ID heatmap-legend
+        heatmapLegend.style.display = 'none';
         chartContainer.style.height = '100px';
         chartContainer.style.width = '100%';
         chartContainer.style.display = 'flex';
@@ -849,11 +907,13 @@ document.addEventListener('DOMContentLoaded', function() {
         else if (yearSelector.options.length > 1 && allHeatmapData[yearSelector.value].length === 0) {
                     chartContainer.innerHTML = '<div class="no-data-message">No data recorded for the selected year.</div>';
         }
-
     }
 
     // Function to draw heatmap
     function drawHeatmap(year, granularity = 'daily') {
+        // Display the legend if it was hidden
+        heatmapLegend.style.display = 'block';
+
         // Parse first and last dates
         const firstDate = new Date(chartContainer.getAttribute('data-first-date'));
         const lastDate = new Date(chartContainer.getAttribute('data-last-date'));
@@ -866,45 +926,87 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Get the heatmap data for the selected year
         let heatmapData, xAxisCategories, tooltipFormatter, dataLabelsFormatter, maxValue;
-        let yAxisCategories = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        let yAxisCategories = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+            'August', 'September', 'October', 'November', 'December'];
+
+        // Set the chart data based on the currently selected granularity
         if (granularity === 'daily') {
             heatmapData = allHeatmapData[year];
 
             // Hold the maximum value in each year
             maxValue = Math.max(...heatmapData.map(array => array[2]));
 
-            xAxisCategories = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'];
+            xAxisCategories = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15',
+                '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'];
 
             // Set up the tooltip and data labels for the daily granularity
             tooltipFormatter = function () {
                 const day = this.point.x;
                 const month = this.point.y;
                 const isKongCount = isKongMapping[`${day}-${month}`] || 0; // Access isKong count from the mapping
-                return 'Date: <b>' + yAxisCategories[this.point.y] + ' ' + (this.point.x + 1) + ', ' + (year) + '</b><br>' +
-                               'Total Observations: <b>' + this.point.value + '</b><br>' +
-                               'Observations With Toy: <b>' + isKongCount + '</b>';
+
+                if (this.point.value === 0) {
+                    return 'Date: <b>' + yAxisCategories[this.point.y] + ' ' + (this.point.x + 1) + ', ' + (year) + '</b><br>' +
+                            'No Observations Recorded on this day';
+                } else if (branch === 'Italy') {  // Also access the isDog, isHuman and NoStances counts if the branch is Italy
+                    const isDogCount = isDogMapping[`${day}-${month}`] || 0;
+                    const isHumanCount = isHumanMapping[`${day}-${month}`] || 0;
+                    const noStancesCount = noStancesMapping[`${day}-${month}`] || 0;
+
+                    return 'Date: <b>' + yAxisCategories[this.point.y] + ' ' + (this.point.x + 1) + ', ' + (year) + '</b><br>' +
+                            'Total Observations: <b>' + this.point.value + '</b><br>' +
+                            'Observations With a Toy: <b>' + isKongCount + '</b><br>' +
+                            'Observations With a Dog: <b>' + isDogCount + '</b><br>' +
+                            'Observations With a Human: <b>' + isHumanCount + '</b><br>' +
+                            'Observations Without Stimuli: <b>' + noStancesCount + '</b>';
+                } else {
+                    return 'Date: <b>' + yAxisCategories[this.point.y] + ' ' + (this.point.x + 1) + ', ' + (year) + '</b><br>' +
+                        'Total Observations: <b>' + this.point.value + '</b><br>' +
+                        'Observations With a Toy: <b>' + isKongCount + '</b><br>' +
+                        'Observations Without a Toy: <b>' + (this.point.value - isKongCount) + '</b>';
+                }
             };
 
+            // Set up the data labels for the daily granularity
             dataLabelsFormatter = function () {
                 const day = this.point.x;
                 const month = this.point.y;
                 const count = this.point.value;
-                const isKongCount = isKongMapping[`${day}-${month}`] || 0; // Access isKong count from the mapping
-                const showIcons = iconsSelector.checked; // Detailed icons checkbox
-                const icon = isKongCount > 0 ? '🦴' : '🚫'; // Dog icon for isKong, X icon otherwise
-                let dataLabel = '';
+                // Access isKong count from the mapping
+                const isKongCount = isKongMapping[`${day}-${month}`] || 0;
+                // Assign the cell icon based on the branch-specific criteria.
+                let icon;
+                // Also access the isDog, isHuman and NoStances counts if the branch is Italy
+                if (branch === 'Italy') {
+                    const isDogCount = isDogMapping[`${day}-${month}`] || 0;
+                    const isHumanCount = isHumanMapping[`${day}-${month}`] || 0;
+                    const noStancesCount = noStancesMapping[`${day}-${month}`] || 0;
 
-                // Check if the user wants to see detailed icons
-                if (showIcons) {
-                    // Display the count with icons
-                    dataLabel = count > 0 ? (icon + '' + count) : count;
-                    dataLabel = '<span style="line-height: 1; vertical-align: middle;">' + dataLabel + '</span>'
+                    // In Italy icon criteria is:
+                    // The maximum value between isKong, isDog, and isHuman counts (priority when equal in same corresponding order)
+                    if (isKongCount === 0 && isDogCount === 0 && isHumanCount === 0) {
+                        icon = '🚫';
+                    } else if (isKongCount >= isDogCount && isKongCount >= isHumanCount) {
+                        icon = '🦴';
+                    } else if (isDogCount >= isHumanCount) {
+                        icon = '🐶';
+                    } else {
+                        icon = '👤';
+                    }
                 } else {
-                    // Display only the count without icons
-                    dataLabel = '<span style="line-height: 1; vertical-align: middle;">' + count + '</span>';
+                    // In Israel icon criteria is:
+                    //  Dog icon if there is at least one isKong on that day, and if not it's X icon
+                    icon = isKongCount > 0 ? '🦴' : '🚫';
                 }
 
-                return dataLabel;
+                // Check if the user wants to see detailed icons
+                if (iconsSelector.checked) {
+                    // Display the count with icons
+                    return count > 0 ? (icon + '' + count) : count;
+                } else {
+                    // Display only the count without icons
+                    return count;
+                }
             };
         } else if (granularity === 'weekly') {
             heatmapData = weeklyHeatmapData[year];
@@ -918,57 +1020,148 @@ document.addEventListener('DOMContentLoaded', function() {
             tooltipFormatter = function () {
                 const week = this.point.x;
                 const month = this.point.y;
-                const isKongCount = isKongWeeklyMapping[`${week}-${month}`] || 0; // Access isKong count from the mapping
-                return '<b>Week ' + (this.point.x + 1) + '</b> of ' + yAxisCategories[this.point.y] + ', ' + (year) + '<br>' +
+                // Access isKong count from the mapping
+                const isKongCount = isKongWeeklyMapping[`${week}-${month}`] || 0;
+                if (this.point.value === 0) {
+                    return 'Week ' + (this.point.x + 1) + ' of ' + yAxisCategories[this.point.y] + ', ' + (year) + '<br>' +
+                            'No Observations Recorded in this week';
+                } else if (branch === 'Italy') {  // Also access the isDog, isHuman and NoStances counts if the branch is Italy
+                    const isDogCount = isDogWeeklyMapping[`${week}-${month}`] || 0;
+                    const isHumanCount = isHumanWeeklyMapping[`${week}-${month}`] || 0;
+                    const noStancesCount = noStancesWeeklyMapping[`${week}-${month}`] || 0;
+
+                    return '<b>Week ' + (this.point.x + 1) + '</b> of ' + yAxisCategories[this.point.y] + ', ' + (year) + '<br>' +
                                'Total Observations: <b>' + this.point.value + '</b><br>' +
-                               'Observations With Toy: <b>' + isKongCount + '</b><br>' +
-                               'Observations Without Toy: <b>' + (this.point.value - isKongCount) + '</b>';
+                               'Observations With a Toy: <b>' + isKongCount + '</b><br>' +
+                               'Observations With a Dog: <b>' + isDogCount + '</b><br>' +
+                               'Observations With a Human: <b>' + isHumanCount + '</b><br>' +
+                               'Observations Without Stimuli: <b>' + noStancesCount + '</b>';
+                } else {
+                    return '<b>Week ' + (this.point.x + 1) + '</b> of ' + yAxisCategories[this.point.y] + ', ' + (year) + '<br>' +
+                               'Total Observations: <b>' + this.point.value + '</b><br>' +
+                               'Observations With a Toy: <b>' + isKongCount + '</b><br>' +
+                               'Observations Without a Toy: <b>' + (this.point.value - isKongCount) + '</b>';
+                }
             };
 
+            // Function to get isDogCount for Italy branch only
+            function getIsDogCount(week, month) {
+                if (branch === 'Italy') {
+                    return isDogWeeklyMapping[`${week}-${month}`] || 0;
+                }
+                return 0;
+            }
+
+            // Function to get isHumanCount for Italy branch only
+            function getIsHumanCount(week, month) {
+                if (branch === 'Italy') {
+                    return isHumanWeeklyMapping[`${week}-${month}`] || 0;
+                }
+                return 0;
+            }
+
+            // Function to get NoStancesCount for Italy branch only
+            function getNoStancesCount(week, month) {
+                if (branch === 'Italy') {
+                    return noStancesWeeklyMapping[`${week}-${month}`] || 0;
+                }
+                return 0;
+            }
+
+            // Set up the data labels for the weekly granularity
             dataLabelsFormatter = function () {
                 const week = this.point.x;
                 const month = this.point.y;
                 const count = this.point.value;
-                const isKongCount = isKongWeeklyMapping[`${week}-${month}`] || 0; // Access isKong count from the mapping
-                const showIcons = iconsSelector.checked; // Detailed icons checkbox
+
                 // Return the count and the detailed icons on the right side of the cell
-                let textRight = '';
-                let dataLabel = '';
+                let dataLabel = count + ': ';
 
-                if (showIcons) {
-                    if (count === 0) {
-                        dataLabel = '<span style="display: inline-block; text-align: left; padding-right: 8rem; margin-left: 4px;">' + count + '</span>';
-                        ;
-                    } else if (count === isKongCount) {
-                        textRight = ' [🦴' + isKongCount.toString().italics() + ']';
-                        dataLabel = '<span style="display: inline-block; width: 50%; text-align: left; padding-right: 3rem; margin-left: -1rem;">' + count + '</span>' +
-                            '<span style="display: inline-block; width: 50%; text-align: right; padding-left: 2rem;">' + textRight + '</span>';
+                // Access isKong count from the mapping
+                const isKongCount = isKongWeeklyMapping[`${week}-${month}`] || 0;
+                // Also access the isDog, isHuman and NoStances counts if the branch is Italy
+                const isDogCount = getIsDogCount(week, month);
+                const isHumanCount = getIsHumanCount(week, month);
+                const noStancesCount = getNoStancesCount(week, month);
 
-                    } else if (isKongCount === 0) {
-                        textRight = ' [🚫' + count.toString().italics() + ']';
-                        dataLabel = '<span style="display: inline-block; width: 50%; text-align: left; padding-right: 3rem; margin-left: -1rem;">' + count + '</span>' +
-                            '<span style="display: inline-block; width: 50%; text-align: right; padding-left: 2rem;">' + textRight + '</span>';
-                    } else {
-                        textRight = '[🦴' + isKongCount.toString().italics() + '|🚫' + (count - isKongCount).toString().italics() + ']';
-                        dataLabel = '<span style="display: inline-block; width: 50%; text-align: left; padding-right: 2rem; margin-left: -2px;">' + count + '</span>' +
-                            '<span style="display: inline-block; width: 50%; text-align: right; padding-left: 1rem;">' + textRight + '</span>';
+                // Check if the user wants to see detailed icons
+                if (iconsSelector.checked) {
+                    // Check if the branch is Israel
+                    if (branch !== 'Italy') {
+                        // Display the total count on the left, and the counts of isKong and isNotKong on the right
+                        if (count === 0) {
+                            return count;
+                        } else if (count === isKongCount) {
+                            return dataLabel + '[🦴' + isKongCount.toString().italics() + ']';
+                        } else if (isKongCount === 0) {
+                            return dataLabel + '[🚫' + count.toString().italics() + ']';
+                        } else {
+                            return dataLabel + '[🦴' + isKongCount.toString().italics() + '|🚫' + (count - isKongCount).toString().italics() + ']';
+                        }
+                    } // Check if the branch is Italy
+                    else if (branch === 'Italy') {
+                        // Display the total count on the left and the counts of isKong, isDog, isHuman and NoStances on the right
+                        if (count === 0) {
+                            return count;
+                        } else if (isKongCount === 0 && isDogCount === 0 && isHumanCount === 0) {
+                            return dataLabel + '[🚫' + count.toString().italics() + ']';
+                        } else if (isDogCount === 0 && isHumanCount === 0 && noStancesCount === 0) {
+                            return dataLabel + '[🦴' + isKongCount.toString().italics() + ']';
+                        } else if (isKongCount === 0 && isHumanCount === 0 && noStancesCount === 0) {
+                           return dataLabel + '[🐶' + isDogCount.toString().italics() + ']';
+                        } else if (isKongCount === 0 && isDogCount === 0 && noStancesCount === 0) {
+                            return dataLabel + '[👤' + isHumanCount.toString().italics() + ']';
+                        } else if (isKongCount === 0) {
+                            if (isDogCount === 0) {
+                               return dataLabel + '[👤' + isHumanCount.toString().italics() + '|🚫' + noStancesCount.toString().italics() + ']';
+                            } else if (isHumanCount === 0) {
+                               return dataLabel + '[🐶' + isDogCount.toString().italics() + '|🚫' + noStancesCount.toString().italics() + ']';
+                            }  else if (noStancesCount === 0) {
+                              return dataLabel + '[🐶' + isDogCount.toString().italics() + '|👤' + isHumanCount.toString().italics() + ']';
+                            } else {
+                               return dataLabel + '[🐶' + isDogCount.toString().italics() + '|👤' + isHumanCount.toString().italics() + '|🚫' + noStancesCount.toString().italics() + ']';
+                            }
+                        } else if (isDogCount === 0) {
+                            if (isHumanCount === 0) {
+                               return dataLabel + '[🦴' + isKongCount.toString().italics() + '|🚫' + noStancesCount.toString().italics() + ']';
+                            } else if (noStancesCount === 0) {
+                               return dataLabel + '[🦴' + isKongCount.toString().italics() + '|👤' + isHumanCount.toString().italics() + ']';
+                            } else {
+                               return dataLabel + '[🦴' + isKongCount.toString().italics() + '|👤' + isHumanCount.toString().italics() + '|🚫' + noStancesCount.toString().italics() + ']';
+                            }
+                        } else if (isHumanCount === 0) {
+                            if (noStancesCount === 0) {
+                               return dataLabel + '[🦴' + isKongCount.toString().italics() + '|🐶' + isDogCount.toString().italics() + ']';
+                            } else {
+                               return dataLabel + '[🦴' + isKongCount.toString().italics() + '|🐶' + isDogCount.toString().italics() + '|🚫' + noStancesCount.toString().italics() + ']';
+                            }
+                        } else if (noStancesCount === 0) {
+                           return dataLabel + '[🦴' + isKongCount.toString().italics() + '|🐶' + isDogCount.toString().italics() + '|👤' + isHumanCount.toString().italics() + ']';
+                        } else {
+                           return dataLabel + '[🦴' + isKongCount.toString().italics() + '|🐶' + isDogCount.toString().italics() + '|👤' + isHumanCount.toString().italics() + '|🚫' + noStancesCount.toString().italics() + ']';
+                        }
                     }
-                } else {
-                    dataLabel = '<span>' + count + '</span>';
+                } else { // If the user does not want to see detailed icons, simply display the count
+                    return count;
                 }
-
-                // Return a string of HTML with two spans, one aligned left and the other right
-                return dataLabel;
-
+                return count;
             };
         }
 
         // Create a full grid for the year with zeros
         let fullYearGrid = createFullYearGrid(year, firstDate, lastDate, granularity);
 
-        // Create a mapping for isKong counts for the daily granularity and the weekly
+        // Create a mapping for isKong counts
         const isKongMapping = {};
         const isKongWeeklyMapping = {};
+        // Also include the isDog and isHuman counts for the Italy branch
+        const isDogMapping = {};
+        const isHumanMapping = {};
+        const isDogWeeklyMapping = {};
+        const isHumanWeeklyMapping = {};
+        const noStancesMapping = {};
+        const noStancesWeeklyMapping = {};
+
 
          // Update the grid with actual counts from heatmapData
         heatmapData.forEach(data => {
@@ -978,12 +1171,26 @@ document.addEventListener('DOMContentLoaded', function() {
             const index = fullYearGrid.findIndex(d => d[0] === day && d[1] === month);
             if (granularity === 'daily') {
                 isKongMapping[`${day}-${month}`] = data[3];
+                // Also include the isDog and isHuman counts if the branch is Italy
+                if (branch === 'Italy') {
+                    isDogMapping[`${day}-${month}`] = data[4];
+                    isHumanMapping[`${day}-${month}`] = data[5];
+                    noStancesMapping[`${day}-${month}`] = data[6];
+                }
+                // Update the count in the full year grid
                 if (index !== -1) {
                     fullYearGrid[index][2] = count;
                 }
             }
             else if (granularity === 'weekly') {
                 isKongWeeklyMapping[`${day}-${month}`] = data[3];
+                // Also include the isDog, isHuman and noStances counts if the branch is Italy
+                if (branch === 'Italy') {
+                    isDogWeeklyMapping[`${day}-${month}`] = data[4];
+                    isHumanWeeklyMapping[`${day}-${month}`] = data[5];
+                    noStancesWeeklyMapping[`${day}-${month}`] = data[6];
+                }
+                // Update the count in the full year grid
                 if (index !== -1) {
                     fullYearGrid[index][2] = count;
                 }
@@ -1038,7 +1245,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 plotBackgroundColor: '#F5F5F5',
             },
             title: {
-                text: 'Observations Overview for ' + year + ' (' + granularity[0].toUpperCase() + granularity.slice(1) + ')',
+                text: chartTitleDogName + 'Observations Overview Heatmap for ' + year + ' (' + granularity[0].toUpperCase() + granularity.slice(1) + ')',
                 style: {
                     fontWeight: 'bold',
                     fontSize: '25px',
@@ -1047,7 +1254,7 @@ document.addEventListener('DOMContentLoaded', function() {
             xAxis: {
                 categories: xAxisCategories,
                 title: {
-                    text: granularity === 'daily' ? 'Day in the Month' : 'Week in the Month',
+                    text: granularity === 'daily' ? 'Day' : 'Week',
                     style: {
                         fontWeight: 'bold',
                         fontSize: '15px',
@@ -1080,14 +1287,17 @@ document.addEventListener('DOMContentLoaded', function() {
             colorAxis: {
                 min: 0,
                 max: maxValue,
-                // Set the color stops based on the maximum value
+                startOnTick: false,
+                endOnTick: false,
                 stops: maxValue === 1 ? [
-                    [0, '#FF0000'], // Red for zero
-                    [1, '#00FF00']  // Green for one (maxValue is 1)
+                    [0, '#3333FF'], // Blue for zero
+                    [1, '#FF3333']  // Red for one (maxValue is 1)
                 ] : [
-                    [0, '#FF0000'], // Red for zero
-                    [1 / maxValue, '#FFFF00'], // Yellow for one
-                    [1, '#00FF00']  // Green for maxValue
+                    [0, '#3333FF'], // Blue for low values
+                    [0.25, '#ADD8E6'], // Light blue for lower-middle
+                    [0.5, '#FFFFFF'], // White for midpoint
+                    [0.75, '#FFA07A'], // Light red for upper-middle
+                    [1, '#FF3333']  // Red for high values (maxValue)
                 ]
             },
             legend: {
@@ -1114,14 +1324,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 dataLabels: {
                     enabled: true,
                     color: '#000000',
-                    useHTML: true,
+                    // Set alignment and x-offset based on granularity and icon display
+                    align: 'center',
+                    x: 0,
+                    verticalAlign: 'middle',
                     formatter: dataLabelsFormatter,
                     style: {
-                        textOutline: 'none',
+                        textOutline: false,
                         fontWeight: 'bold',
                         fontSize: '15px',
-                        width: '100%',
-                        whiteSpace: 'nowrap',
                     }
                 }
             }],
@@ -1143,7 +1354,27 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedYear = this.value;
         const selectedGranularity = granularitySelector.value;
         drawHeatmap(selectedYear, selectedGranularity);
+        updateButtonStates();
     });
+
+    // Event listener for previous year button
+    prevYearButton.addEventListener('click', function() {
+        const currentYearIndex = Array.from(yearSelector.options).findIndex(option => option.value === yearSelector.value);
+        if (currentYearIndex > 0) {
+            yearSelector.selectedIndex = currentYearIndex - 1;
+            yearSelector.dispatchEvent(new Event('change'));
+        }
+    });
+
+    // Event listener for next year button
+    nextYearButton.addEventListener('click', function() {
+        const currentYearIndex = Array.from(yearSelector.options).findIndex(option => option.value === yearSelector.value);
+        if (currentYearIndex < yearSelector.options.length - 1) {
+            yearSelector.selectedIndex = currentYearIndex + 1;
+            yearSelector.dispatchEvent(new Event('change'));
+        }
+    });
+
 
     // Event listener for granularity selector
     granularitySelector.addEventListener('change', function() {

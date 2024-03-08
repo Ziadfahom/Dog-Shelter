@@ -42,16 +42,20 @@
                     {% else %}
                         <img id="dog_picture" src="{% static 'dogs_app/img/default_dog.jpg' %}" class="rounded-circle" alt="Default Dog Image" style="width: 12rem; height: 12rem; object-fit: cover;">
                     {% endif %}
-
-
+                    <!-- View Sample Video Button -->
+                    <div class="mt-4">
+                        <a  class="btn btn-dark" target="_blank">View Sample Video</a>
+                    </div>
                 </div>
+
+
 
                 <div class="card-body bg-none shadow-none">
                     <table class="table table-bordered">
                         <thead class="table-dark">
                             <tr>
-                                <th>#</th>
-                                <th>Details</th>
+                                <th>Attribute</th>
+                                <th>Information</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -116,81 +120,116 @@
                             <tr>
                                 <td class="attr-name" style="{% if dog_record.owner %}padding-top: 1.4rem;{% endif %}"><strong>Owner</strong></td>
                                 <td>
-                                    <div class="d-flex justify-content-between align-items-center">
+                                    <div class="button-right-align">
                                         {% if dog_record.owner %}
-                                            <div class="text-center" >
+                                            <div style="margin-left: 5rem; flex-grow: 1;">
                                                 {{ dog_record.owner|handle_none }}
                                             </div>
-                                            <div >
-                                                <button type="button" id="owner-button" class="btn btn-primary float-end" data-bs-toggle="modal" data-bs-target="#ownerModal">Details</button>
+                                            <div>
+                                                <button type="button" id="owner-button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#ownerModal">Details</button>
                                             </div>
                                         {% else %}
-                                            <div class="text-center" >
+                                            <div style="flex-grow: 1;">
                                                 {{ dog_record.owner|handle_none }}
                                             </div>
                                         {% endif %}
                                     </div>
                                 </td>
                             </tr>
+
                         </tbody>
                     </table>
 
-                    <!-- View Sample Video Button -->
-                    <div class="sample-button">
-                        <a  class="btn btn-dark" target="_blank">Sample Video</a>
-                    </div>
-
-                    <hr>
-                    <div class="chart-outer-border">
+                    <hr class="mb-4 mt-4">
+                    <div class="chart-outer-border mb-4">
                         <!-- Container for dropdown elements -->
-                        <div class="d-flex align-items-center overflow-auto">
+                        <div class="controls-container d-flex align-items-start overflow-auto">
+
                             <!-- First dropdown group -->
-                            <div class="">
-                                <label for="year-selector" class="form-label year-label">Year:</label>
-                                <select id="year-selector" class="year-dropdown">
-                                    <!-- Options will be populated dynamically using JavaScript -->
-                                </select>
+                            <div class=" control-group">
+                                <label for="year-selector" class="form-label year-label">Year</label>
+                                <div class="year-selector-container">
+                                    <button id="prev-year" class="btn btn-outline-dark" type="button"><i class="fas fa-caret-left"></i></button>
+                                    <select id="year-selector" class="year-dropdown">
+                                        <!-- Options will be populated dynamically using JavaScript -->
+                                    </select>
+                                    <button id="next-year" class="btn btn-outline-dark" type="button"><i class="fas fa-caret-right"></i></button>
+                                </div>
                             </div>
+
                             <!-- Second dropdown group -->
-                            <div class="">
-                                <label for="granularity-selector" class="form-label granularity-label">Granularity:</label>
+                            <div class="control-group">
+                                <label for="granularity-selector" class="form-label granularity-label">Granularity</label>
                                 <select id="granularity-selector" class="granularity-dropdown">
                                     <option value="daily" selected>Daily</option>
                                     <option value="weekly">Weekly</option>
                                 </select>
                             </div>
 
-                            <div class="form-check form-switch">
-                                <!-- Change the checkbox color to black -->
-                                <label class="form-check-label" for="detailed-check-box">Detailed Icons</label>
+                            <!-- Third group (icons checkbox) -->
+                            <div class="control-group form-check form-switch detailed-icons-group icons-group ">
+                                <label class="form-label form-check-label icons-label" for="detailed-check-box">Detailed Icons</label>
                                 <input class="form-check-input" type="checkbox" id="detailed-check-box">
                             </div>
                         </div>
-                        <br>
+
                         <!-- Summary Heatmap Chart -->
-                        <div class="w-100 overflow-x-scroll">
+                        <div class="chart-container w-100">
                             <div id="chart-data" data-daily-heatmap='{{ daily_heatmap_data|safe }}' data-weekly-heatmap='{{ weekly_heatmap_data|safe }}' data-first-date='{{ heatmap_first_date|safe }}' data-last-date='{{ heatmap_last_date|safe }}' data-first-weekly-date='{{ heatmap_first_weekly_date|safe }}' class="heatmap-styles"></div>
                         </div>
                         <div id="heatmap-legend" class="mt-3">
                             <div class="color-gradient-legend">
                                 <span class="low-count"></span> - Low Count (Few Observations)
-                                <span class="medium-count"></span> - Medium Count (Moderate Observations)
-                                <span class="high-count"></span> - High Count (Many Observations)
+                                <span class="medium-count" style="margin-left: 2rem;"></span> - Medium Count (Moderate Observations)
+                                <span class="high-count" style="margin-left: 2rem;"></span> - High Count (Many Observations)
                             </div>
                             <div class="symbol-legend" id="icons-legend" style="display: none;">
-                                <span>🦴 - Enrichment Toy Used</span>
-                                <span>🚫 - No Enrichment Toy Used</span>
+                                <br>
+                                {% if request.session.branch == 'Italy' %}
+                                    <span style="margin-right: 2rem;">🦴  - With an Enrichment Toy</span>
+                                    <span style="margin-right: 2rem;">🐶  - With Another Dog Present</span>
+                                    <span style="margin-right: 2rem;">👤  - With a Human Companion</span>
+                                    <span>🚫  - Without any Stimuli</span>
+                                    <br> <br>
+                                    <span style="font-size: 0.9em; font-style: italic;">
+                                        *Each symbol on the chart indicates the specific stimuli present with the dog during the observations for that day/week.
+                                    </span>
+                                    <br>
+                                    <span style="font-size: 0.9em; font-style: italic;">
+                                        **In 'Weekly' view, each cell displays the total count of all observations (as well as the individual counts of each stimuli) used during that week.
+                                        <br>
+                                        In 'Daily' view, the symbol represents only the most prevalent stimulus of the day, and the total count of observations is provided.
+                                        <br>
+                                        ***Hover over cells for the fully detailed daily/weekly information.
+                                    </span>
+                                {% else %}
+                                    <span style="margin-right: 2rem;">🦴  - With an Enrichment Toy</span>
+                                    <span>🚫  - Without an Enrichment Toy</span>
+                                    <br> <br>
+                                    <span style="font-size: 0.9em; font-style: italic;">
+                                        *Each symbol on the chart indicates the existence (or lack) of stimuli with the dog during the observations for that day/week.
+                                    </span>
+                                    <br>
+                                    <span style="font-size: 0.9em; font-style: italic;">
+                                        **In 'Weekly' view, each cell displays the total count of all observations (as well as the individual counts of both states) during that week.
+                                        <br>
+                                        In 'Daily' view, the toy symbol indicates its existence at least once on that day, and the total count of observations is provided.
+                                        <br>
+                                        ***Hover over cells for the fully detailed daily/weekly information.
+                                    </span>
+                                {% endif %}
                             </div>
                         </div>
 
                         <br>
                     </div>
-                    <hr>
+
+                    <hr class="mb-4 mt-4">
 
                     <!-- Expand/Collapse All Button -->
                     <div class="d-flex justify-content-end">
                         <button id="toggleTables" class="btn btn-dark">
-                            Expand All
+                            Expand All <i class="fas fa-angle-double-down"></i>
                         </button>
                     </div>
 
@@ -199,6 +238,7 @@
                     <div class="scrollable-table">
                         <div id="treatments_container" class="w-100">
                             <div class="clickable-header h-100 w-100 my-0 py-3 px-5 d-flex justify-content-between">
+                                <div class="spacer"></div> <!-- Invisible spacer -->
                                 <h2>Treatments</h2>
                                 <h2>
                                     <i class="fas fa-angle-down"></i>
@@ -247,6 +287,7 @@
                     <div class="scrollable-table">
                         <div id="examinations_container" class="w-100">
                             <div class="clickable-header h-100 w-100 my-0 py-3 px-5 d-flex justify-content-between">
+                                <div class="spacer"></div> <!-- Invisible spacer -->
                                 <h2>Examinations</h2>
                                 <h2>
                                     <i class="fas fa-angle-down"></i>
@@ -298,6 +339,7 @@
                     <div class="scrollable-table">
                         <div id="placements_container" class="w-100">
                             <div class="clickable-header h-100 w-100 my-0 py-3 px-5 d-flex justify-content-between">
+                                <div class="spacer"></div> <!-- Invisible spacer -->
                                 <h2>Kennel Placements</h2>
                                 <h2>
                                     <i class="fas fa-angle-down"></i>
@@ -347,6 +389,7 @@
                     <div class="scrollable-table">
                         <div id="sessions_container" class="w-100">
                             <div class="clickable-header h-100 w-100 my-0 py-3 px-5 d-flex justify-content-between">
+                                <div class="spacer"></div> <!-- Invisible spacer -->
                                 <h2>Camera Sessions</h2>
                                 <h2>
                                     <i class="fas fa-angle-down"></i>
@@ -419,101 +462,6 @@
         </div>
     </div>
 
-    <!-- Edit Owner Modal -->
-    {% comment %} <div class="modal fade" id="editOwnerModal" tabindex="-1" aria-labelledby="editOwnerModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header text-center bg-primary">
-                    <h3 class="modal-title w-100" id="editOwnerModalLabel">Edit Owner</h3>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form method="post" action="{% url 'dogs_app:dog_record' dog_record.dogID %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="form_type" value="owner_form">
-
-                        <div class="row mb-3">
-                            <div class="col-5 text-end">
-                                <label for="{{ owner.firstName.id_for_label }}" class="col-form-label">First Name:</label>
-                            </div>
-                            <div class="col-7 custom-input">
-                                {{ owner.firstName }}
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-5 text-end">
-                                <label for="{{ owner.lastName.id_for_label }}" class="col-form-label">Last Name:</label>
-                            </div>
-                            <div class="col-7 custom-input">
-                                {{ owner.lastName }}
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-5 text-end">
-                                <label for="{{ owner.ownerID.id_for_label }}" class="col-form-label">ID:</label>
-                            </div>
-                            <div class="col-7 custom-input">
-                                {{ owner.ownerID }}
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-5 text-end">
-                                <label for="{{ owner.ownerAddress.id_for_label }}" class="col-form-label">Address:</label>
-                            </div>
-                            <div class="col-7 custom-input">
-                                {{ owner.ownerAddress }}
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-5 text-end">
-                                <label for="{{ owner.city.id_for_label }}" class="col-form-label">City:</label>
-                            </div>
-                            <div class="col-7 custom-input">
-                                {{ owner.city }}
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-5 text-end">
-                                <label for="{{ owner.phoneNum.id_for_label }}" class="col-form-label">Phone Number:</label>
-                            </div>
-                            <div class="col-7 custom-input">
-                                {{ owner.phoneNum }}
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-5 text-end">
-                                <label for="{{ owner.cellphoneNum.id_for_label }}" class="col-form-label">Cellphone Number:</label>
-                            </div>
-                            <div class="col-7 custom-input">
-                                {{ owner.cellphoneNum }}
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-5 text-end">
-                                <label for="{{ owner.comments.id_for_label }}" class="col-form-label">Comments:</label>
-                            </div>
-                            <div class="col-7 custom-input">
-                                {{ owner.comments }}
-                            </div>
-                        </div>
-
-                        <div class="text-center">
-                            <button type="submit" class="btn btn-primary btn-modal edit-owner-confirm-btn">Save Changes</button>
-                            <button type="button" class="btn btn-secondary btn-modal" data-bs-dismiss="modal">Close</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div> {% endcomment %}
-
 <!-- Delete Modals -->
 {% include 'modals/dogs/common/__delete_modal.html' with modal_id='deleteTreatmentModal' title='Treatment' label_id='deleteTreatmentModalLabel' button_id='confirmTreatmentDeleteBtn' %}
 {% include 'modals/dogs/common/__delete_modal.html' with modal_id='deleteSessionModal' title='Session' label_id='deleteSessionModalLabel' button_id='confirmSessionDeleteBtn' %}
@@ -544,6 +492,10 @@
         const dogImageLoad = '{{ dog_record.dogName }}';
         // Pass the current branch value to the view_observations.js file for Italy-specific functionality
         const branch = "{{ request.session.branch }}";
+        const chartTitleDogName = dogImageLoad ? dogImageLoad + "'s " : "";
+        const doubleDownIcon = '<i class="fas fa-angle-double-down"></i>';
+        const doubleUpIcon = '<i class="fas fa-angle-double-up"></i>';
+
     </script>
     <script src="{% static 'dogs_app/js/dog_record.js' %}"></script>
 {% endblock %}

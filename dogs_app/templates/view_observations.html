@@ -36,9 +36,19 @@
 
                 <!-- Observations Table -->
                 <div class="observations-table-container">
-                    <div id="observations-success-alert" class="alert alert-success alert-dismissible fade show" role="alert" style="display:none;">
-                        <strong>Success!</strong> Observation has been successfully added.
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <!-- Toast Notification for Observation deletion Success -->
+                    <div aria-live="polite" aria-atomic="true" class="position-relative">
+                        <div class="toast-container position-absolute top-0 end-0 p-3" id="toastPlacement">
+                            <div class="toast success-toast" id="obsSuccessToast">
+                                <div class="toast-header">
+                                    <i class="fa fa-check me-2" aria-hidden="true"></i>
+                                    <strong class="me-auto">Success</strong>
+                                </div>
+                                <div class="toast-body">
+                                    Observation deleted successfully!
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <table id="observations-table" class="table table-striped table-hover table-bordered border-secondary styled-table">
                         <thead class="table-group-divider table-dark">

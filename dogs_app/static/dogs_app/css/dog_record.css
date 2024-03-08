@@ -26,7 +26,7 @@
 
 .clickable-header h2 {
     margin: 0;
-    font-size: 1.15rem;
+    font-size: 1.30rem;
     display: inline;
 }
 
@@ -104,7 +104,7 @@ h2 {
 }
 
 .attr-name {
-    width: 40%;
+    width: 30%;
 }
 
 .list-group-item {
@@ -402,45 +402,9 @@ textarea {
    color: red;
 }
 
-.heatmap-styles {
-    margin-left: auto;  /* Adjust as needed */
-    margin-right: auto; /* Adjust as needed */
+.sample-button {
+    text-align: right;
 }
-
-.dropdown-container {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-}
-
-/* Individual dropdown group styling */
-.dropdown-group {
-    margin-right: 0;
-}
-
-.year-label {
-    margin-right: -2rem;
-    margin-left: 4rem;
-}
-
-.granularity-label {
-    margin-right: 1rem;
-    margin-left: 3rem;
-}
-
-.dropdown-group select {
-    margin-right: 0;
-    margin-left: -3rem;
-}
-
-.chart-outer-border {
-    border: 2px solid #343a40;
-    border-radius: 7px;
-    box-shadow: 0px 0px 5px rgba(52, 58, 64, 0.5);
-    padding: 20px;
-    margin: 5px;
-}
-
 
 #heatmap-legend {
     display: flex;
@@ -452,12 +416,9 @@ textarea {
 .color-gradient-legend, .symbol-legend {
     display: flex;
     align-items: center; /* Aligns items vertically in the middle */
-    gap: 15px; /* Space between each item in a legend row */
+    gap: 10px; /* Space between each item in a legend row */
 }
 
-.color-gradient-legend span, .symbol-legend span {
-    margin-right: 1px; /* Space to the right of each color square or symbol */
-}
 
 .color-gradient-legend span {
     display: inline-block;
@@ -469,22 +430,65 @@ textarea {
 
 
 .low-count {
-    background-color: #FF0000;
+    background-color: #3333FF;
 }
 
 .medium-count {
-    background-color: #FFFF00;
+    background-color: #FFFFFF;
 }
 
 .high-count {
-    background-color: #00FF00;
+    background-color: #FF3333;
+}
+
+.heatmap-styles {
+    margin-left: auto;  /* Adjust as needed */
+    margin-right: auto; /* Adjust as needed */
+}
+
+.chart-outer-border {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center; /* This centers the text inside the child elements */
+}
+
+
+/* Ensuring the chart scales nicely */
+#chart-data {
+    max-width: 100%;
+}
+
+/* Adjustments for smaller screens */
+@media (max-width: 768px) {
+    .d-flex {
+        flex-direction: column;
+    }
+}
+
+/* Flex settings for dropdown container */
+.d-flex {
+    display: flex;
+    justify-content: center; /* Center the dropdowns */
+    flex-wrap: wrap; /* Allow items to wrap on smaller screens */
+}
+
+
+.chart-outer-border {
+    border: 2px solid #343a40;
+    border-radius: 7px;
+    box-shadow: 0px 0px 5px rgba(52, 58, 64, 0.5);
+    padding: 20px;
+    margin: 5px;
 }
 
 #detailed-check-box {
     transform: scale(1.8);
     cursor: pointer;
-    margin-left: 3rem;
+    margin-left: 1rem;
     margin-right: 1.5rem;
+    margin-bottom: -2.2rem;
     background-color: black;
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='white'/%3e%3c/svg%3e");
 }
@@ -502,8 +506,112 @@ textarea {
     background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='white'/></svg>"); /* White circle for checked state */
 }
 
-.sample-button {
-    text-align: right;
+
+.dropdown-container {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
 }
 
+.chart-outer-border {
+    display: flex;
+    flex-direction: column;
+}
+
+.controls-container {
+    margin-bottom: 1rem; /* Adjust as needed for spacing */
+}
+
+.control-group {
+    margin-right: 4rem; /* Adjust as needed for spacing */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centers the contents (label and dropdown) */
+
+}
+
+.control-group > label {
+    text-align: center; /* Center-align text within the label */
+    width: 100%; /* Ensure label takes the full width of its container */
+}
+
+.year-dropdown, .granularity-dropdown {
+    padding: 0.5rem;
+    text-align: center;
+}
+
+.year-selector-container {
+    display: flex;
+    align-items: center;
+    flex-grow: 1; /* Allows the container to grow and fill available space */
+}
+
+.year-selector-container > button {
+    margin: 0 0.5rem; /* 5px spacing around buttons */
+}
+
+
+/* Specific style for Detailed Icons control group */
+.detailed-icons-group {
+    display: flex;
+    flex-direction: column; /* Stack label and checkbox vertically */
+}
+
+@media screen and (max-width: 768px) {
+    .control-group {
+        flex-direction: column; /* Stack elements vertically on small screens */
+    }
+
+    .year-selector-container, .control-group > div {
+        flex-direction: row; /* Maintain horizontal layout */
+    }
+}
+
+/* Ensure the chart container fills the width */
+.chart-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+
+.control-group.icons-group {
+    display: flex;
+    flex-direction: column; /* Stack elements vertically */
+    align-items: flex-start; /* Align items to the start */
+}
+
+.control-group.icons-group .form-check-input {
+    align-self: center; /* Center the checkbox */
+    margin-left: 0; /* Reset the negative margin */
+    transform: scale(1.8); /* Keep your scaling */
+    cursor: pointer;
+    margin-right: 1.5rem;
+    margin-bottom: 6px;
+    /* ... other styles ... */
+}
+
+.control-group.icons-group .form-label {
+    margin-bottom: 0.5rem; /* Spacing between label and checkbox */
+}
+
+
+.spacer {
+    width: 24px; /* Width equal to the icon's width */
+    height: 24px; /* Optional: height equal to the icon's height */
+    visibility: hidden; /* Make the spacer invisible */
+}
+
+/* Center text in table cells */
+.table td,
+.table th {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.button-right-align {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%; /* Ensure div takes full width of td */
+}
 
