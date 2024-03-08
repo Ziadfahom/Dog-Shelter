@@ -40,7 +40,7 @@ def create_group(apps, schema_editor):
             'add_dogplacement', 'change_dogplacement', 'delete_dogplacement', 'view_dogplacement',
             'add_observation', 'change_observation', 'delete_observation', 'view_observation',
             'add_dogstance', 'change_dogstance', 'delete_dogstance', 'view_dogstance',
-            'add_news', 'change_news', 'delete_news', 'view_news'
+            'add_news', 'change_news', 'delete_news', 'view_news', 'add_poll', 'change_poll', 'delete_poll', 'view_polls'
         ]
     )
 

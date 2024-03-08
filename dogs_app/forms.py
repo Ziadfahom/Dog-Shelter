@@ -9,6 +9,10 @@ from .models import (Dog, Owner, Profile, Treatment, EntranceExamination,
 from django.core.exceptions import ValidationError
 from datetime import date
 from django.utils.dateparse import parse_datetime
+from django import forms
+from .models import Choice, Poll
+from django.forms import inlineformset_factory
+
 
 
 # Helper function to get the user's current branch object (Israel/Italy)
@@ -919,3 +923,22 @@ class DogStancePortalForm(forms.ModelForm):
             self.fields['observation'].queryset = (Observation.objects.
                                                    filter(observes__dog__branch=current_branch).
                                                    order_by('-obsDateTime'))
+
+class VoteForm(forms.ModelForm):
+    class Meta:
+        model = Choice
+        fields = ['choice_text']
+
+class PollForm(forms.ModelForm):
+    class Meta:
+        model = Poll
+        fields = ['question']
+
+class ChoiceForm(forms.ModelForm):
+    class Meta:
+        model = Choice
+        fields = ['choice_text']
+
+ChoiceFormSet = forms.inlineformset_factory(
+    Poll, Choice, form=ChoiceForm, max_num=4, can_delete=True
+)

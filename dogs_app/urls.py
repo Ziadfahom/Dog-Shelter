@@ -1,6 +1,5 @@
 from django.urls import path, include
 from django.views.generic import RedirectView
-
 from . import views
 
 urlpatterns = [
@@ -47,5 +46,10 @@ urlpatterns = [
     path('export_dogs_excel/', views.export_dogs_excel, name='export_dogs_excel'),
     path('import_dogs_excel/', views.import_dogs_excel, name='import_dogs_excel'),
     path('import_dogs_json/', views.import_dogs_json, name='import_dogs_json'),
-
+    path('<int:poll_id>/vote/', views.vote, name='vote'),
+    path('<int:poll_id>/results/', views.results, name='results'),
+    path('add_poll/', views.add_poll, name='add_poll'),
+    path('update_poll/<int:poll_id>/', views.update_poll, name='update_poll'),
+    path('delete_poll/<int:poll_id>/', views.delete_poll, name='delete_poll'),
+    path('poll/', views.view_polls, name='view_polls')
 ]

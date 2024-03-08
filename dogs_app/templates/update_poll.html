@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+    <title>Update Poll | {{ poll.question }}</title>
+    <link href="{% static 'dogs_app/css/update_poll.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h1>Update Poll</h1>
+        <form method="post">
+            {% csrf_token %}
+            {{ poll_form.as_p }}
+            {{ choice_formset.as_p }}
+            <button type="submit">Update</button>
+        </form>
+    </div>
+{% endblock %}

@@ -101,6 +101,17 @@ def breadcrumb_processor(request):
         user_name = get_user_name_from_user_id(user_id)
         breadcrumbs.append({"name": f"{user_name}", "url": f"/update_user/{user_id}"})
         breadcrumbs.append({"name": "Delete User", "url": f"{url_path}"})
+    if '/poll/' in url_path:
+        breadcrumbs.append({"name": "Poll", "url": f"{url_path}"})
+    if 'add_poll/' in url_path:
+        breadcrumbs.append({"name": "Poll", "url": "/poll/"})
+        breadcrumbs.append({"name": "Add Poll", "url": f"{url_path}"})
+    if 'update_poll/' in url_path:
+        breadcrumbs.append({"name": "Poll", "url": "/poll/"})
+        breadcrumbs.append({"name": "Update Poll", "url": f"{url_path}"})
+    if 'delete_poll/' in url_path:
+        breadcrumbs.append({"name": "Poll", "url": "/poll/"})
+        breadcrumbs.append({"name": "Delete Poll", "url": f"{url_path}"})
 
     # Portal breadcrumbs
     if 'portal/' in url_path:

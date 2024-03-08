@@ -19,7 +19,7 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponseRedirect, JsonResponse, HttpResponse, HttpResponseNotAllowed
+from django.http import HttpResponseBadRequest, HttpResponseRedirect, JsonResponse, HttpResponse, HttpResponseNotAllowed
 from .filters import DogFilter
 from .forms import SignUpForm, AddDogForm, UpdateUserForm, ProfileUpdateForm, TreatmentForm, EntranceExaminationForm, \
     DogPlacementForm, ObservesForm, ObservationForm, DogStanceForm, LoginForm, NewsForm, OwnerForm
@@ -35,8 +35,9 @@ from io import BytesIO
 from .serializers import DogSerializer
 from django.views.decorators.http import require_POST
 from django.core.serializers.json import DjangoJSONEncoder
-from django.forms.utils import ErrorList
-
+from django.urls import reverse
+from django.forms import formset_factory
+from .forms import PollForm, ChoiceForm, ChoiceFormSet
 
 # Location of the default User profile picture if they don't have a picture
 DEFAULT_IMAGE_SOURCE = '/profile_pictures/default.jpg'
@@ -77,9 +78,6 @@ def get_current_branch(request):
 
     return branch
 
-
-# Main Page view for displaying either dog records if  user is logged in,
-# or a login page if user is logged out
 def home_view(request):
     # Get the current Branch
     branch = get_current_branch(request)
@@ -93,49 +91,41 @@ def home_view(request):
     # Get all the website News to display them in descending order
     news_items = News.objects.filter(branch=branch).order_by('-created_at')[:3]
 
-    # Checking if user is logged in
+    # Get all polls to display them in descending order
+    poll_items = Poll.objects.filter(branch=branch).order_by('-pub_date')[:3]  # Ordering by pub_date
+
     if request.method == 'POST':
+        # Handle user login
         username = request.POST['username']
         password = request.POST['password']
         users = get_user_model()
 
-        # Check if username exists
         if users.objects.filter(username=username).exists():
-
             try:
-                # Authenticate
                 user = authenticate(request, username=username, password=password)
-
-                # If correct username+password combination
                 if user is not None:
                     login(request, user=user)
                     messages.success(request, message='You have successfully logged in!')
                     return redirect('dogs_app:home')
                 else:
-                    # Username exists but password was incorrect
                     messages.error(request, message='The password is incorrect. Please try again...')
                     return redirect('dogs_app:home')
             except Exception as e:
                 messages.error(request, message=f'An error occurred during login: {e}')
                 return redirect('dogs_app:home')
         else:
-            # Username does not exist
             messages.error(request, message='The username does not exist. Please try again...')
             return redirect('dogs_app:home')
     else:
-        # User is not logged in, redirect them to login page (home)
-
-        # Attach user roles to the home page display
         role = get_user_role(request.user) if request.user.is_authenticated else ""
-
         context = {
             'total_dogs': total_dogs,
             'toy_treatment_dogs': toy_treatment_dogs,
             'news_items': news_items,
+            'poll_items': poll_items,
             'role': role
         }
         return render(request, 'home.html', context=context)
-
 
 # Logout Users view for displaying a user-logout option if they're already logged in
 def logout_user_view(request):
@@ -2668,3 +2658,134 @@ def import_dogs_json(request):
     else:
         # If request method is not POST, return error
         return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+def vote(request, poll_id):
+    if 'voted_polls' in request.session:
+        if str(poll_id) in request.session['voted_polls']:
+            return HttpResponseBadRequest("You have already voted in this poll.")
+    else:
+        request.session['voted_polls'] = []
+
+    if request.method == 'POST':
+        poll_id = request.POST.get('poll_id')
+        choice_id = request.POST.get('choice')
+        if poll_id and choice_id:
+            try:
+                choice = Choice.objects.get(pk=choice_id)
+            except Choice.DoesNotExist:
+                return redirect('dogs_app:home')  # Redirect to home page if choice does not exist
+            else:
+                choice.votes += 1
+                choice.save()
+        # After successful voting, add the poll ID to the voted_polls session variable
+        request.session['voted_polls'].append(str(poll_id))
+        request.session.modified = True  # Ensure the session is saved
+
+        # Set a cookie to remember that the user has voted in this session
+        response = HttpResponse("Vote successful")
+        expiration_date = timedelta(days=365)  # 1 year
+        response.set_cookie('voted_poll_' + str(poll_id), 'true', max_age=expiration_date.total_seconds())
+        messages.success(request, 'Thank you for voting!')
+
+    return redirect('dogs_app:home')
+
+def results(request, poll_id):
+    poll = get_object_or_404(Poll, pk=poll_id)
+    return render(request, 'polls/results.html', {'poll': poll})
+
+
+# View for adding a poll to the homepage. Only logged-in admins permitted
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def add_poll(request):
+    ChoiceFormSet = formset_factory(ChoiceForm, extra=4)  # Adjust extra as needed
+
+    if request.method == 'POST':
+        branch = get_current_branch(request)
+        poll_form = PollForm(request.POST)
+        choice_formset = ChoiceFormSet(request.POST)
+
+        if poll_form.is_valid() and choice_formset.is_valid():
+            poll = poll_form.save(commit=False)
+            poll.branch = branch
+            poll.save()
+            
+            for form in choice_formset:
+                choice_text = form.cleaned_data.get('choice_text')
+                if choice_text:
+                    Choice.objects.create(poll=poll, choice_text=choice_text)
+
+            messages.success(request, 'Poll has been added successfully!')
+            return redirect('dogs_app:home')
+    else:
+        poll_form = PollForm()
+        choice_formset = ChoiceFormSet()
+
+    context = {
+        'poll_form': poll_form,
+        'choice_formset': choice_formset,
+    }
+    return render(request, 'add_poll.html', context)
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def update_poll(request, poll_id):
+    # Get the poll object or return a 404 error if it doesn't exist
+    poll = get_object_or_404(Poll, pk=poll_id)
+
+    # Get the current Branch
+    branch = get_current_branch(request)  # Make sure to define get_current_branch function
+    # Check if the poll belongs to the current branch
+    if poll.branch != branch:
+        messages.error(request, "You must be in the correct branch to delete this poll...")
+        return redirect('dogs_app:home')
+
+    if request.method == 'POST':
+        # Create a form instance and populate it with data from the request (binding):
+        poll_form = PollForm(request.POST, instance=poll)
+        choice_formset = ChoiceFormSet(request.POST, instance=poll)
+
+        # Check if both forms are valid
+        if poll_form.is_valid() and choice_formset.is_valid():
+            # Save the form data to the database
+            poll_form.save()
+            choice_formset.save()
+
+            # Redirect to the homepage or any other page after updating the poll
+            return redirect('dogs_app:home')  # Change 'home' to the appropriate URL name
+
+    else:
+        # Create a form instance and populate it with initial data for the poll
+        poll_form = PollForm(instance=poll)
+        choice_formset = ChoiceFormSet(instance=poll)
+
+    # Render the update_poll.html template with the form instances
+    return render(request, 'update_poll.html', {'poll_form': poll_form, 'choice_formset': choice_formset})
+
+# View for deleting a Poll from the homepage. Only available to Admins
+@user_passes_test(lambda u: u.is_superuser)
+def delete_poll(request, poll_id):
+    # Get the poll to delete
+    poll = get_object_or_404(Poll, pk=poll_id)
+    # Get the current Branch
+    branch = get_current_branch(request)  # Make sure to define get_current_branch function
+    # Check if the poll belongs to the current branch
+    if poll.branch != branch:
+        messages.error(request, "You must be in the correct branch to delete this poll...")
+        return redirect('dogs_app:home')
+    if request.method == 'POST':
+        poll.delete()
+        messages.success(request, f"Poll: '{poll.question}' has been successfully deleted...")
+        return redirect('dogs_app:home')
+    else:
+        return render(request, 'delete_poll.html', {'poll': poll})
+    
+# View for showing Polls
+def view_polls(request):
+    branch = get_current_branch(request)
+
+    polls = Poll.objects.all().filter(branch=branch)
+    return render(request, 'polls_page.html', {'polls': polls})
+
+    
+

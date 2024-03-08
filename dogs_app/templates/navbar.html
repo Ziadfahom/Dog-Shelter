@@ -50,6 +50,10 @@
                   <strong>News</strong>
                   <span>Find Out Our Latest Updates</span>
                 </a>
+                <a href="{% url 'dogs_app:view_polls' %}" class="dropdown-item">
+                  <strong>Polls</strong>
+                  <span>Find Out Our Latest Polls</span>
+                </a>
               </div>
             </div>
           </li>
@@ -76,6 +80,10 @@
                 <a href="{% url 'dogs_app:add_news' %}" class="dropdown-item">
                   <strong>Add News</strong>
                   <span>Create News For The Homepage</span>
+                </a>
+                <a href="{% url 'dogs_app:add_poll' %}" class="dropdown-item">
+                  <strong>Add Poll</strong>
+                  <span>Create Polls For The Homepage</span>
                 </a>
                 <a href="{% url 'portal_app:list-kennels' %}" class="dropdown-item">
                     <strong>Control Panel</strong>

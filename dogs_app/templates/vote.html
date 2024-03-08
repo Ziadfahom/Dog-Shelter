@@ -1,0 +1,25 @@
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+    <title>Dogs Watch | Add Poll </title>
+    <link href="{% static 'dogs_app/css/vote.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<!-- vote.html -->
+
+  <form method="post" action="{% url 'dogs_app:vote' poll.id %}">
+    {% csrf_token %}
+    {% for choice in poll.choice_set.all %}
+      <input type="radio" id="choice{{ choice.id }}" name="choice_text" value="{{ choice.id }}">
+      <label for="choice{{ choice.id }}">{{ choice.choice_text }}</label><br>
+    {% endfor %}
+    <button type="submit">Vote</button>
+  </form>
+{% endblock %}
+
+{% block script %}
+    <script src="{% static 'dogs_app/js/vote.js' %}"></script>
+{% endblock %}
