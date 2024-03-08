@@ -509,6 +509,7 @@ class Poll(models.Model):
     class Meta:
         verbose_name_plural = "Poll"
 
+# Choice model for the Poll model
 class Choice(models.Model):
     poll = models.ForeignKey(Poll, on_delete=models.CASCADE)
     choice_text = models.CharField(max_length=200)
