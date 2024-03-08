@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+    <title>DogsWatch | Polls</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'dogs_app/css/polls_page.css' %}">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+{% endblock %}
+
+{% block content %}
+   <div class="container-fluid p-5">
+       <div class="table-wrapper">
+           <div class="table-header bg-dark">
+               <div class="spacer"></div>
+               <div class="title">Latest Polls</div>
+            {% if user.is_superuser %}
+            <div class="spacer">
+               <a href="{% url 'dogs_app:add_poll' %}" class="btn btn-outline-light btn-sm add-poll-btn">
+                   <i class="fas fa-plus"></i>
+                   <i class="fas fa-poll"></i>
+               </a>
+            </div>
+           {% else %}
+            <div class="spacer"></div>
+           {% endif %}
+        </div>
+        <table id="pollsTable">
+            <thead>
+                <tr>
+                    <th>Question</th>
+                    <th>Date Published</th>
+                    <th class="empty-th"></th> <!-- Placeholder for alignment -->
+                    <th class="actions-th">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for poll in polls %}
+                <tr>
+                    <td>{{ poll.question }}</td>
+                    <td>{{ poll.pub_date }}</td>
+                    <td class="empty-td"><!-- Empty Space --></td>
+                    <td class="button-cell">
+                        <div class="control__button">
+                            <a href="{% url 'dogs_app:update_poll' poll.id %}" class="mx-1" title="Edit">
+                              <span class="icon-edit text-dark"></span>
+                            </a>
+                            <a href="{% url 'dogs_app:delete_poll' poll.id %}" class="mx-1" title="Delete">
+                              <span class="icon-delete text-dark"></span>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+    <!-- DataTables UI -->
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="{% static 'dogs_app/js/polls_page.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+    <title>DogsWatch | Delete Poll | {{ poll.question }}</title>
+    <link href="{% static 'dogs_app/css/delete_poll.css' %}" rel="stylesheet">
+{% endblock %}
+
+
+{% block content %}
+    <div class="container mt-5 text-center">
+        <div class="col-md-7 mx-auto">
+            <div class="card shadowed">
+                <div class="card-header bg-dark text-white d-flex align-items-center py-0">
+                    <button onclick="goBack()" class="btn btn-light my-3 align-self-start" title="Go Back">
+                        <span class="icon-arrow_back text-dark"></span>
+                    </button>
+                    <h2 class="card-title text-center w-100">Delete Poll</h2>
+                </div>
+                <div class="card-body py-5">
+                    <p class="text-danger pb-4 h4"><strong>Are you sure you want to delete "{{ poll.question }}"?</strong></p>
+                   <ul class="list-group list-group-flush mt-4">
+                       <li class="list-group-item d-flex justify-content-between align-items-center">
+                           <strong>Question: </strong>
+                           <span class="centered-content">{{ poll.question }}</span>
+                       </li>
+                       <li class="list-group-item d-flex justify-content-between align-items-center">
+                           <strong>Pub Date: </strong>
+                           <span class="centered-content">{{ poll.pub_date }}</span>
+                       </li>
+                   </ul>
+                   <form method="POST" class="mt-5 d-flex">
+                    {% csrf_token %}
+                    <button class="btn flex-grow-1 mx-2 btn-outline-danger btn-lg" type="submit">
+                        Delete
+                    </button>
+                </form>
+               </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block script %}
+    <script src="{% static 'dogs_app/js/delete_poll.js' %}"></script>
+{% endblock %}

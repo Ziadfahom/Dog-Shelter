@@ -497,6 +497,24 @@ class DogStance(models.Model):
         ordering = ['-stanceStartTime']
 
 
+# Poll model for showing the latest polls and displaying them on the homepage
+class Poll(models.Model):
+    question = models.CharField(max_length=200)
+    pub_date = models.DateTimeField(default=timezone.now)
+    branch = models.ForeignKey('Branch', on_delete=models.CASCADE, verbose_name='Branch')
+
+    def __str__(self):
+        return self.question
+    
+    class Meta:
+        verbose_name_plural = "Poll"
+
+class Choice(models.Model):
+    poll = models.ForeignKey(Poll, on_delete=models.CASCADE)
+    choice_text = models.CharField(max_length=200)
+    votes = models.IntegerField(default=0)
+
+
 # News Model for saving the latest website news and displaying them on the homepage
 class News(models.Model):
     title = models.CharField(max_length=200)
