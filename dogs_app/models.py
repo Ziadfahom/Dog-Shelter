@@ -1,4 +1,5 @@
 import os
+
 from django.utils.dateparse import parse_datetime
 import pytz
 from django.db import models
@@ -173,6 +174,32 @@ class Camera(models.Model):
     def __str__(self):
         return f"Camera #{self.camID} - ({self.branch})"
 
+    def delete(self, *args, **kwargs):
+        # Make sure all dogs that are associated with this camera
+        # through Observes have their kongDateAdded updated if needed
+        try:
+            local_tz = pytz.timezone('Asia/Jerusalem')
+            dog_ids_list = []
+            for observes_instance in Observes.objects.filter(camera=self):
+                if observes_instance.dog and observes_instance.dog.pk not in dog_ids_list:
+                    dog_instance = observes_instance.dog
+                    # Find the latest observation with isKong='Y' for this dog
+                    latest_observation = Observation.objects.filter(
+                        observes__dog=dog_instance,
+                        isKong='Y'
+                    ).exclude(observes__camera=self).order_by('-obsDateTime').first()
+                    if latest_observation:
+                        # Convert the new obsDateTime to the local timezone
+                        new_obsDateTime_instance = timezone.localtime(latest_observation.obsDateTime, local_tz)
+                        dog_instance.kongDateAdded = new_obsDateTime_instance.date()
+                    else:
+                        dog_instance.kongDateAdded = None
+                    dog_instance.save()
+                    dog_ids_list.append(dog_instance.pk)
+            super(Camera, self).delete(*args, **kwargs)
+        except Exception as e:
+            print(f"An error occurred while updating the Dog's kongDateAdded field: {e}")
+
     class Meta:
         ordering = ['branch', 'camID']
         unique_together = (('camID', 'branch'),)
@@ -199,16 +226,91 @@ class Observes(models.Model):
         formatted_date = self.sessionDate.strftime("%d/%m/%Y")
         return f"{camera_str} on {dog_str} ({formatted_date})"
 
-    # To ensure both values are always given by a user before changes.
-    # They can only be blank because of deletion of Dog or Camera entities
+
     def save(self, *args, **kwargs):
+        # To ensure both values are always given by a user before changes.
+        # They can only be blank because of deletion of Dog or Camera entities
         if self.dog is None or self.camera is None:
             raise ValidationError('Dog and Camera are required fields.')
-        super().save(*args, **kwargs)
+
+        # Ensure that if the user is changing the dog, their kongDateAdded is updated accordingly
+        if self.pk:
+            try:
+                old_instance = Observes.objects.get(pk=self.pk)
+                if old_instance.dog and self.dog and old_instance.dog_id != self.dog_id:
+                    local_tz = pytz.timezone('Asia/Jerusalem')
+                    # Hold the current Observes instance's latest obsDateTime value
+                    observes_observation_set = old_instance.observation_set.filter(isKong='Y')
+                    if observes_observation_set.exists():
+                        current_obsDateTime = observes_observation_set.order_by('-obsDateTime').first().obsDateTime
+                        if current_obsDateTime:
+                            current_obsDateTime = timezone.localtime(current_obsDateTime, local_tz).date() if current_obsDateTime else None
+
+                    else:
+                        current_obsDateTime = None
+
+                    # Find the latest valid observation for the old dog
+                    latest_observation_old_dog = Observation.objects.filter(
+                        observes__dog=old_instance.dog, isKong='Y'
+                    ).exclude(observes=old_instance).order_by('-obsDateTime').first()
+                    if latest_observation_old_dog:
+                        old_dog_kongDate = timezone.localtime(latest_observation_old_dog.obsDateTime, local_tz).date()
+                        old_instance.dog.kongDateAdded = old_dog_kongDate
+                    else:
+                        old_instance.dog.kongDateAdded = None
+                    old_instance.dog.save()
+
+                    # Find the latest valid observation for the new dog
+                    new_dog_kongDate = self.dog.kongDateAdded
+                    # Compare the new kongDateAdded to the dog's kongDateAdded field and update it if necessary
+                    if current_obsDateTime and (not new_dog_kongDate or current_obsDateTime > new_dog_kongDate):
+                        self.dog.kongDateAdded = current_obsDateTime
+                        self.dog.save()
+            except Dog.DoesNotExist:
+                pass
+            except Dog.MultipleObjectsReturned:
+                pass
+            except Exception as e:
+                print(f"An error occurred while updating the Dog's kongDateAdded field: {e}")
+        super(Observes, self).save(*args, **kwargs)
+
+    # Ensure that upon deletion of an Observes instance, the Dog's kongDateAdded field is handled correctly
+    def delete(self, *args, **kwargs):
+        try:
+            dog_instance = self.dog
+            # Fetch the latest observation with isKong='Y' from this Observes instance
+            latest_session_observation = self.observation_set.filter(isKong='Y').order_by('-obsDateTime').first()
+            if latest_session_observation and latest_session_observation.obsDateTime:
+                # Convert its obsDateTime to the local timezone
+                local_tz = pytz.timezone('Asia/Jerusalem')
+                latest_obsDateTime_instance = timezone.localtime(latest_session_observation.obsDateTime, local_tz)
+
+                # Compare to the dog's kongDateAdded field and update it if necessary
+                if latest_session_observation and latest_obsDateTime_instance.date() == dog_instance.kongDateAdded:
+                    # Find the latest Observation with isKong='Y' for this dog excluding from this Observes instance
+                    new_latest_observation = Observation.objects.filter(
+                        observes__dog=dog_instance,
+                        isKong='Y'
+                    ).exclude(observes=self).order_by('-obsDateTime').first()
+                    if new_latest_observation:
+                        # Convert the new obsDateTime to the local timezone
+                        new_obsDateTime_instance = timezone.localtime(new_latest_observation.obsDateTime, local_tz)
+                        dog_instance.kongDateAdded = new_obsDateTime_instance.date()
+                    else:
+                        dog_instance.kongDateAdded = None
+                    dog_instance.save()
+            super(Observes, self).delete(*args, **kwargs)
+        except Dog.DoesNotExist:
+            pass
+        except Dog.MultipleObjectsReturned:
+            pass
+        except Exception as e:
+            print(f"An error occurred while updating the Dog's kongDateAdded field: {e}")
 
     class Meta:
         verbose_name_plural = "Observes"
         unique_together = (('dog', 'camera', 'sessionDate'),)
+
 
 
 class Treatment(models.Model):
@@ -406,6 +508,20 @@ class Observation(models.Model):
                                 validators=[validate_video_file_extension],
                                 null=True, blank=True, verbose_name='Video')
 
+    # Returns the latest observation with isKong='Y' for this dog excluding this one
+    def get_latest_observation(self):
+        if self.observes.dog:
+            latest_observation = Observation.objects.filter(
+                observes__dog=self.observes.dog,
+                isKong='Y'
+            ).exclude(pk=self.pk).order_by('-obsDateTime').first()
+            if latest_observation:
+                return latest_observation
+            else:
+                return None
+        else:
+            return None
+
     def save(self, *args, **kwargs):
         """
         Overridden save method to ensure that:
@@ -434,51 +550,103 @@ class Observation(models.Model):
             if old_file_video and self.rawVideo != old_file_video:
                 old_file_video.delete(save=False)
 
-        if self.isKong == 'Y' and self.observes.dog:
-            try:
-                dog_instance = self.observes.dog
-                # Convert the obsDateTime to the local timezone
-                local_tz = pytz.timezone('Asia/Jerusalem')
-                obsDateTime_instance = timezone.localtime(self.obsDateTime, local_tz)
+        local_tz = pytz.timezone('Asia/Jerusalem')
+        new_obsDateTime = timezone.localtime(self.obsDateTime, local_tz).date()
+        try:
+            # Get current dog instance
+            current_dog_instance = self.observes.dog if self.observes and self.observes.dog else None
 
-                # Update the dog's kongDateAdded field if it's empty or the observation date is later
-                if not dog_instance.kongDateAdded or obsDateTime_instance.date() > dog_instance.kongDateAdded:
-                    dog_instance.kongDateAdded = obsDateTime_instance.date()
-                    dog_instance.save()
+            # Variables to track if there is a change in Dog
+            old_dog_instance = None
+            dog_changed = False
+
+            # Check if this is an existing instance and if Dog has changed
+            if self.pk:
+                current_instance = Observation.objects.get(pk=self.pk)
+                old_dog_instance = current_instance.observes.dog if current_instance.observes and current_instance.observes.dog else None
+                if old_dog_instance != current_dog_instance:
+                    dog_changed = True
+
+            # Logic for new instances or instances where isKong remains 'N'
+            if not self.pk and self.isKong == 'Y' and current_dog_instance:
+                if not current_dog_instance.kongDateAdded or new_obsDateTime > current_dog_instance.kongDateAdded:
+                    current_dog_instance.kongDateAdded = new_obsDateTime
+                    current_dog_instance.save()
+
+            # If editing an existing instance, compare old and new values
+            elif self.pk and current_dog_instance:
+                current_isKong = self.isKong
+                old_instance = Observation.objects.get(pk=self.pk)
+                old_isKong = old_instance.isKong
+                old_obsDateTime = timezone.localtime(old_instance.obsDateTime, local_tz).date()
+
+                # Update logic when isKong or obsDateTime changes
+                if old_isKong != current_isKong or old_obsDateTime != new_obsDateTime:
+                    if current_isKong == 'Y' and (
+                            not current_dog_instance.kongDateAdded or new_obsDateTime > current_dog_instance.kongDateAdded):
+                        current_dog_instance.kongDateAdded = new_obsDateTime
+                    elif old_isKong == 'Y' and old_obsDateTime == current_dog_instance.kongDateAdded:
+                        latest_observation = self.get_latest_observation()
+                        current_dog_instance.kongDateAdded = timezone.localtime(latest_observation.obsDateTime,
+                                                                                local_tz).date() if latest_observation else None
+                    current_dog_instance.save()
+
+            # Handle the case where the Dog has changed
+            if dog_changed and old_dog_instance:
+                # Update old dog's kongDateAdded
+                latest_observation_old_dog = Observation.objects.filter(
+                    observes__dog=old_dog_instance,
+                    isKong='Y'
+                ).exclude(pk=self.pk).order_by('-obsDateTime').first()
+                old_dog_new_kongDate = timezone.localtime(latest_observation_old_dog.obsDateTime,
+                                                          local_tz).date() if latest_observation_old_dog else None
+                if old_dog_instance.kongDateAdded != old_dog_new_kongDate:
+                    old_dog_instance.kongDateAdded = old_dog_new_kongDate
+                    old_dog_instance.save()
+
+            # Update new dog's kongDateAdded
+            if current_dog_instance and self.isKong == 'Y':
+                if not current_dog_instance.kongDateAdded or current_dog_instance.kongDateAdded < new_obsDateTime:
+                    current_dog_instance.kongDateAdded = new_obsDateTime
+                    current_dog_instance.save()
+
+        except Dog.DoesNotExist:
+            raise ValidationError("The Dog associated with this Observation does not exist.")
+        except Dog.MultipleObjectsReturned:
+            raise ValidationError("Multiple Dogs are associated with this Observation.")
+        except Exception as e:
+            print(f"An error occurred while updating the Dog's kongDateAdded field: {e}")
+            raise ValidationError(f"An error occurred while updating the Dog's kongDateAdded field: {e}")
+        super().save(*args, **kwargs)
+
+    # Make sure the dog's kongDateAdded is updated if the isKong field is set to 'Y'
+    # and the obsDateTime is equal to this one's
+    def delete(self, *args, **kwargs):
+        if self.isKong == 'Y':
+            try:
+                dog_instance = self.observes.dog if self.observes.dog else None
+                if dog_instance:
+                    # Convert the obsDateTime to the local timezone
+                    local_tz = pytz.timezone('Asia/Jerusalem')
+                    obsDateTime_instance = timezone.localtime(self.obsDateTime, local_tz)
+
+                    if dog_instance.kongDateAdded and obsDateTime_instance.date() == dog_instance.kongDateAdded:
+                        # Find the latest observation with isKong='Y' for this dog
+                        latest_observation = self.get_latest_observation()
+
+                        if latest_observation:
+                            # Convert the new obsDateTime to the local timezone
+                            new_obsDateTime_instance = timezone.localtime(latest_observation.obsDateTime, local_tz)
+                            dog_instance.kongDateAdded = new_obsDateTime_instance.date()
+                        else:
+                            dog_instance.kongDateAdded = None
+                        dog_instance.save()
             except Dog.DoesNotExist:
                 pass
             except Dog.MultipleObjectsReturned:
                 pass
             except Exception as e:
                 print(f"An error occurred while updating the Dog's kongDateAdded field: {e}")
-        super().save(*args, **kwargs)
-
-    # Make sure the dog's kongDateAdded is updated if the isKong field is set to 'Y'
-    # and the obsDateTime is equal to this one's
-    def delete(self, *args, **kwargs):
-        try:
-            dog_instance = self.observes.dog
-            # Convert the obsDateTime to the local timezone
-            local_tz = pytz.timezone('Asia/Jerusalem')
-            obsDateTime_instance = timezone.localtime(self.obsDateTime, local_tz)
-            if dog_instance.kongDateAdded and obsDateTime_instance.date() == dog_instance.kongDateAdded:
-                # Find the latest observation with isKong='Y' for this dog
-                latest_observation = Observation.objects.filter(observes__dog=dog_instance, isKong='Y').exclude(pk=self.pk).order_by('-obsDateTime').first()
-
-                if latest_observation:
-                    # Convert the new obsDateTime to the local timezone
-                    new_obsDateTime_instance = timezone.localtime(latest_observation.obsDateTime, local_tz)
-                    dog_instance.kongDateAdded = new_obsDateTime_instance.date()
-                else:
-                    dog_instance.kongDateAdded = None
-                dog_instance.save()
-        except Dog.DoesNotExist:
-            pass
-        except Dog.MultipleObjectsReturned:
-            pass
-        except Exception as e:
-            print(f"An error occurred while updating the Dog's kongDateAdded field: {e}")
-
         super(Observation, self).delete(*args, **kwargs)
 
     def __str__(self):
@@ -581,9 +749,10 @@ class News(models.Model):
 # Branch model for handling the different branches of the shelter (default: Israel, secondary: Italy)
 class Branch(models.Model):
     branchName = models.CharField(max_length=20, unique=True, verbose_name='Branch Name')
+    branchAddress = models.CharField(max_length=100, blank=True, null=True, verbose_name='Branch Address')
+    branchCity = models.CharField(max_length=50, blank=True, null=True, verbose_name='Branch City')
 
     # Add more fields later if needed
-    # branchAddress = models.CharField(max_length=100, verbose_name='Branch Address')
     # branchPhone = models.CharField(max_length=15, blank=True, null=True, verbose_name='Branch Phone Number')
     # branchEmail = models.EmailField(max_length=50, blank=True, null=True, verbose_name='Branch Email')
     # branchManager = models.CharField(max_length=50, blank=True, null=True, verbose_name='Branch Manager')

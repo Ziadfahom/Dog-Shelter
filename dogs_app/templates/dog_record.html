@@ -105,7 +105,7 @@
                             </tr>
                             <tr>
                                 <td><strong>Last Date Given Kong</strong></td>
-                                <td>{{ dog_record.kongDateAdded|handle_none }}</td>
+                                <td id="kongDateAdded">{{ dog_record.kongDateAdded|handle_none }}</td>
                             </tr>
                             <tr>
                                 <td><strong>Dog Status</strong></td>
@@ -271,7 +271,7 @@
                                     {% include "_treatment_row.html" with treatment=treatment %}
                                 {% empty %}
                                     <tr>
-                                        <td colspan="4">No treatments found.</td>
+                                        <td colspan="5">No treatments found.</td>
                                     </tr>
                                 {% endfor %}
                                 </tbody>
@@ -323,7 +323,7 @@
                                     {% include "_examination_row.html" with examination=examination %}
                                 {% empty %}
                                     <tr>
-                                        <td colspan="7">No examinations found.</td>
+                                        <td colspan="8">No examinations found.</td>
                                     </tr>
                                 {% endfor %}
                                 </tbody>
@@ -373,7 +373,7 @@
                                     {% include "_placement_row.html" with placement=placement %}
                                 {% empty %}
                                     <tr>
-                                        <td colspan="5">No placements found.</td>
+                                        <td colspan="6">No placements found.</td>
                                     </tr>
                                 {% endfor %}
                                 </tbody>
@@ -422,7 +422,7 @@
                                     {% include "_session_row.html" with session=session %}
                                 {% empty %}
                                     <tr>
-                                        <td colspan="4">No sessions found.</td>
+                                        <td colspan="5">No sessions found.</td>
                                     </tr>
                                 {% endfor %}
                                 </tbody>

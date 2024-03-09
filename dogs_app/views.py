@@ -2699,6 +2699,7 @@ def import_dogs_json(request):
         # If request method is not POST, return error
         return JsonResponse({'error': 'Invalid request method'}, status=400)
 
+
 def vote(request, poll_id):
     if 'voted_polls' in request.session:
         if str(poll_id) in request.session['voted_polls']:
