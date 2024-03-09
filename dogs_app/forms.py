@@ -135,12 +135,6 @@ class AddDogForm(forms.ModelForm):
                                                                                "title": "Upload the dog's image."}),
                                 label="Dog Image",
                                 help_text="Upload the dog's image here.")
-    kongDateAdded = forms.DateField(required=False,
-                                    widget=forms.widgets.DateInput(format='%Y-%m-%d',
-                                                                   attrs={"type": "date",
-                                                                          "class": "form-control",
-                                                                          "title": "Please enter a valid date"}),
-                                    label="Last Date Given a Kong")
     owner = forms.ModelChoiceField(queryset=Owner.objects.none(),  # Initially empty queryset
                                    required=False,
                                    widget=forms.widgets.Select(attrs={"class": "form-control",
@@ -156,7 +150,7 @@ class AddDogForm(forms.ModelForm):
 
     class Meta:
         model = Dog
-        exclude = ['branch', 'dogID']
+        exclude = ['branch', 'dogID', 'kongDateAdded']
 
     def __init__(self, *args, **kwargs):
         request = kwargs.pop('request', None)  # Extract the request object
@@ -165,7 +159,6 @@ class AddDogForm(forms.ModelForm):
         self.fields['dateOfArrival'].widget.attrs.update({'class': 'date-field'})
         self.fields['dateOfBirthEst'].widget.attrs.update({'class': 'date-field'})
         self.fields['dateOfVaccination'].widget.attrs.update({'class': 'date-field'})
-        self.fields['kongDateAdded'].widget.attrs.update({'class': 'date-field'})
         if request:
             # Get the current branch
             current_branch = get_current_branch(request)

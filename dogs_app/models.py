@@ -131,7 +131,7 @@ class Dog(models.Model):
     isNeutered = models.CharField(max_length=1, choices=IS_NEUTERED_CHOICES, blank=True, null=True)
     isDangerous = models.CharField(max_length=1, choices=IS_DANGEROUS_CHOICES, blank=True, null=True)
     dogImage = models.ImageField(upload_to='dog_pictures', default=DEFAULT_DOG_IMAGE_SOURCE, null=True, blank=True)
-    kongDateAdded = models.DateField(blank=True, null=True)
+    kongDateAdded = models.DateField(blank=True, null=True, verbose_name='Last Date Given a Kong', default=None)
     adoptionDate = models.DateField(blank=True, null=True, verbose_name='Adoption Date', default=None)
     branch = models.ForeignKey('Branch', on_delete=models.CASCADE, verbose_name='Branch')
 
@@ -411,6 +411,8 @@ class Observation(models.Model):
         Overridden save method to ensure that:
         - An Observation instance must be associated with an Observes instance.
         - The jsonFile and rawVideo are deleted if replaced upon saving.
+        - The Dog's kongDateGiven field is updated if the isKong field is
+        set to 'Y' and the obsDateTime is later than that date.
         """
 
         # Ensuring that the Observes instance exists
@@ -432,7 +434,52 @@ class Observation(models.Model):
             if old_file_video and self.rawVideo != old_file_video:
                 old_file_video.delete(save=False)
 
+        if self.isKong == 'Y' and self.observes.dog:
+            try:
+                dog_instance = self.observes.dog
+                # Convert the obsDateTime to the local timezone
+                local_tz = pytz.timezone('Asia/Jerusalem')
+                obsDateTime_instance = timezone.localtime(self.obsDateTime, local_tz)
+
+                # Update the dog's kongDateAdded field if it's empty or the observation date is later
+                if not dog_instance.kongDateAdded or obsDateTime_instance.date() > dog_instance.kongDateAdded:
+                    dog_instance.kongDateAdded = obsDateTime_instance.date()
+                    dog_instance.save()
+            except Dog.DoesNotExist:
+                pass
+            except Dog.MultipleObjectsReturned:
+                pass
+            except Exception as e:
+                print(f"An error occurred while updating the Dog's kongDateAdded field: {e}")
         super().save(*args, **kwargs)
+
+    # Make sure the dog's kongDateAdded is updated if the isKong field is set to 'Y'
+    # and the obsDateTime is equal to this one's
+    def delete(self, *args, **kwargs):
+        try:
+            dog_instance = self.observes.dog
+            # Convert the obsDateTime to the local timezone
+            local_tz = pytz.timezone('Asia/Jerusalem')
+            obsDateTime_instance = timezone.localtime(self.obsDateTime, local_tz)
+            if dog_instance.kongDateAdded and obsDateTime_instance.date() == dog_instance.kongDateAdded:
+                # Find the latest observation with isKong='Y' for this dog
+                latest_observation = Observation.objects.filter(observes__dog=dog_instance, isKong='Y').exclude(pk=self.pk).order_by('-obsDateTime').first()
+
+                if latest_observation:
+                    # Convert the new obsDateTime to the local timezone
+                    new_obsDateTime_instance = timezone.localtime(latest_observation.obsDateTime, local_tz)
+                    dog_instance.kongDateAdded = new_obsDateTime_instance.date()
+                else:
+                    dog_instance.kongDateAdded = None
+                dog_instance.save()
+        except Dog.DoesNotExist:
+            pass
+        except Dog.MultipleObjectsReturned:
+            pass
+        except Exception as e:
+            print(f"An error occurred while updating the Dog's kongDateAdded field: {e}")
+
+        super(Observation, self).delete(*args, **kwargs)
 
     def __str__(self):
         local_tz = pytz.timezone('Asia/Jerusalem')
@@ -508,6 +555,7 @@ class Poll(models.Model):
     
     class Meta:
         verbose_name_plural = "Poll"
+
 
 # Choice model for the Poll model
 class Choice(models.Model):
