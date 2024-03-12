@@ -102,7 +102,7 @@ def breadcrumb_processor(request):
         breadcrumbs.append({"name": f"{user_name}", "url": f"/update_user/{user_id}"})
         breadcrumbs.append({"name": "Delete User", "url": f"{url_path}"})
     if '/poll/' in url_path:
-        breadcrumbs.append({"name": "Poll", "url": f"{url_path}"})
+        breadcrumbs.append({"name": "Polls", "url": f"{url_path}"})
     if 'add_poll/' in url_path:
         breadcrumbs.append({"name": "Poll", "url": "/poll/"})
         breadcrumbs.append({"name": "Add Poll", "url": f"{url_path}"})

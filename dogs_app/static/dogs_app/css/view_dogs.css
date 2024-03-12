@@ -76,14 +76,16 @@ td {
 .search-filter {
     display: flex;
     align-items: center;
+    margin-left: 5rem;
 }
 
 .search-input {
-    padding: 8px;
+    text-align: center;
+    padding: 10px;
     border: 1px solid #ccc;
     border-radius: 3px;
     margin-right: 10px; /* Space between search and filter */
-    width: 25rem;
+    width: 30rem;
 }
 
 .filter-select {
@@ -92,7 +94,8 @@ td {
     border-radius: 3px;
 }
 
-.add-dog-div {
+.add-dog-div,
+.spacer {
     display: flex;
     align-items: center;
 }
@@ -280,6 +283,10 @@ body {
     padding: 1rem;
 }
 
+#filterSection button,
+#filterModal {
+    padding: 10px 20px 10px 20px;
+}
 .date-container, .dropdown-container {
     padding: 1rem;
 }
@@ -328,7 +335,7 @@ body {
 /* Button Styles */
 #dropdownMenuButton {
     margin-bottom: -2rem;
-    margin-left: -1rem;
+    margin-left: 1rem;
     background-color: #36454F;
     border: none;
     padding: 6px 8px;
@@ -399,3 +406,21 @@ body {
 }
 
 
+.filter-options {
+    display: flex;
+    justify-content: space-between;
+}
+
+.filter-option {
+    flex: 1;
+    padding: 0 10px;
+    border-right: 1px solid #ddd;
+}
+
+.filter-option:last-child {
+    border-right: none;
+}
+
+.filter-option select {
+    margin-top: 0.8rem;
+}

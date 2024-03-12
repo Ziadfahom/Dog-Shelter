@@ -226,7 +226,6 @@ class Observes(models.Model):
         formatted_date = self.sessionDate.strftime("%d/%m/%Y")
         return f"{camera_str} on {dog_str} ({formatted_date})"
 
-
     def save(self, *args, **kwargs):
         # To ensure both values are always given by a user before changes.
         # They can only be blank because of deletion of Dog or Camera entities
@@ -460,6 +459,14 @@ def validate_json_file_extension(value):
         raise ValidationError('Unsupported file extension. File should have a valid .json format.')
 
 
+# CSV File validator, raises an error if the file is not a CSV
+def validate_csv_file_extension(value):
+    ext = os.path.splitext(value.name)[1]  # [0] returns path+filename
+    valid_extensions = ['.csv']
+    if not ext.lower() in valid_extensions:
+        raise ValidationError('Unsupported file extension. File should have a valid .csv format.')
+
+
 # Video File Validator, raises an error if the file is not a video
 def validate_video_file_extension(value):
     # List of allowed video file extensions, as defined in settings.py
@@ -504,6 +511,9 @@ class Observation(models.Model):
     jsonFile = models.FileField(upload_to='json_files',
                                 validators=[validate_json_file_extension],
                                 null=True, blank=True, verbose_name='JSON File')
+    csvFile = models.FileField(upload_to='csv_files',
+                               validators=[validate_csv_file_extension],
+                               null=True, blank=True, verbose_name='CSV File')
     rawVideo = models.FileField(upload_to='raw_videos',
                                 validators=[validate_video_file_extension],
                                 null=True, blank=True, verbose_name='Video')
@@ -541,6 +551,7 @@ class Observation(models.Model):
         if self.pk:
             old_file_json = Observation.objects.get(pk=self.pk).jsonFile
             old_file_video = Observation.objects.get(pk=self.pk).rawVideo
+            old_file_csv = Observation.objects.get(pk=self.pk).csvFile
 
             # Check if jsonFile is replaced
             if old_file_json and self.jsonFile != old_file_json:
@@ -549,6 +560,10 @@ class Observation(models.Model):
             # Check if rawVideo is replaced
             if old_file_video and self.rawVideo != old_file_video:
                 old_file_video.delete(save=False)
+
+            # Check if csvFile is replaced
+            if old_file_csv and self.csvFile != old_file_csv:
+                old_file_csv.delete(save=False)
 
         local_tz = pytz.timezone('Asia/Jerusalem')
         new_obsDateTime = timezone.localtime(self.obsDateTime, local_tz).date()

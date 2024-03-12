@@ -2,24 +2,25 @@ import json
 import math
 from collections import defaultdict, Counter
 from datetime import datetime, time
+from functools import wraps
 
-from django.middleware.csrf import get_token
-from django.utils.dateparse import parse_datetime
-from django.utils.timezone import localtime, make_aware
+from django.contrib.auth import REDIRECT_FIELD_NAME
+from django.utils.timezone import localtime
 from openpyxl import Workbook, load_workbook
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 from django.db.models import Prefetch
 from django.db.models import Value, CharField, Count, Q
 from django.db.models.functions import Concat
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404, resolve_url
 from django.contrib.auth import authenticate, login, logout, get_user_model, update_session_auth_hash
 from django.contrib.auth.models import Group
 from django.contrib.auth.forms import PasswordChangeForm
-from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponseBadRequest, HttpResponseRedirect, JsonResponse, HttpResponse, HttpResponseNotAllowed
+from django.http import HttpResponseBadRequest, HttpResponseRedirect, JsonResponse, HttpResponse, \
+    HttpResponseNotAllowed, HttpResponseForbidden
 from .filters import DogFilter
 from .forms import SignUpForm, AddDogForm, UpdateUserForm, ProfileUpdateForm, TreatmentForm, EntranceExaminationForm, \
     DogPlacementForm, ObservesForm, ObservationForm, DogStanceForm, LoginForm, NewsForm, OwnerForm
@@ -75,9 +76,55 @@ def get_current_branch(request):
     # Get the current Branch (Israel/Italy)
     branch_name = request.session.get('branch', 'Israel')  # Default to Israel
     branch = Branch.objects.get(branchName=branch_name if branch_name else 'Israel')  # Get the branch object
-
     return branch
 
+
+# Helper function to check if the user is logged in and is an admin
+def superuser_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            messages.error(request, "You must be logged in as an admin to view this page.")
+            return redirect(f"{resolve_url(settings.LOGIN_URL)}?{REDIRECT_FIELD_NAME}={request.path}")
+        if not request.user.is_superuser:
+            messages.error(request, "You must be an admin to view this page.")
+            return redirect('dogs_app:home')
+        return view_func(request, *args, **kwargs)
+
+    return _wrapped_view
+
+
+# Helper function to check if the user is logged in and is a veterinarian
+def vet_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            messages.error(request, "You must be logged in as a veterinarian to view this page.")
+            return redirect(f"{resolve_url(settings.LOGIN_URL)}?{REDIRECT_FIELD_NAME}={request.path}")
+        if not request.user.groups.filter(name="Vet").exists() and not request.user.is_superuser:
+            messages.error(request, "You must be a veterinarian to view this page.")
+            return redirect('dogs_app:home')
+        return view_func(request, *args, **kwargs)
+
+    return _wrapped_view
+
+
+# Helper function to check if the user is logged in and is a regular (registered) user
+def regular_user_required(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            messages.error(request, "You must be logged in to view this page.")
+            return redirect(f"{resolve_url(settings.LOGIN_URL)}?{REDIRECT_FIELD_NAME}={request.path}")
+        if not request.user.groups.filter(name="Viewer").exists() and not request.user.groups.filter(name="Vet").exists() and not request.user.is_superuser:
+            messages.error(request, "You must be logged in to view this page.")
+            return redirect('dogs_app:home')
+        return view_func(request, *args, **kwargs)
+
+    return _wrapped_view
+
+
+# Display the homepage with the appropriate branch's data
 def home_view(request):
     # Get the current Branch
     branch = get_current_branch(request)
@@ -151,10 +198,11 @@ def login_user_view(request):
                 user = authenticate(request, username=username, password=password)
 
                 # If correct username+password combination
-                if user is not None:
+                if user is not None and user.is_authenticated:
                     login(request, user=user)
                     messages.success(request, message='You have successfully logged in!')
-                    return redirect('dogs_app:home')
+                    next_url = request.POST.get('next') or 'dogs_app:home'
+                    return redirect(next_url)
                 else:
                     # Username exists but password was incorrect
                     messages.error(request, message='The password is incorrect. Please try again...')
@@ -205,6 +253,7 @@ def register_user_view(request):
     return render(request, 'account/register.html', {'form': form, 'profile_form': profile_form})
 
 
+@login_required
 # User password reset view
 def change_password(request):
     # User trying to submit the form
@@ -227,10 +276,8 @@ def change_password(request):
     })
 
 
-# View for adding website news to the homepage
-# Only logged-in admins permitted
-@login_required
-@user_passes_test(lambda u: u.is_superuser)
+@superuser_required
+# View for adding website news to the homepage only for admins
 def add_news(request):
     if request.method == 'POST':
         # Get the current Branch
@@ -249,6 +296,7 @@ def add_news(request):
     return render(request, 'add_news.html', context)
 
 
+@regular_user_required
 # Dog record page, displays the details for a single dog
 def dog_record_view(request, pk):
     # Check if the user is logged in
@@ -596,6 +644,7 @@ def dog_record_view(request, pk):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle deleting a Treatment
 def delete_treatment(request, treatment_id):
     if request.method == 'POST' and request.POST.get('_method') == 'DELETE' and request.headers.get(
@@ -608,6 +657,7 @@ def delete_treatment(request, treatment_id):
             return JsonResponse({'status': 'fail'})
 
 
+@vet_required
 # Handle deleting an Examination
 def delete_examination(request, examination_id):
     if request.method == 'POST' and request.POST.get('_method') == 'DELETE' and request.headers.get(
@@ -620,6 +670,7 @@ def delete_examination(request, examination_id):
             return JsonResponse({'status': 'fail'})
 
 
+@vet_required
 # Handle deleting a DogPlacement
 def delete_placement(request, placement_id):
     if request.method == 'POST' and request.POST.get('_method') == 'DELETE' and request.headers.get(
@@ -632,6 +683,7 @@ def delete_placement(request, placement_id):
             return JsonResponse({'status': 'fail'})
 
 
+@vet_required
 # Handle deleting a Session (Observes)
 def delete_session(request, session_id):
     if request.method == 'POST' and request.POST.get('_method') == 'DELETE' and request.headers.get(
@@ -644,6 +696,7 @@ def delete_session(request, session_id):
             return JsonResponse({'status': 'fail'})
 
 
+@vet_required
 # Handle editing a Treatment
 def edit_treatment(request, treatment_id):
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -683,6 +736,7 @@ def edit_treatment(request, treatment_id):
             return HttpResponseNotAllowed(['POST', 'GET'])
 
 
+@vet_required
 # Handle editing an Examination
 def edit_examination(request, examination_id):
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -725,6 +779,7 @@ def edit_examination(request, examination_id):
             return HttpResponseNotAllowed(['POST', 'GET'])
 
 
+@vet_required
 # Handle editing a DogPlacement
 def edit_placement(request, placement_id):
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -770,6 +825,7 @@ def edit_placement(request, placement_id):
             return HttpResponseNotAllowed(['POST', 'GET'])
 
 
+@vet_required
 # Handle editing a Session (Observes)
 def edit_session(request, session_id):
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -811,6 +867,7 @@ def edit_session(request, session_id):
             return HttpResponseNotAllowed(['POST', 'GET'])
 
 
+@vet_required
 # Handle Editing an Owner
 def edit_owner(request, owner_id):
     # Get the current Branch
@@ -869,6 +926,7 @@ def edit_owner(request, owner_id):
             return HttpResponseNotAllowed(['POST', 'GET'])
 
 
+@vet_required
 # Handle Observations display
 def view_observations(request, session_id):
     observation_form = None
@@ -973,6 +1031,7 @@ def view_observations(request, session_id):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle deleting an Observation
 @require_POST  # Ensures this view can only be accessed with POST request
 def delete_observation(request):
@@ -1014,6 +1073,7 @@ def delete_observation(request):
         return JsonResponse({"status": "error", "message": "Unauthorized"}, status=401)
 
 
+@vet_required
 # Handle editing an Observation
 def edit_observation(request, observation_id):
     if request.method == 'GET':
@@ -1024,7 +1084,7 @@ def edit_observation(request, observation_id):
         observation_data = observation_form.initial
 
         # Temporary! Remove the file fields from the JSON response
-        del observation_data['jsonFile']  # TODO: Remove this line once the JSON file is implemented
+        del observation_data['csvFile']
         del observation_data['rawVideo']  # TODO: Remove this line once the raw video is implemented
 
         return JsonResponse({"status": "success", "observation": observation_data}, status=200)
@@ -1073,6 +1133,7 @@ def edit_observation(request, observation_id):
             return HttpResponseNotAllowed(['POST', 'GET'])
 
 
+@vet_required
 # Handle deleting a DogStance
 @require_POST  # Ensures this view can only be accessed with POST request
 def delete_stance(request):
@@ -1089,6 +1150,7 @@ def delete_stance(request):
         return JsonResponse({"status": "error", "message": "Unauthorized"}, status=401)
 
 
+@vet_required
 # Handle editing a DogStance
 def edit_dog_stance(request, stance_id):
     if request.method == 'GET':
@@ -1127,6 +1189,7 @@ def edit_dog_stance(request, stance_id):
         return HttpResponseNotAllowed(['POST', 'GET'])
 
 
+@vet_required
 # Deleting a dog record
 def delete_dog_view(request, pk):
     # Check if the user is logged in
@@ -1150,6 +1213,7 @@ def delete_dog_view(request, pk):
         return redirect('dogs_app:home')
 
 
+@vet_required
 def add_dog_view(request):
     branch = get_current_branch(request)
 
@@ -1190,6 +1254,7 @@ def add_dog_view(request):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Updating a Dog record
 def update_dog_view(request, pk):
     # Check if user is logged in
@@ -1227,11 +1292,8 @@ def update_dog_view(request, pk):
         return redirect('dogs_app:home')
 
 
-# Display all users for the admins only in view_users.html
-# Check user is logged in
-@login_required
-# Check user is Admin
-@user_passes_test(lambda u: u.is_superuser)
+@superuser_required
+# Display all users for the admins only to view
 def view_users(request):
     # Retrieve sorting criteria from request
     order_by = request.GET.get('order_by', 'username')  # Default sort field
@@ -1318,7 +1380,6 @@ def get_user_role(user):
 
 
 # Custom sorting function for view_users
-# Custom sorting function for view_users
 def sort_users_by_role(users, direction='asc', page_number=1):
     # Mapping roles to sort order
     ROLE_SORT_ORDER = {'Admin': 0, 'Vet': 1, 'Viewer': 2}
@@ -1344,10 +1405,7 @@ def sort_users_by_role(users, direction='asc', page_number=1):
     return users_page, paginator
 
 
-# Only logged-in users permitted
-@login_required
-# Check user is Admin
-@user_passes_test(lambda u: u.is_superuser)
+@superuser_required
 # Delete a user in the Admin user-view page
 def delete_user_view(request, pk):
     # Check if the user is logged in
@@ -1371,9 +1429,8 @@ def delete_user_view(request, pk):
         return redirect('dogs_app:home')
 
 
-# View for updating user details
-# Check user is Admin
-@user_passes_test(lambda u: u.is_superuser)
+@superuser_required
+# View for updating user details for admins
 def update_user_view(request, pk):
     # Check if user is logged in
     if request.user.is_authenticated:
@@ -1443,9 +1500,9 @@ def update_user_view(request, pk):
         return redirect('dogs_app:home')
 
 
+@login_required
 # User updating their own details view
 # Only logged-in users permitted
-@login_required
 def update_user_self_view(request):
     if request.user.is_authenticated:
         user_to_update = User.objects.get(pk=request.user.pk)
@@ -1509,8 +1566,8 @@ def update_user_self_view(request):
         return redirect('dogs_app:home')
 
 
+@superuser_required
 # Page for editing the news from the homepage. Only visible to Admins
-@user_passes_test(lambda u: u.is_superuser)
 def update_news(request, news_id):
     # Get the news story to edit
     news = get_object_or_404(News, pk=news_id)
@@ -1533,8 +1590,8 @@ def update_news(request, news_id):
         return render(request, 'update_news.html', {'news': news, 'form': form})
 
 
+@superuser_required
 # View for deleting a News story from the homepage. Only available to Admins
-@user_passes_test(lambda u: u.is_superuser)
 def delete_news(request, news_id):
     # Get the news story to delete
     news = get_object_or_404(News, pk=news_id)
@@ -2054,6 +2111,7 @@ def view_news(request):
     return render(request, 'news_page.html', context)
 
 
+@regular_user_required
 # View for viewing all dogs in a table
 def view_dogs(request):
     branch = get_current_branch(request)
@@ -2091,7 +2149,7 @@ def view_dogs(request):
         return render(request, 'view_dogs.html', context=context)
     # If user is not logged in/authenticated, show an error message and redirect to home.
     else:
-        messages.error(request, "You Must Be Logged In To Add New Dogs...")
+        messages.error(request, "You Must Be Logged In To View Dogs...")
         return redirect('dogs_app:home')
 
 
@@ -2113,6 +2171,7 @@ def unspecified_filter(dogs, field_name, value):
     return dogs
 
 
+@regular_user_required
 # Handling Dog Filtering in the view_dogs page
 def filter_dogs(request):
     branch = get_current_branch(request)
@@ -2179,7 +2238,7 @@ def filter_dogs(request):
         pagination_end = min(dogs_page.number + 3, paginator.num_pages)
 
         # Render table and pagination
-        table_rows = ''.join([render_to_string('_dog_row.html', {'dog': dog}) for dog in dogs_page])
+        table_rows = ''.join([render_to_string('_dog_row.html', {'dog': dog, 'user': request.user}) for dog in dogs_page])
         pagination_html = render_to_string('_pagination.html', {
             'dogs': dogs_page,
             'pagination_start': pagination_start,
@@ -2202,504 +2261,519 @@ def get_filtered_dog_ids(request):
 
 # Main function to export Dogs in JSON format
 def export_dogs_json(request):
-    if request.method == 'POST':
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            dog_ids = json.loads(request.POST.get('dog_ids'))
+    if request.user.is_authenticated and (request.user.is_superuser or request.user.groups.filter(name='Vet').exists()):
+        if request.method == 'POST':
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                dog_ids = json.loads(request.POST.get('dog_ids'))
 
-            # Use select_related and prefetch_related for optimization and fetching all associated entities
-            dogs = Dog.objects \
-                .select_related('owner') \
-                .prefetch_related('entranceexamination_set',
-                                  'treatment_set',
-                                  'dogplacement_set__kennel',
-                                  Prefetch('observers',
-                                           queryset=Observes.objects.prefetch_related(
-                                               Prefetch('observation_set',
-                                                        queryset=Observation.objects
-                                                        .prefetch_related('dogstance_set'))))) \
-                .filter(dogID__in=dog_ids)
+                # Use select_related and prefetch_related for optimization and fetching all associated entities
+                dogs = Dog.objects \
+                    .select_related('owner') \
+                    .prefetch_related('entranceexamination_set',
+                                      'treatment_set',
+                                      'dogplacement_set__kennel',
+                                      Prefetch('observers',
+                                               queryset=Observes.objects.prefetch_related(
+                                                   Prefetch('observation_set',
+                                                            queryset=Observation.objects
+                                                            .prefetch_related('dogstance_set'))))) \
+                    .filter(dogID__in=dog_ids)
 
-            # Serialize dogs
-            dog_data = DogSerializer.serialize_dogs(dogs)
+                # Serialize dogs
+                dog_data = DogSerializer.serialize_dogs(dogs)
 
-            # Add a root key "data" to wrap the list
-            wrapped_dog_data = {'data': dog_data}
+                # Add a root key "data" to wrap the list
+                wrapped_dog_data = {'data': dog_data}
 
-            return JsonResponse(wrapped_dog_data, safe=False)
+                return JsonResponse(wrapped_dog_data, safe=False)
+    else:
+        # If user is not logged in/authenticated, show an error message and redirect to home.
+        return JsonResponse({'error': 'You are not authorized to perform this action'}, status=403)
 
 
 # View for handling Excel file exports in view_dogs page
 def export_dogs_excel(request):
-    if request.method == 'POST':
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            try:
-                data = json.loads(request.body.decode('utf-8'))
-                dog_ids = data.get('dog_ids', [])
-                sort_by = data.get('sort_by', '-dateOfArrival')
+    if request.user.is_authenticated and (request.user.is_superuser or request.user.groups.filter(name='Vet').exists()):
+        if request.method == 'POST':
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                try:
+                    data = json.loads(request.body.decode('utf-8'))
+                    dog_ids = data.get('dog_ids', [])
+                    sort_by = data.get('sort_by', '-dateOfArrival')
 
-                # Filter and sort dogs
-                dogs = Dog.objects.filter(dogID__in=dog_ids).order_by(sort_by)
+                    # Filter and sort dogs
+                    dogs = Dog.objects.filter(dogID__in=dog_ids).order_by(sort_by)
 
-                # Create workbook and worksheet
-                wb = Workbook()
-                ws = wb.active
-                ws.title = "Dogsheler Dogs Data"
+                    # Create workbook and worksheet
+                    wb = Workbook()
+                    ws = wb.active
+                    ws.title = "Dogsheler Dogs Data"
 
-                # Define headers and write them to the first row
-                headers = ['Chip Number', 'Name', 'Date of Birth', 'Date of Arrival',
-                           'Date of Vaccination', 'Breed', 'Gender', 'Fur Color', 'Neutered',
-                           'Dangerous', 'Image', 'Last Kong Date Given', 'Owner']
+                    # Define headers and write them to the first row
+                    headers = ['Chip Number', 'Name', 'Date of Birth', 'Date of Arrival',
+                               'Date of Vaccination', 'Breed', 'Gender', 'Fur Color', 'Neutered',
+                               'Dangerous', 'Image', 'Last Kong Date Given', 'Owner']
 
-                # Styling headers with bold font and background color
-                header_font = Font(bold=True, color="FFFFFF")
-                data_font = Font(name='Arial', size=11)
+                    # Styling headers with bold font and background color
+                    header_font = Font(bold=True, color="FFFFFF")
+                    data_font = Font(name='Arial', size=11)
 
-                # Define fills
-                header_fill = PatternFill(start_color="0070C0",
-                                          end_color="0070C0", fill_type="solid")
-                light_blue_fill = PatternFill(start_color="D9EBF5", end_color="D9EBF5", fill_type="solid")
-                light_gray_fill = PatternFill(start_color="E5E5E5", end_color="E5E5E5", fill_type="solid")
+                    # Define fills
+                    header_fill = PatternFill(start_color="0070C0",
+                                              end_color="0070C0", fill_type="solid")
+                    light_blue_fill = PatternFill(start_color="D9EBF5", end_color="D9EBF5", fill_type="solid")
+                    light_gray_fill = PatternFill(start_color="E5E5E5", end_color="E5E5E5", fill_type="solid")
 
-                # Define Center alignment
-                center_aligned = Alignment(horizontal="center", vertical="center")
+                    # Define Center alignment
+                    center_aligned = Alignment(horizontal="center", vertical="center")
 
-                # Define border
-                thin_border = Border(left=Side(style='thin'),
-                                     right=Side(style='thin'),
-                                     top=Side(style='thin'),
-                                     bottom=Side(style='thin'))
+                    # Define border
+                    thin_border = Border(left=Side(style='thin'),
+                                         right=Side(style='thin'),
+                                         top=Side(style='thin'),
+                                         bottom=Side(style='thin'))
 
-                # Header row styling
-                for col_num, header in enumerate(headers, 1):
-                    col_letter = get_column_letter(col_num)
-                    cell = ws['{}1'.format(col_letter)]
-                    cell.value = header
-                    cell.font = header_font
-                    cell.fill = header_fill
-                    cell.alignment = center_aligned
-                    cell.border = thin_border
-                    ws.column_dimensions[col_letter].width = 15 if header not in ['Gender', 'Neutered',
-                                                                                  'Dangerous'] else 10
+                    # Header row styling
+                    for col_num, header in enumerate(headers, 1):
+                        col_letter = get_column_letter(col_num)
+                        cell = ws['{}1'.format(col_letter)]
+                        cell.value = header
+                        cell.font = header_font
+                        cell.fill = header_fill
+                        cell.alignment = center_aligned
+                        cell.border = thin_border
+                        ws.column_dimensions[col_letter].width = 15 if header not in ['Gender', 'Neutered',
+                                                                                      'Dangerous'] else 10
 
-                # Check if dogs queryset is empty
-                if not dogs.exists():
-                    # Merge cells from A2 to N2 (14 columns)
-                    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=13)
+                    # Check if dogs queryset is empty
+                    if not dogs.exists():
+                        # Merge cells from A2 to N2 (14 columns)
+                        ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=13)
 
-                    # Reference to the merged cell
-                    merged_cell = ws.cell(row=2, column=1)
+                        # Reference to the merged cell
+                        merged_cell = ws.cell(row=2, column=1)
 
-                    # Populate the merged cell
-                    merged_cell.value = "No Data Available"
+                        # Populate the merged cell
+                        merged_cell.value = "No Data Available"
 
-                    # Style the merged cell
-                    merged_cell.font = Font(name='Arial', size=12, bold=True)
-                    merged_cell.alignment = center_aligned
-                    merged_cell.fill = PatternFill(start_color="FFFF99", end_color="FFFF99", fill_type="solid")
-                    merged_cell.border = thin_border
+                        # Style the merged cell
+                        merged_cell.font = Font(name='Arial', size=12, bold=True)
+                        merged_cell.alignment = center_aligned
+                        merged_cell.fill = PatternFill(start_color="FFFF99", end_color="FFFF99", fill_type="solid")
+                        merged_cell.border = thin_border
 
-                # Otherwise, proceed with populating Excel file with dog data and apply styles
-                else:
-                    # Populate Excel file with dog data and apply styles
-                    for row_num, dog in enumerate(dogs, 2):  # Start from row 2 to not overwrite headers
-                        for col_num in range(1, 14):  # 13 columns in total
-                            # Determine row color
-                            if row_num % 2 == 0:
-                                row_fill = light_gray_fill
-                            else:
-                                row_fill = light_blue_fill
+                    # Otherwise, proceed with populating Excel file with dog data and apply styles
+                    else:
+                        # Populate Excel file with dog data and apply styles
+                        for row_num, dog in enumerate(dogs, 2):  # Start from row 2 to not overwrite headers
+                            for col_num in range(1, 14):  # 13 columns in total
+                                # Determine row color
+                                if row_num % 2 == 0:
+                                    row_fill = light_gray_fill
+                                else:
+                                    row_fill = light_blue_fill
 
-                            cell = ws.cell(row=row_num, column=col_num)
+                                cell = ws.cell(row=row_num, column=col_num)
 
-                            # Populate the cell based on the column number
-                            cell.value = {
-                                1: dog.chipNum if dog.chipNum else "N/A",
-                                2: dog.dogName if dog.dogName else "N/A",
-                                3: dog.dateOfBirthEst if dog.dateOfBirthEst else "N/A",
-                                4: dog.dateOfArrival if dog.dateOfArrival else "N/A",
-                                5: dog.dateOfVaccination if dog.dateOfVaccination else "N/A",
-                                6: dog.breed if dog.breed else "N/A",
-                                7: dog.get_gender_display() if dog.gender else "N/A",
-                                8: dog.furColor if dog.furColor else "N/A",
-                                9: dog.get_isNeutered_display() if dog.isNeutered else "N/A",
-                                10: dog.get_isDangerous_display() if dog.isDangerous else "N/A",
-                                11: str(dog.dogImage) if dog.dogImage else "N/A",
-                                12: dog.kongDateAdded if dog.kongDateAdded else "N/A",
-                                13: str(dog.owner) if dog.owner else "N/A"
-                            }.get(col_num)
+                                # Populate the cell based on the column number
+                                cell.value = {
+                                    1: dog.chipNum if dog.chipNum else "N/A",
+                                    2: dog.dogName if dog.dogName else "N/A",
+                                    3: dog.dateOfBirthEst if dog.dateOfBirthEst else "N/A",
+                                    4: dog.dateOfArrival if dog.dateOfArrival else "N/A",
+                                    5: dog.dateOfVaccination if dog.dateOfVaccination else "N/A",
+                                    6: dog.breed if dog.breed else "N/A",
+                                    7: dog.get_gender_display() if dog.gender else "N/A",
+                                    8: dog.furColor if dog.furColor else "N/A",
+                                    9: dog.get_isNeutered_display() if dog.isNeutered else "N/A",
+                                    10: dog.get_isDangerous_display() if dog.isDangerous else "N/A",
+                                    11: str(dog.dogImage) if dog.dogImage else "N/A",
+                                    12: dog.kongDateAdded if dog.kongDateAdded else "N/A",
+                                    13: str(dog.owner) if dog.owner else "N/A"
+                                }.get(col_num)
 
-                            # Apply styling
-                            cell.font = data_font
-                            cell.alignment = center_aligned
-                            cell.border = thin_border
-                            cell.fill = row_fill
+                                # Apply styling
+                                cell.font = data_font
+                                cell.alignment = center_aligned
+                                cell.border = thin_border
+                                cell.fill = row_fill
 
-                # Initialize BytesIO and save workbook to it
-                excel_file = BytesIO()
-                wb.save(excel_file)
-                excel_file.seek(0)
+                    # Initialize BytesIO and save workbook to it
+                    excel_file = BytesIO()
+                    wb.save(excel_file)
+                    excel_file.seek(0)
 
-                # Prepare the HttpResponse
-                response = HttpResponse(
-                    excel_file.read(),
-                    content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                )
-                response['Content-Disposition'] = 'attachment; filename=dogs_data.xlsx'
+                    # Prepare the HttpResponse
+                    response = HttpResponse(
+                        excel_file.read(),
+                        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    )
+                    response['Content-Disposition'] = 'attachment; filename=dogs_data.xlsx'
 
-                return response
-            except Exception as e:
-                # Handling any exception that occurs during export
-                error_message = f"Export failed due to error: {str(e)}"
-                return JsonResponse({'status': 'error', 'message': error_message}, status=400)
+                    return response
+                except Exception as e:
+                    # Handling any exception that occurs during export
+                    error_message = f"Export failed due to error: {str(e)}"
+                    return JsonResponse({'status': 'error', 'message': error_message}, status=400)
+            else:
+                return JsonResponse({'error': 'Not an AJAX request'}, status=400)
         else:
-            return JsonResponse({'error': 'Not an AJAX request'}, status=400)
+            return JsonResponse({'error': 'Invalid request method'}, status=400)
     else:
-        return JsonResponse({'error': 'Invalid request method'}, status=400)
+        # If user is not logged in/authenticated, show an error message and redirect to home.
+        return JsonResponse({'error': 'You are not authorized to perform this action'}, status=403)
 
 
 # View for handling Excel file imports in view_dogs page
 def import_dogs_excel(request):
-    if request.method == 'POST':
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            try:
-                excel_file = request.FILES['excel_file']
-                wb = load_workbook(excel_file)
-                ws = wb.active
+    if request.user.is_authenticated and (request.user.is_superuser or request.user.groups.filter(name='Vet').exists()):
+        if request.method == 'POST':
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                try:
+                    excel_file = request.FILES['excel_file']
+                    wb = load_workbook(excel_file)
+                    ws = wb.active
 
-                dog_count = 0  # Initialize a counter for imported dogs
+                    dog_count = 0  # Initialize a counter for imported dogs
 
-                # Start the transaction block
-                with transaction.atomic():
-                    # Iterate through each row in the worksheet
-                    for row_number, row in enumerate(ws.iter_rows(min_row=2), start=2):
-                        try:
-                            # Validate Data First
-                            gender_value = 'M'
-                            is_neutered_value = ''
-                            is_dangerous_value = ''
+                    # Start the transaction block
+                    with transaction.atomic():
+                        # Iterate through each row in the worksheet
+                        for row_number, row in enumerate(ws.iter_rows(min_row=2), start=2):
+                            try:
+                                # Validate Data First
+                                gender_value = 'M'
+                                is_neutered_value = ''
+                                is_dangerous_value = ''
 
-                            if row[6].value:
-                                gender_value = 'M' if row[6].value.lower() in ['male', 'm'] or row[6].value in ['זכר',
-                                                                                                                'ז'] \
-                                    else 'F' if row[6].value.lower() in ['female', 'f'] or row[6].value in ['נקבה', 'נ'] \
-                                    else 'M'
-                            if row[8].value:
-                                is_neutered_value = 'Y' if row[8].value.lower() in ['yes', 'y'] or row[8].value in [
-                                    'כן', 'כ'] \
-                                    else 'N' if row[8].value.lower() in ['no', 'n'] or row[8].value in ['לא', 'ל'] \
-                                    else ''
-                            if row[9].value:
-                                is_dangerous_value = 'Y' if row[9].value.lower() in ['yes', 'y'] or row[9].value in [
-                                    'כן', 'כ'] \
-                                    else 'N' if row[9].value.lower() in ['no', 'n'] or row[9].value in ['לא', 'ל'] \
-                                    else ''
+                                if row[6].value:
+                                    gender_value = 'M' if row[6].value.lower() in ['male', 'm'] or row[6].value in ['זכר',
+                                                                                                                    'ז'] \
+                                        else 'F' if row[6].value.lower() in ['female', 'f'] or row[6].value in ['נקבה', 'נ'] \
+                                        else 'M'
+                                if row[8].value:
+                                    is_neutered_value = 'Y' if row[8].value.lower() in ['yes', 'y'] or row[8].value in [
+                                        'כן', 'כ'] \
+                                        else 'N' if row[8].value.lower() in ['no', 'n'] or row[8].value in ['לא', 'ל'] \
+                                        else ''
+                                if row[9].value:
+                                    is_dangerous_value = 'Y' if row[9].value.lower() in ['yes', 'y'] or row[9].value in [
+                                        'כן', 'כ'] \
+                                        else 'N' if row[9].value.lower() in ['no', 'n'] or row[9].value in ['לא', 'ל'] \
+                                        else ''
 
-                            date_of_arrival_value = row[3].value
-                            if not date_of_arrival_value:
-                                date_of_arrival_value = timezone.now().date()
+                                date_of_arrival_value = row[3].value
+                                if not date_of_arrival_value:
+                                    date_of_arrival_value = timezone.now().date()
 
-                            # dog_image_url = None if row[10].value is None else '/static/img/' + row[10].value
-                            dog_image_url = None  # TO-DO Work on Images
+                                # dog_image_url = None if row[10].value is None else '/static/img/' + row[10].value
+                                dog_image_url = None  # TO-DO Work on Images
 
-                            dog_data = {
-                                'chipNum': row[0].value,
-                                'dogName': row[1].value,
-                                'dateOfBirthEst': row[2].value,
-                                'dateOfArrival': date_of_arrival_value,
-                                'dateOfVaccination': row[4].value,
-                                'breed': row[5].value,
-                                'gender': gender_value,
-                                'furColor': row[7].value,
-                                'isNeutered': is_neutered_value,
-                                'isDangerous': is_dangerous_value,
-                                'dogImage': dog_image_url,
-                                'kongDateAdded': row[11].value,
-                                'owner': None
-                                # 'owner': omitted for now
-                            }
+                                dog_data = {
+                                    'chipNum': row[0].value,
+                                    'dogName': row[1].value,
+                                    'dateOfBirthEst': row[2].value,
+                                    'dateOfArrival': date_of_arrival_value,
+                                    'dateOfVaccination': row[4].value,
+                                    'breed': row[5].value,
+                                    'gender': gender_value,
+                                    'furColor': row[7].value,
+                                    'isNeutered': is_neutered_value,
+                                    'isDangerous': is_dangerous_value,
+                                    'dogImage': dog_image_url,
+                                    'kongDateAdded': row[11].value,
+                                    'owner': None
+                                    # 'owner': omitted for now
+                                }
 
-                            # Attempt to create a new Dog instance
-                            new_dog = Dog(**dog_data)
-                            new_dog.full_clean()  # This will raise ValidationError for any field issues
-                            new_dog.save()
-                            # Increment dog count
-                            dog_count += 1
+                                # Attempt to create a new Dog instance
+                                new_dog = Dog(**dog_data)
+                                new_dog.full_clean()  # This will raise ValidationError for any field issues
+                                new_dog.save()
+                                # Increment dog count
+                                dog_count += 1
 
-                        except ValidationError as e:
-                            # Handling specific field validation errors
-                            error_details = "\n".join(
-                                [f"Column '{k}': {', '.join(v)}" for k, v in e.message_dict.items()])
-                            error_message = f"Import error at row {row_number}:{error_details}"
-                            raise ValueError(error_message)
+                            except ValidationError as e:
+                                # Handling specific field validation errors
+                                error_details = "\n".join(
+                                    [f"Column '{k}': {', '.join(v)}" for k, v in e.message_dict.items()])
+                                error_message = f"Import error at row {row_number}:{error_details}"
+                                raise ValueError(error_message)
 
-                        except IntegrityError as e:
-                            # Handling unique constraint violations like chipNum uniqueness
-                            error_message = f"Import error at row {row_number}:{str(e)}"
-                            raise ValueError(error_message)
+                            except IntegrityError as e:
+                                # Handling unique constraint violations like chipNum uniqueness
+                                error_message = f"Import error at row {row_number}:{str(e)}"
+                                raise ValueError(error_message)
 
-                    # add success message with dog count
-                    if dog_count == 1:
-                        success_message = "1 dog has been successfully imported!"
-                    else:
-                        success_message = f"{dog_count} dogs have been successfully imported!"
-                    return JsonResponse({'status': 'success', 'message': success_message}, status=200)
-            except ValueError as e:
-                # Handling custom ValueError which now includes detailed row information
-                error_message = f"Import cancelled due to error:{e}"
-                return JsonResponse({'status': 'error', 'message': error_message}, status=400)
+                        # add success message with dog count
+                        if dog_count == 1:
+                            success_message = "1 dog has been successfully imported!"
+                        else:
+                            success_message = f"{dog_count} dogs have been successfully imported!"
+                        return JsonResponse({'status': 'success', 'message': success_message}, status=200)
+                except ValueError as e:
+                    # Handling custom ValueError which now includes detailed row information
+                    error_message = f"Import cancelled due to error:{e}"
+                    return JsonResponse({'status': 'error', 'message': error_message}, status=400)
 
-            except Exception as e:
-                # General error handling
-                general_error_message = f"General error occurred: {str(e)}. Import cancelled."
-                return JsonResponse({'status': 'error', 'message': general_error_message}, status=400)
+                except Exception as e:
+                    # General error handling
+                    general_error_message = f"General error occurred: {str(e)}. Import cancelled."
+                    return JsonResponse({'status': 'error', 'message': general_error_message}, status=400)
+            else:
+                # If request is not AJAX, return error
+                return JsonResponse({'error': 'Not an AJAX request'}, status=400)
         else:
-            # If request is not AJAX, return error
-            return JsonResponse({'error': 'Not an AJAX request'}, status=400)
+            # If request method is not POST, return error
+            return JsonResponse({'error': 'Invalid request method'}, status=400)
     else:
-        # If request method is not POST, return error
-        return JsonResponse({'error': 'Invalid request method'}, status=400)
+        return JsonResponse({'error': 'You are not authorized to perform this action'}, status=403)
 
 
 # View for handling JSON file imports in view_dogs page
 def import_dogs_json(request):
-    branch = get_current_branch(request)
-    if request.method == 'POST':
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            try:
-                json_file = request.FILES['json_file']
-                data = json.load(json_file)['data']
+    if request.user.is_authenticated and (request.user.is_superuser or request.user.groups.filter(name='Vet').exists()):
+        branch = get_current_branch(request)
+        if request.method == 'POST':
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                try:
+                    json_file = request.FILES['json_file']
+                    data = json.load(json_file)['data']
 
-                dog_count = 1  # Initialize a counter for imported dogs
+                    dog_count = 1  # Initialize a counter for imported dogs
 
-                # Start the transaction block
-                with transaction.atomic():
-                    # Iterate through each dog in the data
-                    for index, dog_info in enumerate(data):
-                        try:
-                            # Remove dogID from the data, hold the rest of the associated entities
-                            dog_info.pop('dogID', None)
+                    # Start the transaction block
+                    with transaction.atomic():
+                        # Iterate through each dog in the data
+                        for index, dog_info in enumerate(data):
+                            try:
+                                # Remove dogID from the data, hold the rest of the associated entities
+                                dog_info.pop('dogID', None)
 
-                            # Hold the rest of the associated entities
-                            owner_info = dog_info.pop('owner', None)
-                            treatments_info = dog_info.pop('treatments', [])
-                            examinations_info = dog_info.pop('entranceExaminations', [])
-                            dogPlacements_info = dog_info.pop('dogPlacements', [])
-                            observes_info = dog_info.pop('observes', [])
+                                # Hold the rest of the associated entities
+                                owner_info = dog_info.pop('owner', None)
+                                treatments_info = dog_info.pop('treatments', [])
+                                examinations_info = dog_info.pop('entranceExaminations', [])
+                                dogPlacements_info = dog_info.pop('dogPlacements', [])
+                                observes_info = dog_info.pop('observes', [])
 
-                            # Default 'dateOfArrival' to today if not provided
-                            if not dog_info.get('dateOfArrival'):
-                                dog_info['dateOfArrival'] = timezone.now().date().isoformat()
+                                # Default 'dateOfArrival' to today if not provided
+                                if not dog_info.get('dateOfArrival'):
+                                    dog_info['dateOfArrival'] = timezone.now().date().isoformat()
 
-                            # Handle 'owner' field
-                            owner = None  # In case we don't need to associate Dog with an Owner
-                            if owner_info:
-                                owner_info.pop('ownerSerialNum', None)  # Remove ownerSerialNum which is PK auto field
-                                owner_id = owner_info.get('ownerID', None)
+                                # Handle 'owner' field
+                                owner = None  # In case we don't need to associate Dog with an Owner
+                                if owner_info:
+                                    owner_info.pop('ownerSerialNum', None)  # Remove ownerSerialNum which is PK auto field
+                                    owner_id = owner_info.get('ownerID', None)
 
-                                if owner_id:
-                                    # If ownerID is provided, use get_or_create
-                                    owner, created = Owner.objects.get_or_create(
-                                        ownerID=owner_id,
-                                        defaults={k: v for k, v in owner_info.items()}
-                                    )
-
-                                    if not created:
-                                        # If owner already exists, update the owner info
-                                        for k, v in owner_info.items():
-                                            setattr(owner, k, v)
-                                        owner.branch = branch
-                                        owner.save()
-                                else:
-                                    # ownerID not provided, create an owner without one
-                                    owner = Owner(**owner_info)
-                                    owner.branch = branch
-                                    owner.save()
-
-                            # Extract and validate dog data from dog_info
-                            # Create Dog instance and save
-                            new_dog = Dog(**dog_info, owner=owner)
-                            new_dog.full_clean()
-                            new_dog.save()
-
-                            # Handle 'treatment' field
-                            treatment_count = 0  # Initialize counter for treatments
-                            for treatment_info in treatments_info:
-                                treatment_count += 1
-                                try:
-                                    treatment_info.pop('treatmentID', None)
-                                    new_treatment = Treatment(**treatment_info, dog=new_dog)
-                                    new_treatment.full_clean()  # Validate the treatment data
-                                    new_treatment.save()
-                                except ValidationError as e:
-                                    error_details = "; ".join([f"{field}: {', '.join(err_msgs)}" for field, err_msgs in
-                                                               e.message_dict.items()])
-                                    error_message = (f"Dog #{index + 1}, Treatment #{treatment_count},"
-                                                     f" Details: {error_details}")
-                                    raise ValueError(error_message)
-
-                            # Handle 'entranceExamination' field
-                            examination_count = 0  # Initialize counter for examinations
-                            for examination_info in examinations_info:
-                                examination_count += 1
-                                try:
-                                    examination_info.pop('examinationID', None)
-                                    new_examination = EntranceExamination(**examination_info, dog=new_dog)
-                                    new_examination.full_clean()
-                                    new_examination.save()
-                                except ValidationError as e:
-                                    error_details = "; ".join([f"{field}: {', '.join(err_msgs)}" for field, err_msgs in
-                                                               e.message_dict.items()])
-                                    error_message = (f"Dog #{index + 1}, Examination #{examination_count},"
-                                                     f" Details: {error_details}")
-                                    raise ValueError(error_message)
-
-                            # Handle 'dogPlacement' field
-                            dogPlacement_count = 0  # Initialize counter for placements
-                            for dogPlacement_info in dogPlacements_info:
-                                dogPlacement_count += 1
-                                try:
-                                    kennel_num = dogPlacement_info.pop('kennelNum', None)
-                                    kennel_image = dogPlacement_info.pop('kennelImage', None)
-
-                                    kennel = None
-
-                                    if kennel_num:
-                                        kennel, created = Kennel.objects.get_or_create(
-                                            kennelNum=kennel_num,
-                                            defaults={'kennelImage': kennel_image}
+                                    if owner_id:
+                                        # If ownerID is provided, use get_or_create
+                                        owner, created = Owner.objects.get_or_create(
+                                            ownerID=owner_id,
+                                            defaults={k: v for k, v in owner_info.items()}
                                         )
 
                                         if not created:
-                                            # If kennel already exists, update the kennel info
-                                            kennel.kennelImage = kennel_image
-                                            kennel.branch = branch
-                                            kennel.save()
+                                            # If owner already exists, update the owner info
+                                            for k, v in owner_info.items():
+                                                setattr(owner, k, v)
+                                            owner.branch = branch
+                                            owner.save()
+                                    else:
+                                        # ownerID not provided, create an owner without one
+                                        owner = Owner(**owner_info)
+                                        owner.branch = branch
+                                        owner.save()
 
-                                    new_dogPlacement = DogPlacement(**dogPlacement_info, dog=new_dog, kennel=kennel)
-                                    new_dogPlacement.full_clean()
-                                    new_dogPlacement.save()
-                                except ValidationError as e:
-                                    error_details = "; ".join([f"{field}: {', '.join(err_msgs)}" for field, err_msgs in
-                                                               e.message_dict.items()])
-                                    error_message = (f"Dog #{index + 1}, DogPlacement #{dogPlacement_count},"
-                                                     f" Details: {error_details}")
-                                    raise ValueError(error_message)
+                                # Extract and validate dog data from dog_info
+                                # Create Dog instance and save
+                                new_dog = Dog(**dog_info, owner=owner)
+                                new_dog.full_clean()
+                                new_dog.save()
 
-                            # Handle 'observes' field
-                            observes_count = 0  # Initialize counter for Observes
-                            for observes_data in observes_info:
-                                observes_count += 1
-                                try:
-                                    camID = observes_data.pop('camID', None)
-                                    observations_info = observes_data.pop('observations', [])
-
-                                    # Default 'sessionDate' to today if not provided
-                                    if not observes_data.get('sessionDate'):
-                                        observes_data['sessionDate'] = timezone.now().date().isoformat()
-
-                                    camera = None
-                                    if camID:
-                                        camera, created = Camera.objects.get_or_create(camID=camID, branch=branch)  # TO-DO: Check if this is correct
-
-                                    new_observes = Observes(**observes_data, dog=new_dog, camera=camera)
-                                    new_observes.full_clean()
-                                    new_observes.save()
-                                except ValidationError as e:
-                                    error_details = "; ".join([f"{field}: {', '.join(err_msgs)}" for field, err_msgs in
-                                                               e.message_dict.items()])
-                                    error_message = (f"Dog #{index + 1}, Observes(Session) #{observes_count},"
-                                                     f" Details: {error_details}")
-                                    raise ValueError(error_message)
-
-                                # Handle 'observation' field
-                                observation_count = 0  # Initialize counter for Observation
-                                for observation_data in observations_info:
-                                    observation_count += 1
+                                # Handle 'treatment' field
+                                treatment_count = 0  # Initialize counter for treatments
+                                for treatment_info in treatments_info:
+                                    treatment_count += 1
                                     try:
-                                        obs_date_str = observation_data.get('obsDateTime')
-
-                                        # Check if obsDateTime is a string that needs parsing
-                                        if obs_date_str:
-                                            # Parse the string to a naive datetime object
-                                            naive_datetime = parse_datetime(obs_date_str)
-                                            if naive_datetime and not timezone.is_aware(naive_datetime):
-                                                # Localize the naive datetime
-                                                local_tz = pytz.timezone('Asia/Jerusalem')
-                                                aware_datetime = local_tz.localize(naive_datetime)
-                                                observation_data['obsDateTime'] = aware_datetime
-                                        else:
-                                            # Default 'obsDateTime' to now if not provided
-                                            observation_data['obsDateTime'] = timezone.now()
-
-                                        dogStances_info = observation_data.pop('dogStances', [])
-
-                                        new_observation = Observation(**observation_data, observes=new_observes)
-                                        new_observation.full_clean()
-                                        new_observation.save()
+                                        treatment_info.pop('treatmentID', None)
+                                        new_treatment = Treatment(**treatment_info, dog=new_dog)
+                                        new_treatment.full_clean()  # Validate the treatment data
+                                        new_treatment.save()
                                     except ValidationError as e:
-                                        error_details = "; ".join(
-                                            [f"{field}: {', '.join(err_msgs)}" for field, err_msgs in
-                                             e.message_dict.items()])
-                                        error_message = (f"Dog #{index + 1}, Observation #{observation_count},"
+                                        error_details = "; ".join([f"{field}: {', '.join(err_msgs)}" for field, err_msgs in
+                                                                   e.message_dict.items()])
+                                        error_message = (f"Dog #{index + 1}, Treatment #{treatment_count},"
                                                          f" Details: {error_details}")
                                         raise ValueError(error_message)
 
-                                    # Handle 'dogStance' field
-                                    dogStance_count = 0  # Initialize counter for dogStance
-                                    for dogStance_data in dogStances_info:
-                                        dogStance_count += 1
+                                # Handle 'entranceExamination' field
+                                examination_count = 0  # Initialize counter for examinations
+                                for examination_info in examinations_info:
+                                    examination_count += 1
+                                    try:
+                                        examination_info.pop('examinationID', None)
+                                        new_examination = EntranceExamination(**examination_info, dog=new_dog)
+                                        new_examination.full_clean()
+                                        new_examination.save()
+                                    except ValidationError as e:
+                                        error_details = "; ".join([f"{field}: {', '.join(err_msgs)}" for field, err_msgs in
+                                                                   e.message_dict.items()])
+                                        error_message = (f"Dog #{index + 1}, Examination #{examination_count},"
+                                                         f" Details: {error_details}")
+                                        raise ValueError(error_message)
+
+                                # Handle 'dogPlacement' field
+                                dogPlacement_count = 0  # Initialize counter for placements
+                                for dogPlacement_info in dogPlacements_info:
+                                    dogPlacement_count += 1
+                                    try:
+                                        kennel_num = dogPlacement_info.pop('kennelNum', None)
+                                        kennel_image = dogPlacement_info.pop('kennelImage', None)
+
+                                        kennel = None
+
+                                        if kennel_num:
+                                            kennel, created = Kennel.objects.get_or_create(
+                                                kennelNum=kennel_num,
+                                                defaults={'kennelImage': kennel_image}
+                                            )
+
+                                            if not created:
+                                                # If kennel already exists, update the kennel info
+                                                kennel.kennelImage = kennel_image
+                                                kennel.branch = branch
+                                                kennel.save()
+
+                                        new_dogPlacement = DogPlacement(**dogPlacement_info, dog=new_dog, kennel=kennel)
+                                        new_dogPlacement.full_clean()
+                                        new_dogPlacement.save()
+                                    except ValidationError as e:
+                                        error_details = "; ".join([f"{field}: {', '.join(err_msgs)}" for field, err_msgs in
+                                                                   e.message_dict.items()])
+                                        error_message = (f"Dog #{index + 1}, DogPlacement #{dogPlacement_count},"
+                                                         f" Details: {error_details}")
+                                        raise ValueError(error_message)
+
+                                # Handle 'observes' field
+                                observes_count = 0  # Initialize counter for Observes
+                                for observes_data in observes_info:
+                                    observes_count += 1
+                                    try:
+                                        camID = observes_data.pop('camID', None)
+                                        observations_info = observes_data.pop('observations', [])
+
+                                        # Default 'sessionDate' to today if not provided
+                                        if not observes_data.get('sessionDate'):
+                                            observes_data['sessionDate'] = timezone.now().date().isoformat()
+
+                                        camera = None
+                                        if camID:
+                                            camera, created = Camera.objects.get_or_create(camID=camID, branch=branch)  # TO-DO: Check if this is correct
+
+                                        new_observes = Observes(**observes_data, dog=new_dog, camera=camera)
+                                        new_observes.full_clean()
+                                        new_observes.save()
+                                    except ValidationError as e:
+                                        error_details = "; ".join([f"{field}: {', '.join(err_msgs)}" for field, err_msgs in
+                                                                   e.message_dict.items()])
+                                        error_message = (f"Dog #{index + 1}, Observes(Session) #{observes_count},"
+                                                         f" Details: {error_details}")
+                                        raise ValueError(error_message)
+
+                                    # Handle 'observation' field
+                                    observation_count = 0  # Initialize counter for Observation
+                                    for observation_data in observations_info:
+                                        observation_count += 1
                                         try:
-                                            new_dogStance = DogStance(**dogStance_data, observation=new_observation)
-                                            new_dogStance.full_clean()
-                                            new_dogStance.save()
+                                            obs_date_str = observation_data.get('obsDateTime')
+
+                                            # Check if obsDateTime is a string that needs parsing
+                                            if obs_date_str:
+                                                # Parse the string to a naive datetime object
+                                                naive_datetime = parse_datetime(obs_date_str)
+                                                if naive_datetime and not timezone.is_aware(naive_datetime):
+                                                    # Localize the naive datetime
+                                                    local_tz = pytz.timezone('Asia/Jerusalem')
+                                                    aware_datetime = local_tz.localize(naive_datetime)
+                                                    observation_data['obsDateTime'] = aware_datetime
+                                            else:
+                                                # Default 'obsDateTime' to now if not provided
+                                                observation_data['obsDateTime'] = timezone.now()
+
+                                            dogStances_info = observation_data.pop('dogStances', [])
+
+                                            new_observation = Observation(**observation_data, observes=new_observes)
+                                            new_observation.full_clean()
+                                            new_observation.save()
                                         except ValidationError as e:
                                             error_details = "; ".join(
                                                 [f"{field}: {', '.join(err_msgs)}" for field, err_msgs in
                                                  e.message_dict.items()])
-                                            error_message = (f"Dog #{index + 1}, dogStance #{dogStance_count},"
+                                            error_message = (f"Dog #{index + 1}, Observation #{observation_count},"
                                                              f" Details: {error_details}")
                                             raise ValueError(error_message)
 
-                        except ValidationError as e:
-                            # Handling specific field validation errors
-                            error_details = "\n".join(
-                                [f"Field '{k}': {', '.join(v)}" for k, v in e.message_dict.items()])
-                            error_message = f"Dog #{index + 1} (JSON Line: {index + 1}), {error_details}"
-                            raise ValueError(error_message)
+                                        # Handle 'dogStance' field
+                                        dogStance_count = 0  # Initialize counter for dogStance
+                                        for dogStance_data in dogStances_info:
+                                            dogStance_count += 1
+                                            try:
+                                                new_dogStance = DogStance(**dogStance_data, observation=new_observation)
+                                                new_dogStance.full_clean()
+                                                new_dogStance.save()
+                                            except ValidationError as e:
+                                                error_details = "; ".join(
+                                                    [f"{field}: {', '.join(err_msgs)}" for field, err_msgs in
+                                                     e.message_dict.items()])
+                                                error_message = (f"Dog #{index + 1}, dogStance #{dogStance_count},"
+                                                                 f" Details: {error_details}")
+                                                raise ValueError(error_message)
 
-                        except IntegrityError as e:
-                            # Handling unique constraint violations like chipNum uniqueness
-                            error_message = f"Dog #{index + 1} (JSON Line: {index + 1}), {str(e)}"
-                            raise ValueError(error_message)
+                            except ValidationError as e:
+                                # Handling specific field validation errors
+                                error_details = "\n".join(
+                                    [f"Field '{k}': {', '.join(v)}" for k, v in e.message_dict.items()])
+                                error_message = f"Dog #{index + 1} (JSON Line: {index + 1}), {error_details}"
+                                raise ValueError(error_message)
 
-                        dog_count += 1  # Increment after each successful processing
+                            except IntegrityError as e:
+                                # Handling unique constraint violations like chipNum uniqueness
+                                error_message = f"Dog #{index + 1} (JSON Line: {index + 1}), {str(e)}"
+                                raise ValueError(error_message)
 
-                    # add success message with dog count
-                    if dog_count == 1:  # No dogs were successfully imported
-                        success_message = ("Import Completed: No new dogs were added. "
-                                           "Please check the data for accuracy or duplication.")
-                    elif dog_count == 2:  # Since we start count from 1, 2 means only 1 dog processed
-                        success_message = "1 dog has been successfully imported!"
-                    else:
-                        success_message = f"{dog_count - 1} dogs have been successfully imported!"
-                    return JsonResponse({'status': 'success', 'message': success_message}, status=200)
-            except ValueError as e:
-                # Handling custom ValueError which now includes detailed row information
-                error_message = f"Import Cancelled: Error Detected - {e}"
-                return JsonResponse({'status': 'error', 'message': error_message}, status=400)
+                            dog_count += 1  # Increment after each successful processing
 
-            except Exception as e:
-                # General error handling
-                general_error_message = f"General error occurred: {str(e)}. Import cancelled."
-                return JsonResponse({'status': 'error', 'message': general_error_message}, status=400)
+                        # add success message with dog count
+                        if dog_count == 1:  # No dogs were successfully imported
+                            success_message = ("Import Completed: No new dogs were added. "
+                                               "Please check the data for accuracy or duplication.")
+                        elif dog_count == 2:  # Since we start count from 1, 2 means only 1 dog processed
+                            success_message = "1 dog has been successfully imported!"
+                        else:
+                            success_message = f"{dog_count - 1} dogs have been successfully imported!"
+                        return JsonResponse({'status': 'success', 'message': success_message}, status=200)
+                except ValueError as e:
+                    # Handling custom ValueError which now includes detailed row information
+                    error_message = f"Import Cancelled: Error Detected - {e}"
+                    return JsonResponse({'status': 'error', 'message': error_message}, status=400)
+
+                except Exception as e:
+                    # General error handling
+                    general_error_message = f"General error occurred: {str(e)}. Import cancelled."
+                    return JsonResponse({'status': 'error', 'message': general_error_message}, status=400)
+            else:
+                # If request is not AJAX, return error
+                return JsonResponse({'error': 'Not an AJAX request'}, status=400)
         else:
-            # If request is not AJAX, return error
-            return JsonResponse({'error': 'Not an AJAX request'}, status=400)
+            # If request method is not POST, return error
+            return JsonResponse({'error': 'Invalid request method'}, status=400)
     else:
-        # If request method is not POST, return error
-        return JsonResponse({'error': 'Invalid request method'}, status=400)
+        return JsonResponse({'error': 'You are not authorized to perform this action'}, status=403)
 
 
+@login_required
 def vote(request, poll_id):
     if 'voted_polls' in request.session:
         if str(poll_id) in request.session['voted_polls']:
@@ -2730,17 +2804,16 @@ def vote(request, poll_id):
 
     return redirect('dogs_app:home')
 
+
 def results(request, poll_id):
     poll = get_object_or_404(Poll, pk=poll_id)
     return render(request, 'polls/results.html', {'poll': poll})
 
 
+@superuser_required
 # View for adding a poll to the homepage. Only logged-in admins permitted
-@login_required
-@user_passes_test(lambda u: u.is_superuser)
 def add_poll(request):
     ChoiceFormSet = formset_factory(ChoiceForm, extra=4)  # Adjust extra as needed
-
     if request.method == 'POST':
         branch = get_current_branch(request)
         poll_form = PollForm(request.POST)
@@ -2768,8 +2841,9 @@ def add_poll(request):
     }
     return render(request, 'add_poll.html', context)
 
-@login_required
-@user_passes_test(lambda u: u.is_superuser)
+
+@superuser_required
+# View for updating a Poll from the homepage. Only available to Admins
 def update_poll(request, poll_id):
     # Get the poll object or return a 404 error if it doesn't exist
     poll = get_object_or_404(Poll, pk=poll_id)
@@ -2803,8 +2877,9 @@ def update_poll(request, poll_id):
     # Render the update_poll.html template with the form instances
     return render(request, 'update_poll.html', {'poll_form': poll_form, 'choice_formset': choice_formset})
 
+
+@superuser_required
 # View for deleting a Poll from the homepage. Only available to Admins
-@user_passes_test(lambda u: u.is_superuser)
 def delete_poll(request, poll_id):
     # Get the poll to delete
     poll = get_object_or_404(Poll, pk=poll_id)
@@ -2820,7 +2895,9 @@ def delete_poll(request, poll_id):
         return redirect('dogs_app:home')
     else:
         return render(request, 'delete_poll.html', {'poll': poll})
-    
+
+
+@regular_user_required
 # View for showing Polls
 def view_polls(request):
     branch = get_current_branch(request)

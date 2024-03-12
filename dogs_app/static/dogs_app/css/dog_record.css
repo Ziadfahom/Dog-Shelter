@@ -293,7 +293,6 @@ textarea {
 
 .modal-header {
     justify-content: center;
-    background: linear-gradient(120deg, #0072b5, #005a91); /* Gradient from primary to a slightly darker shade */
     padding: 15px 20px; /* Enhanced padding */
     font-family: 'Lato', sans-serif; /* Elegant font */
 }

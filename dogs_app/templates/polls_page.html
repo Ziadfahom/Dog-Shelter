@@ -14,41 +14,46 @@
                <div class="spacer"></div>
                <div class="title">Latest Polls</div>
             {% if user.is_superuser %}
-            <div class="spacer">
-               <a href="{% url 'dogs_app:add_poll' %}" class="btn btn-outline-light btn-sm add-poll-btn">
-                   <i class="fas fa-plus"></i>
-                   <i class="fas fa-poll"></i>
-               </a>
-            </div>
+                <div class="spacer">
+                   <a href="{% url 'dogs_app:add_poll' %}" class="btn btn-outline-light btn-sm add-poll-btn">
+                       <i class="fas fa-plus"></i>
+                       <i class="fas fa-poll"></i>
+                   </a>
+                </div>
            {% else %}
-            <div class="spacer"></div>
+                <div class="spacer"></div>
            {% endif %}
         </div>
         <table id="pollsTable">
             <thead>
                 <tr>
-                    <th>Question</th>
-                    <th>Date Published</th>
-                    <th class="empty-th"></th> <!-- Placeholder for alignment -->
-                    <th class="actions-th">Actions</th>
+                    <th style="width: 30%">Date Published</th>
+                    <th style="text-align: center;">Question</th>
+                    {% if user.is_superuser %}
+                        <th class="actions-th">Actions</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
                 {% for poll in polls %}
                 <tr>
-                    <td>{{ poll.question }}</td>
-                    <td>{{ poll.pub_date }}</td>
-                    <td class="empty-td"><!-- Empty Space --></td>
-                    <td class="button-cell">
-                        <div class="control__button">
-                            <a href="{% url 'dogs_app:update_poll' poll.id %}" class="mx-1" title="Edit">
-                              <span class="icon-edit text-dark"></span>
-                            </a>
-                            <a href="{% url 'dogs_app:delete_poll' poll.id %}" class="mx-1" title="Delete">
-                              <span class="icon-delete text-dark"></span>
-                            </a>
-                        </div>
-                    </td>
+                    <td style="text-align: center;">{{ poll.pub_date }}</td>
+                    <td style="text-align: center;">{{ poll.question }}</td>
+                    {% if user.is_superuser %}
+                        <td class="button-cell">
+                            <div class="control__button">
+                                <a href="{% url 'dogs_app:update_poll' poll.id %}" class="mx-1" title="Edit">
+                                  <span class="icon-edit text-dark"></span>
+                                </a>
+                                <a href="{% url 'dogs_app:delete_poll' poll.id %}" class="mx-1" title="Delete">
+                                  <span class="icon-delete text-dark"></span>
+                                </a>
+                            </div>
+                        </td>
+                    {% endif %}
+                </tr>
+                <tr class="content-row second-row">
+                    <td colspan="{% if user.is_superuser %} 3 {% else %} 2 {% endif %}" style="text-align: center; padding: 3rem;">Poll Results Placeholder</td>
                 </tr>
                 {% endfor %}
             </tbody>

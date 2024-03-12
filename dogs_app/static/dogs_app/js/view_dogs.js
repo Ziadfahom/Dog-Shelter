@@ -1,5 +1,9 @@
 // Initialize ageSlider for the noUiSlider
 const ageSlider = document.getElementById('ageRange');
+if (userIsVet === true) {
+}
+else {
+}
 
 // Age filter logic
 noUiSlider.create(ageSlider, {
@@ -212,7 +216,6 @@ function applyFiltersFromURL() {
 // Collect filter values and apply them.
 function applyFilters() {
   let ageValues = ageSlider.noUiSlider.get();
-
   let params = {
     'page': 1, // Revert to first page when applying new filters
     'sort_by': getURLParameters().sort_by || '-dateOfArrival', // Either the sorting parameter from the URL or default
@@ -304,42 +307,46 @@ function getURLParameters() {
 
 // Handle logic for exporting/importing Dog table as JSON/Excel file.
 $(document).ready(function() {
-    // Exporting Dog table as JSON
     $('#exportJsonButton').click(function() {
-      // First, fetch the filtered dog IDs
-      $.ajax({
-          url: '/get_filtered_dog_ids/',
-          type: 'GET',
-          success: function(response) {
-              // Use the filtered dog IDs for exporting
-              let filteredDogIDs = response.filtered_dogs_ids;
-
-              // Initiate the export process
-              $.ajax({
-                  url: '/export_dogs_json/',
-                  type: 'POST',
-                  data: {'dog_ids': JSON.stringify(filteredDogIDs)},
-                  headers: { 'X-CSRFToken': getCookie('csrftoken') },
-                  success: async function(data) {
-                     let blob = new Blob([JSON.stringify(data)], { type: 'application/json;charset=utf-8' });
-
-                     // File handler & file stream
-                     const fileHandle = await window.showSaveFilePicker({
-                       suggestedName: 'Shelter_dogs_data.json',
-                       types: [{
-                         description: "JSON file",
-                         accept: {"application/json": [".json"]}
-                       }]
-                     });
-                     const fileStream = await fileHandle.createWritable();
-
-                     // Write file
-                     await fileStream.write(blob);
-                     await fileStream.close();
+        $.ajax({
+            url: '/get_filtered_dog_ids/',
+            type: 'GET',
+            success: function(response) {
+                let filteredDogIDs = response.filtered_dogs_ids;
+                $.ajax({
+                    url: '/export_dogs_json/',
+                    type: 'POST',
+                    data: {'dog_ids': JSON.stringify(filteredDogIDs)},
+                    headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                    success: async function(data, textStatus, xhr) {
+                        if (xhr.status === 200) {
+                            let blob = new Blob([JSON.stringify(data)], { type: 'application/json;charset=utf-8' });
+                            const fileHandle = await window.showSaveFilePicker({
+                                suggestedName: 'Shelter_dogs_data.json',
+                                types: [{
+                                    description: "JSON file",
+                                    accept: {"application/json": [".json"]}
+                                }]
+                            });
+                            const fileStream = await fileHandle.createWritable();
+                            await fileStream.write(blob);
+                            await fileStream.close();
+                        } else {
+                            // Handle non-200 responses here, such as showing an error message
+                            alert("Error: Unable to export data. Please check your permissions.");
+                        }
                     },
-              });
-          }
-      });
+                    error: function(xhr, status, error) {
+                    // Check if the response has a JSON content
+                    if (xhr.responseJSON && xhr.responseJSON.error) {
+                            alert(xhr.responseJSON.error);
+                        } else {
+                            alert("An unexpected error occurred: " + error);
+                        }
+                    }
+                });
+            }
+        });
     });
 
     // Exporting Dog table as Excel

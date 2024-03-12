@@ -43,11 +43,23 @@ def calculate_age(birth_date):
         return "-"
     else:
         today = date.today()
-        age_in_years = today.year - birth_date.year
-        age_in_months = (today.month - birth_date.month) / 12
-        age_in_days = (today.day - birth_date.day) / 365
-        age = age_in_years + age_in_months + age_in_days
-        return round(age, 1)
+        # Calculate the total number of months
+        total_months = (today.year - birth_date.year) * 12 + (today.month - birth_date.month)
+
+        # Adjust if the day in birth date is greater than today's day
+        if birth_date.day > today.day:
+            total_months -= 1
+
+        years = total_months // 12
+        months = total_months % 12
+
+        if years > 0:
+            if months > 0:
+                return f"{years} years {months} months"
+            else:
+                return f"{years} years"
+        else:
+            return f"{months} months"
 
 
 # Calculate the value for sessionDurationInMins using minutes, hours and days

@@ -335,7 +335,7 @@ $(document).ready(function() {
                     // Populate the form fields with the current observation data
                     $('#editObservationModal input[name="sessionDurationInMins"]').val(response.observation.sessionDurationInMins);
                     $('#editObservationModal select[name="isKong"]').val(response.observation.isKong);
-                    $('#editObservationModal select[name="jsonFile"]').val(response.observation.jsonFile);
+                    $('#editObservationModal select[name="csvFile"]').val(response.observation.csvFile);
                     $('#editObservationModal select[name="rawVideo"]').val(response.observation.rawVideo);
 
                     // Adjust Italy-specific fields

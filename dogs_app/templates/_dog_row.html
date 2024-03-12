@@ -15,7 +15,9 @@ over each dog and display them in a separate row-->
     data-bs-html="true"
     title="{% if dog.dogImage %}<img src='{{ dog.dogImage.url }}' alt='Thumbnail of {{ dog.dogName }}' style='width: 100px;height:100px;'>{% else %}<img src='{% static 'dogs_app/img/default_dog.jpg' %}' alt='Default dog thumbnail'>{% endif %}">
     <td class="text-center">{{ dog.dogName|handle_none }}</td>
-    <td class="text-center">{{ dog.dateOfArrival|date:"d/m/Y"|handle_none }}</td>
+    {% if user.is_authenticated and user|has_group:"Vet" %}
+        <td class="text-center">{{ dog.dateOfArrival|date:"d/m/Y"|handle_none }}</td>
+    {% endif %}
     <td class="text-center">
         {% if dog.gender == "M" %}
             Male(⚦)
@@ -28,28 +30,30 @@ over each dog and display them in a separate row-->
     <td class="text-center">{{ dog.breed|handle_none }}</td>
     <td class="text-center">{{ dog.furColor|handle_none }}</td>
     <td class="text-center">{{ dog.dateOfBirthEst|calculate_age }}</td>
-    <td class="text-center">{{ dog.dateOfVaccination|date:"d/m/Y"|handle_none }}</td>
-    <td class="text-center">
-        <div class="form-check d-flex justify-content-center">
-            {% if dog.isNeutered == "Y" %}
-                <input class="form-check-input" type="checkbox" style="transform: scale(1.5);" checked disabled>
-            {% elif dog.isNeutered == "N" %}
-                <input class="form-check-input" type="checkbox" style="transform: scale(1.5);" disabled>
-            {% else %}
-                <span>-</span>
-            {% endif %}
-        </div>
-    </td>
-    <td class="text-center">
-        <div class="form-check d-flex justify-content-center">
-            {% if dog.isDangerous == "Y" %}
-                <input class="form-check-input" type="checkbox" style="transform: scale(1.5);" checked disabled>
-            {% elif dog.isDangerous == "N" %}
-                <input class="form-check-input" type="checkbox" style="transform: scale(1.5);" disabled>
-            {% else %}
-                <span>-</span>
-            {% endif %}        </div>
-    </td>
-    <td class="text-center">{{ dog.kongDateAdded|date:"d/m/Y"|handle_none }}</td>
-    <td class="text-center">{{ dog.owner|handle_none }}</td>
+    {% if user.is_authenticated and user|has_group:"Vet" %}
+        <td class="text-center">{{ dog.dateOfVaccination|date:"d/m/Y"|handle_none }}</td>
+        <td class="text-center">
+            <div class="form-check d-flex justify-content-center">
+                {% if dog.isNeutered == "Y" %}
+                    <input class="form-check-input" type="checkbox" style="transform: scale(1.5);" checked disabled>
+                {% elif dog.isNeutered == "N" %}
+                    <input class="form-check-input" type="checkbox" style="transform: scale(1.5);" disabled>
+                {% else %}
+                    <span>-</span>
+                {% endif %}
+            </div>
+        </td>
+        <td class="text-center">
+            <div class="form-check d-flex justify-content-center">
+                {% if dog.isDangerous == "Y" %}
+                    <input class="form-check-input" type="checkbox" style="transform: scale(1.5);" checked disabled>
+                {% elif dog.isDangerous == "N" %}
+                    <input class="form-check-input" type="checkbox" style="transform: scale(1.5);" disabled>
+                {% else %}
+                    <span>-</span>
+                {% endif %}        </div>
+        </td>
+        <td class="text-center">{{ dog.kongDateAdded|date:"d/m/Y"|handle_none }}</td>
+        <td class="text-center">{{ dog.owner|handle_none }}</td>
+    {% endif %}
 </tr>

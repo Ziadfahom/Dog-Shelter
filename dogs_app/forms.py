@@ -539,7 +539,7 @@ class ObservationForm(forms.ModelForm):
 
     class Meta:
         model = Observation
-        fields = ['obsDateTime', 'sessionDurationInMins', 'isKong', 'isDog', 'isHuman', 'jsonFile', 'rawVideo']
+        fields = ['obsDateTime', 'sessionDurationInMins', 'isKong', 'isDog', 'isHuman', 'csvFile', 'rawVideo']
         widgets = {
             'sessionDurationInMins': forms.NumberInput(attrs={'class': 'form-control',
                                                               'title': 'Please enter a duration (in minutes)',}),
@@ -555,10 +555,9 @@ class ObservationForm(forms.ModelForm):
                                                                                  'title': 'Select if the dog is with '
                                                                                           'a human',
                                                                                  'required': 'required'}),
-            'jsonFile': forms.FileInput(attrs={'class': 'form-control-file'}),
+            'csvFile': forms.FileInput(attrs={'class': 'form-control-file'}),
             'rawVideo': forms.FileInput(attrs={'class': 'form-control-file'})
         }
-
 
 
 # Form for adding new Dog Stance
@@ -844,10 +843,10 @@ class ObservationPortalForm(forms.ModelForm):
                                 widget=forms.widgets.Select(attrs={"class": "form-control",
                                                                    "title": "Select if the dog is with a Human"}),
                                 label="With a Human?")
-    jsonFile = forms.FileField(required=False,
-                               widget=forms.widgets.FileInput(attrs={"class": "form-control-file",
-                                                                     "title": "Upload a JSON file"}),
-                               label="JSON File")
+    csvFile = forms.FileField(required=False,
+                              widget=forms.widgets.FileInput(attrs={"class": "form-control-file",
+                                                                    "title": "Upload a CSV file"}),
+                              label="CSV File")
     rawVideo = forms.FileField(required=False,
                                widget=forms.widgets.FileInput(attrs={"class": "form-control-file",
                                                                      "title": "Upload a video file"}),
@@ -869,7 +868,7 @@ class ObservationPortalForm(forms.ModelForm):
 
     class Meta:
         model = Observation
-        fields = ['observes', 'obsDateTime', 'sessionDurationInMins', 'isKong', 'isDog', 'isHuman', 'jsonFile', 'rawVideo']
+        fields = ['observes', 'obsDateTime', 'sessionDurationInMins', 'isKong', 'isDog', 'isHuman', 'csvFile', 'rawVideo']
 
 
 # DogStance Form in Portal

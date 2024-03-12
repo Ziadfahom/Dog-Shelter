@@ -30,7 +30,7 @@ $(document).ready(function () {
             let setCount = 0;
             $('#pollsTable tbody tr:not(.content-row)').each(function () {
                 const content = $(this).data('content');
-                const contentRow = $('<tr class="content-row second-row"><td colspan="4"></td></tr>');
+                const contentRow = $('<tr class="content-row second-row"><td colspan="3"></td></tr>');
                 contentRow.find('td').html(content);
 
                 $(this).after(contentRow);
@@ -44,7 +44,7 @@ $(document).ready(function () {
                 // Increment the set count for the next row
                 setCount++;
             });
-        }
+        },
     });
 });
 

@@ -17,24 +17,24 @@
         <div class="col-12 col-md-8 col-lg-6 col-xl-5">
           <div class="card bg-white text-black shadowed my-5" style="border-radius: 0.5rem">
             <div class="card-body p-5">
-              <div class="mb-5">
+              <div class="mb-5" style="display: flex; justify-content: center; align-items: center;">
                 {% include 'components/logo.html' %}
               </div>
               <div class="mb-md-5 mt-md-4 pb-5">
                 <div class="">
-                    <h2 class="fw-bold mb-2">Welcome Back :)</h2>
-                    <p class="text-dark-50 mb-5">Please enter your username and password!</p>
+                    <h2 class="fw-bold mb-2" style="text-align: center;">Welcome Back!</h2>
+                    <p class="text-dark-50 mb-5" style="text-align: center;">Please enter your username and password below</p>
                 </div>
 
                 <form method="POST" action="{% url 'dogs_app:login' %}">
                     {% csrf_token %}
                     {% include "components/form.html" %}
+                    <input type="hidden" name="next" value="{{ request.GET.next }}">
+{#                    <p class="small mb-5 pb-lg-2">#}
+{#                        <a class="text-dark" href="#!">Forgot password?</a>#}
+{#                    </p>#}
 
-                    <p class="small mb-5 pb-lg-2">
-                        <a class="text-dark" href="#!">Forgot password?</a>
-                    </p>
-
-                    <button class="btn btn-outline-dark ight btn-lg px-5 d-block w-100" type="submit">
+                    <button class="btn btn-outline-dark light btn-lg px-5 d-block w-100" type="submit">
                         Login
                     </button>  
                 </form>

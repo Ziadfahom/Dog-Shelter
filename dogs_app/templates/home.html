@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load dog_filters %}
+{% load date_filters %}
 {% load static %}
 
 {% block head  %}
@@ -32,20 +33,19 @@
       <div class="buttons py-3">
         {% if user.is_authenticated %}
         <a href="{% url 'dogs_app:view_dogs' %}" class="button-cover px-5">
-          <span class="text">Meet The Crew</span>
-          <span>Visit The Pack!</span>
+          <span class="text">Meet Our Crew!</span>
+          <span style="white-space: nowrap">Greet The Companions</span>
         </a>
         {% else %}
-        <a href="{% url 'dogs_app:register' %}" class="button-cover px-5">
+        <a href="{% url 'dogs_app:register' %}" class="button-cover px-5" >
           <span class="text">Get Started</span>
           <span>Register!</span>
         </a>
-
-        <a href="{% url 'dogs_app:view_news' %}" class="button-cover px-5 ms-2">
-          <span class="text">Explore News</span>
-          <span>Let's Go!</span>
-        </a>
         {% endif %}
+        <a href="{% url 'dogs_app:graphs' %}" class="button-cover px-5 ms-3">
+          <span class="text">Discover Graphs</span>
+          <span style="white-space: nowrap">Analyze Trends!</span>
+        </a>
       </div>
     </div>
     <div class="col-12 col-lg-6 px-0">
@@ -69,18 +69,18 @@
         <p class="pb-2"> Our system tracks and analyzes their behavior and changes, especially during moments of play. The data we gather is a key to unlocking their needs, enhancing their well-being, and guiding them to forever homes.</p>
 
         <a href="{% url 'dogs_app:view_news' %}" class="button-cover px-5">
-          <span class="text">Dive In</span>
-          <span>Our News!</span>
+          <span class="text">Stay Informed</span>
+          <span style="white-space: nowrap">Check Our Latest News</span>
         </a>
         
         {% if user.is_superuser %}
           <a href="{% url 'dogs_app:add_news' %}" class="button-cover px-5 ms-2">
             <span class="text">Share Insights</span>
-            <span>Spread News!</span>
+            <span style="white-space: nowrap">Spread Some News!</span>
           </a>
           <a href="{% url 'dogs_app:add_poll' %}" class="button-cover px-5 ms-2">
-            <span class="text">Begin Survey</span>
-            <span>Add a Poll!</span>
+            <span class="text">Create a Survey</span>
+            <span style="white-space: nowrap">Add New Polls</span>
           </a>
         {% endif %}
       </div>
@@ -321,7 +321,7 @@
 
 <!-- View Polls Section -->
 {% block view_polls %}
-<div class="row" style="background-color: #FFC971;"> <!--color light orange-->
+<div class="row py-2 px-2" style="background-color: #FFC971;"> <!--color light orange-->
   {% for poll in poll_items %}
     <div class="col-12 col-md-6 p-0 relative">
       <div class="solution_cards_box pb-3">
@@ -334,7 +334,7 @@
             <h3>{{ poll.question }}</h3>
           </div>
           <div class="solu_description">
-            <p>{% if poll.pub_date %}Date Created: {{ poll.pub_date|truncatechars:150|slice:":150" }}{% else %}No Date{% endif %}</p>
+            <p>{% if poll.pub_date %}Date Created: {{ poll.pub_date|format_european_datetime }}{% else %}No Date{% endif %}</p>
           </div>
 
           {% if user.is_superuser %}

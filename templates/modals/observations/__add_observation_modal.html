@@ -16,7 +16,7 @@
 
         <div class="py-3 w-100">
             {% comment %} Header {% endcomment %}
-            <h5 class="text-dark fw-bold text-uppercase" id="newObservationModalLabel">Add New Observation</h5>
+            <h5 class="text-dark fw-bold text-uppercase" id="newObservationModalLabel" style="text-align: center;">Add New Observation</h5>
             <hr>
 
             {% comment %} Content {% endcomment %}
@@ -100,14 +100,14 @@
                         </div>
                     {% endif %}
 
-                    {% if observation_form.jsonFile.errors %}
+                    {% if observation_form.csvFile.errors %}
                         <div class="form-error-row">
-                            <span class="text-danger form-error">{{ observation_form.jsonFile.errors }}</span>
+                            <span class="text-danger form-error">{{ observation_form.csvFile.errors }}</span>
                         </div>
                     {% endif %}
                     <div class="form-row">
-                        <label for="json-upload">Upload JSON File:</label>
-                        <input type="file" id="json-upload" class="form-control-file" name="{{ observation_form.jsonFile.name }}" value="{{ observation_form.jsonFile.value }}">
+                        <label for="csv-upload">Upload CSV File:</label>
+                        <input type="file" id="csv-upload" class="form-control-file" name="{{ observation_form.jsonFile.name }}" value="{{ observation_form.jsonFile.value }}">
                     </div>
 
                     {% if observation_form.rawVideo.errors %}

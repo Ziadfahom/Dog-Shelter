@@ -16,48 +16,50 @@
         <!-- Caption and Toolbar -->
         <div class="row justify-content-center">
             <div class="col-12 bg-dark text-white d-flex align-items-center px-2 py-3">
-                <div class="dropdown ms-3 mb-2">
-                    <button class="dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <i class="fas fa-file-import"></i>
-                    </button>
-                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                        <h6 class="dropdown-header">
-                            <i class="fas fa-upload"></i> Export
-                        </h6>
-                        <a class="dropdown-item" href="#" id="exportJsonButton">
-                            <i class="fas fa-file-code"></i> Export as JSON
-                        </a>
-    
-                        <!-- TO-DO: Fix the exportation file not working -->
-                        <a class="dropdown-item" href="#" id="exportExcelButton">
-                            <i class="fas fa-file-excel"></i> Export as Excel
-                        </a>
-    
-                        <div class="dropdown-divider padded-divider"></div>
-    
-                        <!-- TO-DO: make them functional. -->
-                        <h6 class="dropdown-header">
-                            <i class="fas fa-download"></i> Import
-                        </h6>
+                {% if user.is_authenticated and user|has_group:"Vet" %}
+                    <div class="dropdown ms-3 mb-2">
+                        <button class="dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-file-import"></i>
+                        </button>
+                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <h6 class="dropdown-header">
+                                <i class="fas fa-upload"></i> Export
+                            </h6>
+                            <a class="dropdown-item" href="#" id="exportJsonButton">
+                                <i class="fas fa-file-code"></i> Export as JSON
+                            </a>
 
-                        <!-- Hidden file input to upload JSON file -->
-                        <input type="file" id="jsonFileInput" style="display: none;" accept=".json"/>
+                            <!-- TO-DO: Fix the exportation file not working -->
+                            <a class="dropdown-item" href="#" id="exportExcelButton">
+                                <i class="fas fa-file-excel"></i> Export as Excel
+                            </a>
 
-                        <a class="dropdown-item" href="#" id="importJsonButton" onclick="document.getElementById('jsonFileInput').click();">
-                            <i class="fas fa-file-code"></i> Import from JSON
-                        </a>
-    
-                        <!-- Hidden file input to upload Excel file -->
-                        <input type="file" id="excelFileInput" style="display: none;" accept=".xlsx, .xls, .csv"/>
-    
-                        <a class="dropdown-item" href="#" id="importExcelButton" onclick="document.getElementById('excelFileInput').click();">
-                            <i class="fas fa-file-excel"></i> Import from Excel
-                        </a>
+                            <div class="dropdown-divider padded-divider"></div>
+
+                            <!-- TO-DO: make them functional. -->
+                            <h6 class="dropdown-header">
+                                <i class="fas fa-download"></i> Import
+                            </h6>
+
+                            <!-- Hidden file input to upload JSON file -->
+                            <input type="file" id="jsonFileInput" style="display: none;" accept=".json"/>
+
+                            <a class="dropdown-item" href="#" id="importJsonButton" onclick="document.getElementById('jsonFileInput').click();">
+                                <i class="fas fa-file-code"></i> Import from JSON
+                            </a>
+
+                            <!-- Hidden file input to upload Excel file -->
+                            <input type="file" id="excelFileInput" style="display: none;" accept=".xlsx, .xls, .csv"/>
+
+                            <a class="dropdown-item" href="#" id="importExcelButton" onclick="document.getElementById('excelFileInput').click();">
+                                <i class="fas fa-file-excel"></i> Import from Excel
+                            </a>
+                        </div>
                     </div>
-                </div>
+                {% endif %}
     
-                <div class="flex-grow-1 text-center">
-                    <h2>Current Dogs in Our System</h2>
+                <div class="flex-grow-1 text-center" style="{% if not user|has_group:"Vet" %}margin-left: 3rem;{% else %}margin-left: -1rem;{% endif %}">
+                    <h2>Current Dogs in {% if request.session.branch == 'Italy' %}Bracciano{% else %}Lod{% endif %} Shelter</h2>
                 </div>
             </div>
 
@@ -70,7 +72,7 @@
                     </button>
                 </div>
                 <div class="search-filter">
-                    <input type="text" id="searchInput" placeholder="Search by name..." class="search-input shadow-lg">
+                    <input type="text" id="searchInput" placeholder="Search by name..." class="search-input shadow-lg" {% if not user|has_group:"Vet" %}style="margin-right: 9rem;"{% endif %}>
                 </div>
                 {% if user.is_authenticated and user|has_group:"Vet" %}
                     <div class="add-dog-div">
@@ -78,6 +80,8 @@
                             <i class="bi bi-plus-circle-fill"></i> New Dog
                         </a>
                     </div>
+                {% else %}
+                    <div class="spacer"></div>
                 {% endif %}
             </div>
 
@@ -85,196 +89,276 @@
             <div id="filterSection" class="row justify-content-center filter-section bg-light collapse mb-4">
                 <div class="col-12">
                     <form id="filterForm">
+                        {% if user.is_authenticated and user|has_group:"Vet" %}
+                            <!-- Main Flex Container -->
+                            <div class="d-flex flex-wrap">
 
-                        <!-- Main Flex Container -->
-                        <div class="d-flex flex-wrap">
-
-                            <!-- Left Side (Dates) Container -->
-                            <div class="date-container col-md-6">
-                                <div class="filter-header">Dates</div>
-                                <!-- Arrival Date Section -->
-                                <div class="card mb-2">
-                                    <div class="card-header">Date of Arrival</div>
-                                    <div class="card-body">
-                                        <div class="d-flex">
-                                            <div class="col-md-6 item-margin vertical-separator">
-                                                <label for="startDateOfArrival" class="form-label">Start Date</label>
-                                                <input type="date" class="form-control" id="startDateOfArrival" name="startDateOfArrival">
-                                            </div>
-                                            <div class="col-md-6 adjust-right">
-                                                <label for="endDateOfArrival" class="form-label">End Date</label>
-                                                <input type="date" class="form-control" id="endDateOfArrival" name="endDateOfArrival">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Vaccination Date Section -->
-                                <div class="card mb-2">
-                                    <div class="card-header">Date of Vaccination</div>
-                                    <div class="card-body">
-                                        <div class="d-flex">
-                                            <div class="col-md-6 item-margin vertical-separator">
-                                                <label for="startDateOfVaccination" class="form-label">Start Date</label>
-                                                <input type="date" class="form-control" id="startDateOfVaccination" name="startDateOfVaccination">
-                                            </div>
-                                            <div class="col-md-6 adjust-right">
-                                                <label for="endDateOfVaccination" class="form-label">End Date</label>
-                                                <input type="date" class="form-control" id="endDateOfVaccination" name="endDateOfVaccination">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Kong Date Section -->
-                                <div class="card mb-2">
-                                    <div class="card-header">Date Given Kong</div>
-                                    <div class="card-body">
-                                        <div class="d-flex">
-                                            <div class="col-md-6 item-margin vertical-separator">
-                                                <label for="kongstartDateAdded" class="form-label">Start Date</label>
-                                                <input type="date" class="form-control" id="kongstartDateAdded" name="kongstartDateAdded">
-                                            </div>
-                                            <div class="col-md-6 adjust-right">
-                                                <label for="kongendDateAdded" class="form-label">End Date</label>
-                                                <input type="date" class="form-control" id="kongendDateAdded" name="kongendDateAdded">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </div>
-
-                            <!-- Right Side (Dropdowns) Container -->
-                            <div class="dropdown-container col-md-6">
-                                <div class="filter-header">Attributes</div>
-
-                                <!-- Age Range (Slider) -->
-                                <div class="card mb-2">
-                                    <div class="card-body">
-                                        <div class="d-flex align-items-center">
-                                            <div class="col-md-10 mx-auto">
-                                                <label for="ageRange" class="form-label">
-                                                    Age Range (Years)<br>
-                                                    <span id="selectedAgeRange">0 - 20</span>
-                                                </label>
-                                                <div class="d-flex align-items-center justify-content-between">
-                                                    <span>(0)</span> <!-- Min Value -->
-                                                    <div id="ageRange" class="mx-4" style="flex: 1;"></div>
-                                                    <span>(20)</span> <!-- Max Value -->
+                                <!-- Left Side (Dates) Container -->
+                                <div class="date-container col-md-6">
+                                    <div class="filter-header">Dates</div>
+                                    <!-- Arrival Date Section -->
+                                    <div class="card mb-2">
+                                        <div class="card-header">Date of Arrival</div>
+                                        <div class="card-body">
+                                            <div class="d-flex">
+                                                <div class="col-md-6 item-margin vertical-separator">
+                                                    <label for="startDateOfArrival" class="form-label">Start Date</label>
+                                                    <input type="date" class="form-control" id="startDateOfArrival" name="startDateOfArrival">
                                                 </div>
-                                                <!-- Hidden inputs to hold the slider values for form submission -->
-                                                <input type="hidden" id="ageRangeStart" name="ageRangeStart">
-                                                <input type="hidden" id="ageRangeEnd" name="ageRangeEnd">
+                                                <div class="col-md-6 adjust-right">
+                                                    <label for="endDateOfArrival" class="form-label">End Date</label>
+                                                    <input type="date" class="form-control" id="endDateOfArrival" name="endDateOfArrival">
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
+
+                                    <!-- Vaccination Date Section -->
+                                    <div class="card mb-2">
+                                        <div class="card-header">Date of Vaccination</div>
+                                        <div class="card-body">
+                                            <div class="d-flex">
+                                                <div class="col-md-6 item-margin vertical-separator">
+                                                    <label for="startDateOfVaccination" class="form-label">Start Date</label>
+                                                    <input type="date" class="form-control" id="startDateOfVaccination" name="startDateOfVaccination">
+                                                </div>
+                                                <div class="col-md-6 adjust-right">
+                                                    <label for="endDateOfVaccination" class="form-label">End Date</label>
+                                                    <input type="date" class="form-control" id="endDateOfVaccination" name="endDateOfVaccination">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Kong Date Section -->
+                                    <div class="card mb-2">
+                                        <div class="card-header">Date Given Kong</div>
+                                        <div class="card-body">
+                                            <div class="d-flex">
+                                                <div class="col-md-6 item-margin vertical-separator">
+                                                    <label for="kongstartDateAdded" class="form-label">Start Date</label>
+                                                    <input type="date" class="form-control" id="kongstartDateAdded" name="kongstartDateAdded">
+                                                </div>
+                                                <div class="col-md-6 adjust-right">
+                                                    <label for="kongendDateAdded" class="form-label">End Date</label>
+                                                    <input type="date" class="form-control" id="kongendDateAdded" name="kongendDateAdded">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                 </div>
 
-                                <!-- Gender & Breed Section -->
-                                <div class="card mb-2">
-                                    <div class="card-body">
-                                        <div class="d-flex">
-                                            <!-- Gender Dropdown -->
-                                            <div class="col-md-6 item-margin vertical-separator">
-                                                <label for="gender" class="form-label">Gender</label>
-                                                <select id="gender" name="gender" class="form-control">
-                                                    <option value="">Display All Genders</option>
-                                                    <option value="Unspecified">Unspecified Gender Only</option>
-                                                    <option value="M">Male</option>
-                                                    <option value="F">Female</option>
-                                                </select>
-                                            </div>
+                                <!-- Right Side (Dropdowns) Container -->
+                                <div class="dropdown-container col-md-6">
+                                    <div class="filter-header">Attributes</div>
 
-                                            <!-- Breed Dropdown -->
-                                            <div class="col-md-6 adjust-right">
-                                                <label for="breed" class="form-label">Breed</label>
-                                                <div id="breedDropdownSection">
-                                                    <select id="breed" name="breed" class="form-control">
-                                                        <option value="">All Breeds</option>
-                                                        <option value="Unspecified">Unspecified Breed</option>
-                                                        <option value="Mixed Breed">Mixed Breed</option>
-                                                        {% for breed in unique_breeds %}
-                                                            <option value="{{ breed.breed }}">{{ breed.breed }}</option>
-                                                        {% endfor %}
+                                    <!-- Age Range (Slider) -->
+                                    <div class="card mb-2">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center">
+                                                <div class="col-md-10 mx-auto">
+                                                    <label for="ageRange" class="form-label">
+                                                        Age Range (Years)<br>
+                                                        <span id="selectedAgeRange">0 - 20</span>
+                                                    </label>
+                                                    <div class="d-flex align-items-center justify-content-between">
+                                                        <span>(0)</span> <!-- Min Value -->
+                                                        <div id="ageRange" class="mx-4" style="flex: 1;"></div>
+                                                        <span>(20)</span> <!-- Max Value -->
+                                                    </div>
+                                                    <!-- Hidden inputs to hold the slider values for form submission -->
+                                                    <input type="hidden" id="ageRangeStart" name="ageRangeStart">
+                                                    <input type="hidden" id="ageRangeEnd" name="ageRangeEnd">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Gender & Breed Section -->
+                                    <div class="card mb-2">
+                                        <div class="card-body">
+                                            <div class="d-flex">
+                                                <!-- Gender Dropdown -->
+                                                <div class="col-md-6 item-margin vertical-separator">
+                                                    <label for="gender" class="form-label">Gender</label>
+                                                    <select id="gender" name="gender" class="form-control">
+                                                        <option value="">Display All Genders</option>
+                                                        <option value="Unspecified">Unspecified Gender Only</option>
+                                                        <option value="M">Male</option>
+                                                        <option value="F">Female</option>
+                                                    </select>
+                                                </div>
+
+                                                <!-- Breed Dropdown -->
+                                                <div class="col-md-6 adjust-right">
+                                                    <label for="breed" class="form-label">Breed</label>
+                                                    <div id="breedDropdownSection">
+                                                        <select id="breed" name="breed" class="form-control">
+                                                            <option value="">All Breeds</option>
+                                                            <option value="Unspecified">Unspecified Breed</option>
+                                                            <option value="Mixed Breed">Mixed Breed</option>
+                                                            {% for breed in unique_breeds %}
+                                                                <option value="{{ breed.breed }}">{{ breed.breed }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- isNeutered & isDangerous Section -->
+                                    <div class="card mb-2">
+                                        <div class="card-body">
+                                            <div class="d-flex">
+                                                <!-- isNeutered Dropdown -->
+                                                <div class="col-md-6 item-margin vertical-separator">
+                                                    <label for="isNeutered" class="form-label">Neutered</label>
+                                                    <select id="isNeutered" name="isNeutered" class="form-control">
+                                                        <option value="">Display All</option>
+                                                        <option value="Unspecified">Unspecified Only</option>
+                                                        <option value="Y">Yes</option>
+                                                        <option value="N">No</option>
+                                                    </select>
+                                                </div>
+
+                                                <!-- isDangerous Dropdown -->
+                                                <div class="col-md-6 adjust-right">
+                                                    <label for="isDangerous" class="form-label">Dangerous</label>
+                                                    <select id="isDangerous" name="isDangerous" class="form-control">
+                                                        <option value="">Display All</option>
+                                                        <option value="Unspecified">Unspecified Only</option>
+                                                        <option value="Y">Yes</option>
+                                                        <option value="N">No</option>
                                                     </select>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <!-- isNeutered & isDangerous Section -->
-                                <div class="card mb-2">
-                                    <div class="card-body">
-                                        <div class="d-flex">
-                                            <!-- isNeutered Dropdown -->
-                                            <div class="col-md-6 item-margin vertical-separator">
-                                                <label for="isNeutered" class="form-label">Neutered</label>
-                                                <select id="isNeutered" name="isNeutered" class="form-control">
-                                                    <option value="">Display All</option>
-                                                    <option value="Unspecified">Unspecified Only</option>
-                                                    <option value="Y">Yes</option>
-                                                    <option value="N">No</option>
-                                                </select>
-                                            </div>
+                                    <!-- Fur Color & Owner Section -->
+                                    <div class="card mb-2">
+                                        <div class="card-body">
+                                            <div class="d-flex">
+                                                <!-- Fur Color Dropdown -->
+                                                <div class="col-md-6 item-margin vertical-separator">
+                                                    <label for="furColor" class="form-label">Fur Color</label>
+                                                    <select id="furColor" name="furColor" class="form-control">
+                                                        <option value="">All Fur Colors</option>
+                                                        <option value="Unspecified">Unspecified Fur Color</option>
+                                                        {% for color in unique_colors %}
+                                                            <option value="{{ color.furColor }}">{{ color.furColor }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
 
-                                            <!-- isDangerous Dropdown -->
-                                            <div class="col-md-6 adjust-right">
-                                                <label for="isDangerous" class="form-label">Dangerous</label>
-                                                <select id="isDangerous" name="isDangerous" class="form-control">
-                                                    <option value="">Display All</option>
-                                                    <option value="Unspecified">Unspecified Only</option>
-                                                    <option value="Y">Yes</option>
-                                                    <option value="N">No</option>
-                                                </select>
+                                                <!-- Owner Dropdown -->
+                                                <div class="col-md-6 adjust-right">
+                                                    <label for="owner" class="form-label">Owner</label>
+                                                    <div id="ownerDropdownSection">
+                                                        <select id="owner" name="owner" class="form-control">
+                                                            <option value="">All Owners</option>
+                                                            <option value="Unspecified">Unspecified Owner</option>
+                                                            {% for owner in unique_owners %}
+                                                                <option value="{{ owner.owner }}">{{ owner.owner__firstName }} {{ owner.owner__lastName }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
+
                                 </div>
 
-                                <!-- Fur Color & Owner Section -->
-                                <div class="card mb-2">
-                                    <div class="card-body">
-                                        <div class="d-flex">
-                                            <!-- Fur Color Dropdown -->
-                                            <div class="col-md-6 item-margin vertical-separator">
-                                                <label for="furColor" class="form-label">Fur Color</label>
-                                                <select id="furColor" name="furColor" class="form-control">
-                                                    <option value="">All Fur Colors</option>
-                                                    <option value="Unspecified">Unspecified Fur Color</option>
-                                                    {% for color in unique_colors %}
-                                                        <option value="{{ color.furColor }}">{{ color.furColor }}</option>
-                                                    {% endfor %}
-                                                </select>
-                                            </div>
+                            </div>
+                        {% else %}
+                            <!-- Main Flex Container -->
+                            <div class="container-fluid">
+                                <div class="row">
 
-                                            <!-- Owner Dropdown -->
-                                            <div class="col-md-6 adjust-right">
-                                                <label for="owner" class="form-label">Owner</label>
-                                                <div id="ownerDropdownSection">
-                                                    <select id="owner" name="owner" class="form-control">
-                                                        <option value="">All Owners</option>
-                                                        <option value="Unspecified">Unspecified Owner</option>
-                                                        {% for owner in unique_owners %}
-                                                            <option value="{{ owner.owner }}">{{ owner.owner__firstName }} {{ owner.owner__lastName }}</option>
-                                                        {% endfor %}
-                                                    </select>
+                                    <!-- Age Range (Slider) -->
+                                    <div class="col-md-6">
+                                        <div class="card mb-2">
+                                            <div class="card-body">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="col-md-10 mx-auto">
+                                                        <label for="ageRange" class="form-label">
+                                                            Age Range (Years)<br>
+                                                            <span id="selectedAgeRange">0 - 20</span>
+                                                        </label>
+                                                        <div class="d-flex align-items-center justify-content-between">
+                                                            <span>(0)</span> <!-- Min Value -->
+                                                            <div id="ageRange" class="mx-4" style="flex: 1;"></div>
+                                                            <span>(20)</span> <!-- Max Value -->
+                                                        </div>
+                                                        <!-- Hidden inputs to hold the slider values for form submission -->
+                                                        <input type="hidden" id="ageRangeStart" name="ageRangeStart">
+                                                        <input type="hidden" id="ageRangeEnd" name="ageRangeEnd">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                    <!-- Gender Dropdown -->
+                                    <div class="col-md-6">
+                                        <div class="card mb-2">
+                                            <div class="card-body">
+                                                <div class="filter-options d-flex">
+                                                    <!-- Gender Dropdown -->
+                                                    <div class="filter-option">
+                                                        <label for="gender" class="form-label">Gender</label>
+                                                        <select id="gender" name="gender" class="form-control">
+                                                            <option value="">Display All Genders</option>
+                                                            <option value="Unspecified">Unspecified Gender Only</option>
+                                                            <option value="M">Male</option>
+                                                            <option value="F">Female</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <!-- Breed Dropdown -->
+                                                    <div class="filter-option">
+                                                        <label for="breed" class="form-label">Breed</label>
+                                                        <div id="breedDropdownSection">
+                                                            <select id="breed" name="breed" class="form-control">
+                                                                <option value="">All Breeds</option>
+                                                                <option value="Unspecified">Unspecified Breed</option>
+                                                                <option value="Mixed Breed">Mixed Breed</option>
+                                                                {% for breed in unique_breeds %}
+                                                                    <option value="{{ breed.breed }}">{{ breed.breed }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Fur Color Dropdown -->
+                                                    <div class="filter-option">
+                                                        <label for="furColor" class="form-label">Fur Color</label>
+                                                        <select id="furColor" name="furColor" class="form-control">
+                                                            <option value="">All Fur Colors</option>
+                                                            <option value="Unspecified">Unspecified Fur Color</option>
+                                                            {% for color in unique_colors %}
+                                                                <option value="{{ color.furColor }}">{{ color.furColor }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-
                             </div>
-
-                        </div>
+                        {% endif %}
 
                         <!-- Buttons -->
                         <div class="d-flex align-items-center justify-content-end mb-1">
                             <button type="button" class="btn mx-2 btn-warning reset-btn" onclick="resetFilters()">Reset All</button>
                             <button type="button" class="btn mx-2 btn-primary apply-btn" onclick="applyFilters()">Apply Filters</button>
-                            <button type="button" class="btn mx-2 btn-dark" data-bs-toggle="collapse" data-bs-target="#filterSection">Close</button>
+                            <button type="button" class="btn ms-2 me-4 btn-dark" data-bs-toggle="collapse" data-bs-target="#filterSection">Close</button>
                         </div>
                     </form>
                 </div>
@@ -288,16 +372,20 @@
                     <thead class="table-dark">
                         <tr>
                             <th scope="col" class="text-center sortable-header" data-column="dogName" style="border-top-left-radius: 10px; cursor: pointer;">Name <i class="fas fa-sort"></i></th>
-                            <th scope="col" class="text-center sortable-header" data-column="dateOfArrival" style="cursor: pointer;">Arrival Date <i class="fas fa-sort"></i></th>
+                            {% if user.is_authenticated and user|has_group:"Vet" %}
+                                <th scope="col" class="text-center sortable-header" data-column="dateOfArrival" style="cursor: pointer;">Arrival Date <i class="fas fa-sort"></i></th>
+                            {% endif %}
                             <th scope="col" class="text-center sortable-header" data-column="gender" style="cursor: pointer;">Gender <i class="fas fa-sort"></i></th>
                             <th scope="col" class="text-center sortable-header" data-column="breed" style="cursor: pointer;">Breed <i class="fas fa-sort"></i></th>
                             <th scope="col" class="text-center sortable-header" data-column="furColor" style="cursor: pointer;">Fur Color <i class="fas fa-sort"></i></th>
-                            <th scope="col" class="text-center sortable-header" data-column="dateOfBirthEst" style="cursor: pointer;">Age (Years) <i class="fas fa-sort"></i></th>
-                            <th scope="col" class="text-center sortable-header" data-column="dateOfVaccination" style="cursor: pointer;">Vaccination Date <i class="fas fa-sort"></i></th>
-                            <th scope="col" class="text-center sortable-header" data-column="isNeutered" style="cursor: pointer;">Neutered? <i class="fas fa-sort"></i></th>
-                            <th scope="col" class="text-center sortable-header" data-column="isDangerous" style="cursor: pointer;">Dangerous? <i class="fas fa-sort"></i></th>
-                            <th scope="col" class="text-center sortable-header" data-column="kongDateAdded" style="cursor: pointer;">Last Kong Given <i class="fas fa-sort"></i></th>
-                            <th scope="col" class="text-center sortable-header" data-column="owner" style="border-top-right-radius: 10px; cursor: pointer;">Owner <i class="fas fa-sort"></i></th>
+                            <th scope="col" class="text-center sortable-header" data-column="dateOfBirthEst" style="cursor: pointer;">Age <i class="fas fa-sort"></i></th>
+                            {% if user.is_authenticated and user|has_group:"Vet" %}
+                                <th scope="col" class="text-center sortable-header" data-column="dateOfVaccination" style="cursor: pointer;">Vaccination Date <i class="fas fa-sort"></i></th>
+                                <th scope="col" class="text-center sortable-header" data-column="isNeutered" style="cursor: pointer;">Neutered? <i class="fas fa-sort"></i></th>
+                                <th scope="col" class="text-center sortable-header" data-column="isDangerous" style="cursor: pointer;">Dangerous? <i class="fas fa-sort"></i></th>
+                                <th scope="col" class="text-center sortable-header" data-column="kongDateAdded" style="cursor: pointer;">Last Toy Given <i class="fas fa-sort"></i></th>
+                                <th scope="col" class="text-center sortable-header" data-column="owner" style="border-top-right-radius: 10px; cursor: pointer;">Owner <i class="fas fa-sort"></i></th>
+                            {% endif %}
                         </tr>
                     </thead>
                     <tbody class="small stylish-tbody" id="dog-table">
@@ -333,5 +421,10 @@
     <!-- Age Slider UI -->
     <script src="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.js"></script>
     <!-- View_dogs.JS-->
+    <script type="text/javascript">
+        // Pass the current User Authorization status to the JS file
+        const userIsVet = {% if user.is_authenticated and user|has_group:"Vet" %}true{% else %}false{% endif %};
+
+    </script>
     <script src="{% static 'dogs_app/js/view_dogs.js' %}"></script>
 {% endblock %}

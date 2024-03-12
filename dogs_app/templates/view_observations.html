@@ -62,6 +62,7 @@
                                 <th>With Human?</th>
                                 {% endif %}
                                 <th>JSON File</th>
+                                <th>CSV File</th>
                                 <th>Video</th>
                                 <th>Edit/Delete</th>
                             </tr>
@@ -71,7 +72,7 @@
                                 {% include '_observation_row.html' %}
                             {% empty %} 
                                 <tr class="">
-                                    <td colspan="7">No observations found.</td>
+                                    <td colspan="9">No observations found.</td>
                                 </tr>
                             {% endfor %}
                         </tbody>

@@ -345,6 +345,7 @@ class ObservationTable(tables.Table):
     delete = tables.Column(empty_values=(), orderable=False)
     edit = tables.Column(empty_values=(), orderable=False)
     jsonFile = tables.Column(empty_values=(), orderable=False)
+    csvFile = tables.Column(empty_values=(), orderable=False)
     rawVideo = tables.Column(empty_values=(), orderable=False)
 
     def __init__(self, *args, **kwargs):
@@ -354,7 +355,6 @@ class ObservationTable(tables.Table):
         # Only display isHuman and isDog if the current branch is Italy
         if get_current_branch(self.request).branchName != 'Italy':
             self.exclude = ('isHuman', 'isDog')
-
 
     def render_delete(self, record):
         if self.request:
@@ -391,7 +391,7 @@ class ObservationTable(tables.Table):
     class Meta:
         model = Observation
         template_name = 'django_tables2/bootstrap.html'
-        fields = ('observes', 'obsDateTime', 'sessionDurationInMins', 'isKong', 'isDog', 'isHuman', 'jsonFile', 'rawVideo', 'edit', 'delete')
+        fields = ('observes', 'obsDateTime', 'sessionDurationInMins', 'isKong', 'isDog', 'isHuman', 'jsonFile', 'csvFile', 'rawVideo', 'edit', 'delete')
         order_by = '-obsDateTime'
 
 

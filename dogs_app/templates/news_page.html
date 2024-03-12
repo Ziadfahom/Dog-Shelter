@@ -25,33 +25,36 @@
             <table id="newsTable">
             <thead>
                 <tr>
-                    <th>Date Created</th>
-                    <th>Title</th>
-                    <th class="empty-th"></th> <!-- Placeholder for alignment -->
-                    <th class="actions-th">Actions</th>
+                    <th style="width: 30%">Date Created</th>
+                    <th style="text-align: center;">Title</th>
+                    {% if user.is_superuser %}
+                        <th class="actions-th">Actions</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
                 {% for news in news_list %}
-                <tr data-content="{{ news.content|escapejs }}" class="first-row">
-                    <td>{{ news.created_at }}</td>
-                    <td>{{ news.title }}</td>
-                    <td class="empty-td"><!-- Empty Space --></td>
-                    <td class="button-cell">
-                        <div class="control__button">
-                            <a href="{% url 'dogs_app:update_news' news.id %}" class="mx-1" title="Edit">
-                              <span class="icon-edit text-dark"></span>
-                            </a>
-                            <a href="{% url 'dogs_app:delete_news' news.id %}" class="mx-1" title="Delete">
-                              <span class="icon-delete text-dark"></span>
-                            </a>
-                        </div>
-                    </td>
-                </tr>
+                    <tr data-content="{{ news.content|escapejs }}" class="first-row">
+                        <td style="text-align: center;">{{ news.created_at }}</td>
+                        <td style="text-align: center;">{{ news.title }}</td>
+                        {% if user.is_superuser %}
+                            <td class="button-cell">
+                                <div class="control__button">
+                                    <a href="{% url 'dogs_app:update_news' news.id %}" class="mx-1" title="Edit">
+                                      <span class="icon-edit text-dark"></span>
+                                    </a>
+                                    <a href="{% url 'dogs_app:delete_news' news.id %}" class="mx-1" title="Delete">
+                                      <span class="icon-delete text-dark"></span>
+                                    </a>
+                                </div>
+                            </td>
+                        {% endif %}
+                    </tr>
+                    <tr class="content-row second-row">
+                        <td colspan="{% if user.is_superuser %} 3 {% else %} 2 {% endif %}" style="text-align: center; padding: 3rem;">{{ news.content }}</td>
+                    </tr>
                 {% endfor %}
             </tbody>
-
-            </table>
         </div>
     </div>
 {% endblock %}

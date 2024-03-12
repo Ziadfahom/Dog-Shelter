@@ -71,6 +71,9 @@
         {{ observation.jsonFile|handle_none }}
     </td>
     <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Stances for this Observation">
+        {{ observation.csvFile|handle_none }}
+    </td>
+    <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Stances for this Observation">
         {{ observation.rawVideo|handle_none }}
     </td>
     <td>

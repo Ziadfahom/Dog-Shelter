@@ -14,6 +14,7 @@ from dogs_app.models import (Owner, Camera, Kennel, Treatment, EntranceExaminati
                              DogPlacement, Observes, Observation, DogStance, Branch)
 from portal_app.tables import (OwnerTable, CameraTable, KennelTable, TreatmentTable, ExaminationTable,
                                DogPlacementTable, ObservesTable, ObservationTable, DogStanceTable)
+from dogs_app.views import vet_required
 
 
 # Helper function to get the user's current branch object (Israel/Italy)
@@ -25,6 +26,7 @@ def get_current_branch(request):
     return branch
 
 
+@vet_required
 # Display a list of all Owners
 def owner_list_portal(request):
     branch = get_current_branch(request)
@@ -58,6 +60,7 @@ def owner_list_portal(request):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle adding a new Owner
 def add_owner_portal(request):
     branch = get_current_branch(request)
@@ -96,6 +99,7 @@ def add_owner_portal(request):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle deleting an Owner
 def delete_owner_portal(request, pk):
     if request.user.is_authenticated:
@@ -122,6 +126,7 @@ def delete_owner_portal(request, pk):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle editing an Owner
 def edit_owner_portal(request, pk):
     if request.user.is_authenticated:
@@ -158,6 +163,7 @@ def edit_owner_portal(request, pk):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Display a list of all Cameras
 def camera_list_portal(request):
     branch = get_current_branch(request)
@@ -187,6 +193,7 @@ def camera_list_portal(request):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle adding a new Camera
 def add_camera_portal(request):
     branch = get_current_branch(request)
@@ -224,6 +231,7 @@ def add_camera_portal(request):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle deleting a Camera
 def delete_camera_portal(request, pk):
     if request.user.is_authenticated:
@@ -250,6 +258,7 @@ def delete_camera_portal(request, pk):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle editing a Camera
 def edit_camera_portal(request, pk):
     if request.user.is_authenticated:
@@ -287,6 +296,7 @@ def edit_camera_portal(request, pk):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Display a list of all Kennels
 def kennel_list_portal(request):
     branch = get_current_branch(request)
@@ -317,6 +327,7 @@ def kennel_list_portal(request):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle adding a new Kennel
 def add_kennel_portal(request):
     branch = get_current_branch(request)
@@ -361,6 +372,7 @@ def add_kennel_portal(request):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle deleting a Kennel
 def delete_kennel_portal(request, pk):
     if request.user.is_authenticated:
@@ -387,6 +399,7 @@ def delete_kennel_portal(request, pk):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle editing a Kennel
 def edit_kennel_portal(request, pk):
     if request.user.is_authenticated:
@@ -430,6 +443,7 @@ def edit_kennel_portal(request, pk):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Display a list of all Treatments
 def treatment_list_portal(request):
     branch = get_current_branch(request)
@@ -482,6 +496,7 @@ def treatment_list_portal(request):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle adding a new Treatment
 def add_treatment_portal(request):
     if request.user.is_authenticated:
@@ -520,6 +535,7 @@ def add_treatment_portal(request):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle deleting a Treatment
 def delete_treatment_portal(request, pk):
     if request.user.is_authenticated:
@@ -546,6 +562,7 @@ def delete_treatment_portal(request, pk):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle editing a Treatment
 def edit_treatment_portal(request, pk):
     if request.user.is_authenticated:
@@ -588,6 +605,7 @@ def edit_treatment_portal(request, pk):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Display a list of all Examinations
 def examination_list_portal(request):
     branch = get_current_branch(request)
@@ -644,6 +662,7 @@ def examination_list_portal(request):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle adding a new Examination
 def add_examination_portal(request):
     if request.user.is_authenticated:
@@ -682,6 +701,7 @@ def add_examination_portal(request):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle deleting an Examination
 def delete_examination_portal(request, pk):
     if request.user.is_authenticated:
@@ -708,6 +728,7 @@ def delete_examination_portal(request, pk):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle editing an Examination
 def edit_examination_portal(request, pk):
     if request.user.is_authenticated:
@@ -750,6 +771,7 @@ def edit_examination_portal(request, pk):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Display a list of all Dog Placements
 def placement_list_portal(request):
     branch = get_current_branch(request)
@@ -813,6 +835,7 @@ def placement_list_portal(request):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle adding a new Placement
 def add_placement_portal(request):
     if request.user.is_authenticated:
@@ -851,6 +874,7 @@ def add_placement_portal(request):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle deleting a Placement
 def delete_placement_portal(request, pk):
     if request.user.is_authenticated:
@@ -878,6 +902,7 @@ def delete_placement_portal(request, pk):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle editing a Placement
 def edit_placement_portal(request, pk):
     if request.user.is_authenticated:
@@ -920,6 +945,7 @@ def edit_placement_portal(request, pk):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Display a list of all Sessions (Observes)
 def observes_list_portal(request):
     branch = get_current_branch(request)
@@ -968,6 +994,7 @@ def observes_list_portal(request):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle adding a new Session
 def add_observes_portal(request):
     if request.user.is_authenticated:
@@ -1006,6 +1033,7 @@ def add_observes_portal(request):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle deleting a Session
 def delete_observes_portal(request, pk):
     if request.user.is_authenticated:
@@ -1032,6 +1060,7 @@ def delete_observes_portal(request, pk):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle editing a Session
 def edit_observes_portal(request, pk):
     if request.user.is_authenticated:
@@ -1074,6 +1103,7 @@ def edit_observes_portal(request, pk):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Display a list of all Observations
 def observations_list_portal(request):
     branch = get_current_branch(request)
@@ -1130,6 +1160,7 @@ def observations_list_portal(request):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle adding a new Observation
 def add_observation_portal(request):
     if request.user.is_authenticated:
@@ -1171,6 +1202,7 @@ def add_observation_portal(request):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle deleting an Observation
 def delete_observation_portal(request, pk):
     if request.user.is_authenticated:
@@ -1197,6 +1229,7 @@ def delete_observation_portal(request, pk):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle editing an Observation
 def edit_observation_portal(request, pk):
     if request.user.is_authenticated:
@@ -1245,6 +1278,7 @@ def edit_observation_portal(request, pk):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Display a list of all DogStances
 def stances_list_portal(request):
     branch = get_current_branch(request)
@@ -1298,6 +1332,7 @@ def stances_list_portal(request):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle adding a new DogStance
 def add_stance_portal(request):
     if request.user.is_authenticated:
@@ -1339,6 +1374,7 @@ def add_stance_portal(request):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle deleting a DogStance
 def delete_stance_portal(request, pk):
     if request.user.is_authenticated:
@@ -1365,6 +1401,7 @@ def delete_stance_portal(request, pk):
         return redirect('dogs_app:home')
 
 
+@vet_required
 # Handle editing a DogStance
 def edit_stance_portal(request, pk):
     if request.user.is_authenticated:
