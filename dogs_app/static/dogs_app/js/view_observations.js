@@ -643,7 +643,7 @@ $(document).ready(function(){
             "order": [[0, 'asc']],
             "stateSave": true,
             "language": {
-                "emptyTable": "No Dog Stances found."
+                "emptyTable": "No Dog Activities found."
             },
             "columnDefs": [
                 {

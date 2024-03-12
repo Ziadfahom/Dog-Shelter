@@ -1,8 +1,10 @@
 // Initialize ageSlider for the noUiSlider
 const ageSlider = document.getElementById('ageRange');
 if (userIsVet === true) {
+
 }
 else {
+
 }
 
 // Age filter logic
@@ -33,14 +35,18 @@ $(document).ready(function() {
 
     // Extract URL parameters and form values.
     let params = getURLParameters();
+
     params.dogName = document.getElementById('searchInput').value;
-    params.startDateOfArrival = document.getElementById('startDateOfArrival').value;
-    params.endDateOfArrival = document.getElementById('endDateOfArrival').value;
     params.breed = document.getElementById('breed').value;
     params.gender = document.getElementById('gender').value;
     params.furColor = document.getElementById('furColor').value;
     params.ageFrom = Math.round(ageSlider.noUiSlider.get()[0]);
     params.ageTo = Math.round(ageSlider.noUiSlider.get()[1]);
+
+    // Update URL parameters matching the user's permissions (for Vets and above)
+    if (userIsVet === true) {
+    params.startDateOfArrival = document.getElementById('startDateOfArrival').value;
+    params.endDateOfArrival = document.getElementById('endDateOfArrival').value;
     params.startDateOfVaccination = document.getElementById('startDateOfVaccination').value;
     params.endDateOfVaccination = document.getElementById('endDateOfVaccination').value;
     params.isNeutered = document.getElementById('isNeutered').value;
@@ -48,7 +54,7 @@ $(document).ready(function() {
     params.kongstartDateAdded = document.getElementById('kongstartDateAdded').value;
     params.kongendDateAdded = document.getElementById('kongendDateAdded').value;
     params.owner = document.getElementById('owner').value;
-
+    }
 
     // Determine the selected page number from pagination link.
     let pageNumber = $(this).data('page');
@@ -70,8 +76,12 @@ $(document).ready(function() {
       delete params.dogName;
     }
 
-    // Update the URL with the new parameter and refresh the table
-    updateURL(params.page, params.sort_by, searchQuery || '', params.startDateOfArrival, params.endDateOfArrival, params.breed, params.gender, params.furColor, params.ageFrom, params.ageTo, params.startDateOfVaccination, params.endDateOfVaccination, params.isNeutered, params.isDangerous, params.kongstartDateAdded, params.kongendDateAdded, params.owner);
+    // Update the URL with the new parameter and refresh the table depending on User's permissions
+    if (userIsVet === true) {
+        updateVetURL(params.page, params.sort_by, searchQuery || '', params.startDateOfArrival, params.endDateOfArrival, params.breed, params.gender, params.furColor, params.ageFrom, params.ageTo, params.startDateOfVaccination, params.endDateOfVaccination, params.isNeutered, params.isDangerous, params.kongstartDateAdded, params.kongendDateAdded, params.owner);
+    } else {
+        updateURL(params.page, params.sort_by, searchQuery || '', params.breed, params.gender, params.furColor, params.ageFrom, params.ageTo);
+    }
     refreshTable(params, params.page || 1);
   });
 
@@ -138,8 +148,12 @@ function refreshTable(params, pageNumber) {
           </tr>`;
       }
 
-      // Update the URL to reflect the new state.
-      updateURL(pageNumber, params.sort_by, params.dogName || '', params.startDateOfArrival, params.endDateOfArrival, params.breed, params.gender, params.furColor, params.ageFrom, params.ageTo, params.startDateOfVaccination, params.endDateOfVaccination, params.isNeutered, params.isDangerous, params.kongstartDateAdded, params.kongendDateAdded, params.owner);
+      // Update the URL to reflect the new state depending on User's permissions
+      if (userIsVet === true) {
+        updateVetURL(pageNumber, params.sort_by, params.dogName || '', params.startDateOfArrival, params.endDateOfArrival, params.breed, params.gender, params.furColor, params.ageFrom, params.ageTo, params.startDateOfVaccination, params.endDateOfVaccination, params.isNeutered, params.isDangerous, params.kongstartDateAdded, params.kongendDateAdded, params.owner);
+      } else {
+        updateURL(pageNumber, params.sort_by, params.dogName || '', params.breed, params.gender, params.furColor, params.ageFrom, params.ageTo);
+      }
 
       // Initialize tooltips.
       $('[data-bs-toggle="tooltip"]').tooltip({
@@ -193,19 +207,23 @@ function applyFiltersFromURL() {
   // If filters are present, populate the filter fields.
   if (hasFilters) {
     document.getElementById('searchInput').value = params.dogName || '';
-    document.getElementById('startDateOfArrival').value = params.startDateOfArrival || '';
-    document.getElementById('endDateOfArrival').value = params.endDateOfArrival || '';
     document.getElementById('breed').value = params.breed || '';
     document.getElementById('gender').value = params.gender || '';
     document.getElementById('furColor').value = params.furColor || '';
     ageSlider.noUiSlider.set([params.ageFrom || 0, params.ageTo || 20]);
-    document.getElementById('startDateOfVaccination').value = params.startDateOfVaccination || '';
-    document.getElementById('endDateOfVaccination').value = params.endDateOfVaccination || '';
-    document.getElementById('isNeutered').value = params.isNeutered || '';
-    document.getElementById('isDangerous').value = params.isDangerous || '';
-    document.getElementById('kongstartDateAdded').value = params.kongstartDateAdded || '';
-    document.getElementById('kongendDateAdded').value = params.kongendDateAdded || '';
-    document.getElementById('owner').value = params.owner || '';
+
+    // Proceed depending on User's permissions
+    if (userIsVet === true) {
+        document.getElementById('startDateOfArrival').value = params.startDateOfArrival || '';
+        document.getElementById('endDateOfArrival').value = params.endDateOfArrival || '';
+        document.getElementById('startDateOfVaccination').value = params.startDateOfVaccination || '';
+        document.getElementById('endDateOfVaccination').value = params.endDateOfVaccination || '';
+        document.getElementById('isNeutered').value = params.isNeutered || '';
+        document.getElementById('isDangerous').value = params.isDangerous || '';
+        document.getElementById('kongstartDateAdded').value = params.kongstartDateAdded || '';
+        document.getElementById('kongendDateAdded').value = params.kongendDateAdded || '';
+        document.getElementById('owner').value = params.owner || '';
+    }
   }
 
   // Refresh the table.
@@ -213,63 +231,92 @@ function applyFiltersFromURL() {
 }
 
 
+function applyVetFilters() {
+    let ageValues = ageSlider.noUiSlider.get();
+    if (userIsVet === true) {
+        return {
+            'page': 1, // Revert to first page when applying new filters
+            'sort_by': getURLParameters().sort_by || '-dateOfArrival', // Either the sorting parameter from the URL or default
+            'dogName': document.getElementById('searchInput').value || '',
+            'startDateOfArrival': document.getElementById('startDateOfArrival').value || '',
+            'endDateOfArrival': document.getElementById('endDateOfArrival').value || '',
+            'breed': document.getElementById('breed').value || '',
+            'gender': document.getElementById('gender').value || '',
+            'furColor': document.getElementById('furColor').value || '',
+            'ageFrom': Math.round(ageValues[0]) || 0,
+            'ageTo': Math.round(ageValues[1]) || 20,
+            'startDateOfVaccination': document.getElementById('startDateOfVaccination').value || '',
+            'endDateOfVaccination': document.getElementById('endDateOfVaccination').value || '',
+            'isNeutered': document.getElementById('isNeutered').value || '',
+            'isDangerous': document.getElementById('isDangerous').value || '',
+            'kongstartDateAdded': document.getElementById('kongstartDateAdded').value || '',
+            'kongendDateAdded': document.getElementById('kongendDateAdded').value || '',
+            'owner': document.getElementById('owner').value || ''
+        };
+    } else {
+        return {
+            'page': 1, // Revert to first page when applying new filters
+            'sort_by': getURLParameters().sort_by || '-dateOfArrival', // Either the sorting parameter from the URL or default
+            'dogName': document.getElementById('searchInput').value || '',
+            'breed': document.getElementById('breed').value || '',
+            'gender': document.getElementById('gender').value || '',
+            'furColor': document.getElementById('furColor').value || '',
+            'ageFrom': Math.round(ageValues[0]) || 0,
+            'ageTo': Math.round(ageValues[1]) || 20,
+        };
+    }
+}
+
 // Collect filter values and apply them.
 function applyFilters() {
-  let ageValues = ageSlider.noUiSlider.get();
-  let params = {
-    'page': 1, // Revert to first page when applying new filters
-    'sort_by': getURLParameters().sort_by || '-dateOfArrival', // Either the sorting parameter from the URL or default
-    'dogName': document.getElementById('searchInput').value || '',
-    'startDateOfArrival': document.getElementById('startDateOfArrival').value || '',
-    'endDateOfArrival': document.getElementById('endDateOfArrival').value || '',
-    'breed': document.getElementById('breed').value || '',
-    'gender': document.getElementById('gender').value || '',
-    'furColor': document.getElementById('furColor').value || '',
-    'ageFrom': Math.round(ageValues[0]) || 0,
-    'ageTo': Math.round(ageValues[1]) || 20,
-    'startDateOfVaccination': document.getElementById('startDateOfVaccination').value || '',
-    'endDateOfVaccination': document.getElementById('endDateOfVaccination').value || '',
-    'isNeutered': document.getElementById('isNeutered').value || '',
-    'isDangerous': document.getElementById('isDangerous').value || '',
-    'kongstartDateAdded': document.getElementById('kongstartDateAdded').value || '',
-    'kongendDateAdded': document.getElementById('kongendDateAdded').value || '',
-    'owner': document.getElementById('owner').value || ''
-  };
+    let ageValues = ageSlider.noUiSlider.get();
+    let params = applyVetFilters();
 
-  // Update the URL and refresh the table.
-  updateURL(params.page, params.sort_by, params.dogName, params.startDateOfArrival, params.endDateOfArrival, params.breed, params.gender, params.furColor, params.ageFrom, params.ageTo, params.startDateOfVaccination, params.endDateOfVaccination, params.isNeutered, params.isDangerous, params.kongstartDateAdded, params.kongendDateAdded, params.owner);
-  refreshTable(params, 1);
+    // Update the URL and refresh the table depending on User permissions
+    if (userIsVet === true) {
+        updateVetURL(params.page, params.sort_by, params.dogName, params.startDateOfArrival, params.endDateOfArrival, params.breed, params.gender, params.furColor, params.ageFrom, params.ageTo, params.startDateOfVaccination, params.endDateOfVaccination, params.isNeutered, params.isDangerous, params.kongstartDateAdded, params.kongendDateAdded, params.owner);
+    } else {
+        updateURL(params.page, params.sort_by, params.dogName, params.breed, params.gender, params.furColor, params.ageFrom, params.ageTo);
+    }
+
+    refreshTable(params, 1);
+    let closeFiltersButton = document.getElementById('closeFiltersButton');
+    closeFiltersButton.click();
 }
 
 
 // Reset all filters to their default state.
 function resetFilters() {
-  document.getElementById('startDateOfArrival').value = '';
-  document.getElementById('endDateOfArrival').value = '';
-  document.getElementById('breed').selectedIndex = 0;
-  document.getElementById('gender').selectedIndex = 0;
-  document.getElementById('furColor').selectedIndex = 0;
-  document.getElementById('searchInput').value = '';
-  ageSlider.noUiSlider.set([0, 20]);
-  document.getElementById('startDateOfVaccination').value = '';
-  document.getElementById('endDateOfVaccination').value = '';
-  document.getElementById('isNeutered').selectedIndex = 0;
-  document.getElementById('isDangerous').selectedIndex = 0;
-  document.getElementById('kongstartDateAdded').value = '';
-  document.getElementById('kongendDateAdded').value = '';
-  document.getElementById('owner').selectedIndex = 0;
+    document.getElementById('breed').selectedIndex = 0;
+    document.getElementById('gender').selectedIndex = 0;
+    document.getElementById('furColor').selectedIndex = 0;
+    document.getElementById('searchInput').value = '';
+    ageSlider.noUiSlider.set([0, 20]);
 
-  // Construct a new URL without query parameters and update the browser's history.
-  let newurl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-  window.history.pushState({ path: newurl }, '', newurl);
+    // Reset filters depending on User's permissions
+    if (userIsVet === true) {
+        document.getElementById('startDateOfArrival').value = '';
+        document.getElementById('endDateOfArrival').value = '';
+        document.getElementById('startDateOfVaccination').value = '';
+        document.getElementById('endDateOfVaccination').value = '';
+        document.getElementById('isNeutered').selectedIndex = 0;
+        document.getElementById('isDangerous').selectedIndex = 0;
+        document.getElementById('kongstartDateAdded').value = '';
+        document.getElementById('kongendDateAdded').value = '';
+        document.getElementById('owner').selectedIndex = 0;
+    }
 
-  // Refresh the table with no filters.
-  refreshTable({});
+    // Construct a new URL without query parameters and update the browser's history.
+    let newurl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+    window.history.pushState({ path: newurl }, '', newurl);
+
+    // Refresh the table with no filters.
+    refreshTable({});
 }
 
 
-// Update the URL to reflect the current filter and pagination state.
-function updateURL(page, sort_by, dogName, startDateOfArrival, endDateOfArrival, breed, gender, furColor, ageFrom, ageTo, startDateOfVaccination, endDateOfVaccination, isNeutered, isDangerous, kongstartDateAdded, kongendDateAdded, owner) {
+// Update the URL for Vets to reflect the current filter and pagination state.
+function updateVetURL(page, sort_by, dogName, startDateOfArrival, endDateOfArrival, breed, gender, furColor, ageFrom, ageTo, startDateOfVaccination, endDateOfVaccination, isNeutered, isDangerous, kongstartDateAdded, kongendDateAdded, owner) {
   const url = new URL(window.location);
   url.searchParams.set('page', page || '');
   url.searchParams.set('sort_by', sort_by || '-dateOfArrival');
@@ -293,6 +340,22 @@ function updateURL(page, sort_by, dogName, startDateOfArrival, endDateOfArrival,
   window.history.pushState({ path: url.toString() }, '', url.toString());
 }
 
+
+// Update the URL for regular users to reflect the current filter and pagination state.
+function updateURL(page, sort_by, dogName, breed, gender, furColor, ageFrom, ageTo) {
+  const url = new URL(window.location);
+  url.searchParams.set('page', page || '');
+  url.searchParams.set('sort_by', sort_by || '-dateOfArrival');
+  url.searchParams.set('dogName', dogName || '');
+  url.searchParams.set('breed', breed || '');
+  url.searchParams.set('gender', gender || '');
+  url.searchParams.set('furColor', furColor || '');
+  url.searchParams.set('ageFrom', ageFrom || '');
+  url.searchParams.set('ageTo', ageTo || '');
+
+  // Push the new URL state.
+  window.history.pushState({ path: url.toString() }, '', url.toString());
+}
 
 // Retrieve parameters from the current URL.
 function getURLParameters() {

@@ -16,7 +16,7 @@
 
         <div class="py-3 w-100">
             {% comment %} Header {% endcomment %}
-            <h5 class="text-dark fw-bold text-uppercase" style="text-align: center;">Add a New Dog Stance</h5>
+            <h5 class="text-dark fw-bold text-uppercase" style="text-align: center;">Add a New Dog Activity</h5>
             <hr>
 
             {% comment %} Content {% endcomment %}
@@ -43,7 +43,7 @@
                         </div>
                     {% endif %}
                     <div class="form-row">
-                        <label for="timepicker">Stance Start Time:</label>
+                        <label for="timepicker">Activity Start Time:</label>
                         <input type="text" id="timepicker" class="form-control {{ stance_form.stanceStartTime.name }}" name="{{ stance_form.stanceStartTime.name }}" value="{{ stance_form.stanceStartTime.value }}">
                     </div>
 

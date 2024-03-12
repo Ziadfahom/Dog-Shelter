@@ -109,6 +109,22 @@ def vet_required(view_func):
     return _wrapped_view
 
 
+# Return True if the user is validated as a Vet user
+def valid_vet_user(request):
+    if request.user.is_authenticated and (request.user.groups.filter(name='Vet').exists() or request.user.is_superuser):
+        return True
+    else:
+        return False
+
+
+# Return True if the user is validated as a registered Regular ('Viewer') user
+def valid_registered_regular_user(request):
+    if request.user.is_authenticated and (request.user.groups.filter(name='Vet').exists() or request.user.groups.filter(name='Viewer').exists() or request.user.is_superuser):
+        return True
+    else:
+        return False
+
+
 # Helper function to check if the user is logged in and is a regular (registered) user
 def regular_user_required(view_func):
     @wraps(view_func)
@@ -173,6 +189,7 @@ def home_view(request):
             'role': role
         }
         return render(request, 'home.html', context=context)
+
 
 # Logout Users view for displaying a user-logout option if they're already logged in
 def logout_user_view(request):
@@ -301,7 +318,6 @@ def add_news(request):
 def dog_record_view(request, pk):
     # Check if the user is logged in
     if request.user.is_authenticated:
-
         # Look up and save the dog's record and all relevant data of that dog
         dog_record = Dog.objects.select_related('owner').prefetch_related(
             'treatment_set',
@@ -1626,9 +1642,12 @@ def chart_data(request):
 
     # Get all the Dogs that have received a Kong Toy
     dogs_with_kong = Dog.objects.filter(branch=branch, kongDateAdded__isnull=False)
-    # ---Comprehensive Health & Safety Profile of Our Canines Chart---
+
+    # ---Health Metrics Profiling of Our Canines Chart---
     # Prepare a dictionary in JSON for distribution of dogs by gender, vaccination and isneutered
-    health_metrics = get_health_metrics_dict(request=request)
+    # ONLY for vets
+    if request.user.is_authenticated and (request.user.groups.filter(name='Vet').exists() or request.user.is_superuser):
+        health_metrics = get_health_metrics_dict(request=request)
     # -----------------------------------
 
     # ---Dog Stances With/Without Kong Charts---
@@ -1700,7 +1719,8 @@ def chart_data(request):
         'top_stances_per_year': top_stances_per_year,  # Dog Stances by Day (Across The Week) Chart (5)
         'top_stances_per_year_limits': top_stances_per_year_limits,  # Dog Stances by Day (Across The Week) Chart (6)
         'top_stance_position_combos': top_stance_position_combos,  # Most Common General Behaviors Chart
-        'health_metrics': health_metrics,  # Comprehensive Health & Safety Profile of Our Canines Chart
+        # Comprehensive Health & Safety Profile of Our Canines Chart (only for vets)
+        'health_metrics': health_metrics if request.user.is_authenticated and (request.user.groups.filter(name='Vet').exists() or request.user.is_superuser) else None,
     }
 
     return JsonResponse(data)

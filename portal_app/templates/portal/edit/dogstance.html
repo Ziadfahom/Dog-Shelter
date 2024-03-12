@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block head %}
-    <title>DogsWatch | Edit Stance</title>
+    <title>DogsWatch | Edit Dog Activity</title>
     <link rel="stylesheet" href="{% static 'portal_app/css/simple_styles.css' %}">
 {% endblock %}
 
@@ -24,7 +24,7 @@
 
                 <!-- Form -->
                 <div class="form-container">
-                    <h2>Edit Stance</h2>
+                    <h2>Edit Dog Activity</h2>
                     <form method="post">
                         {% csrf_token %}
                         {{ form.as_p }}

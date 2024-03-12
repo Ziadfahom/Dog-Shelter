@@ -156,9 +156,18 @@ function fetchDataAndCreateCharts() {
                 // Stance+Position With/Without Kong Radar Chart
                 var ctx_stance_position = document.getElementById('chart_dogStance_dogPosition_with_without').getContext('2d');
 
-                // Health Metrics Multi-Series Pie Chart
-                var ctx_health_metrics = document.getElementById('chart_health_metrics').getContext('2d');
 
+                // Return the context for the health metrics chart if the user is a vet only
+                function getHealthMetricsData() {
+                    if (userIsVet === true) {
+                        return document.getElementById('chart_health_metrics').getContext('2d');
+                    } else {
+                        return null;
+                    }
+                }
+
+                // Health Metrics Multi-Series Pie Chart
+                var ctx_health_metrics = getHealthMetricsData();
 
                 // Define Colors
                 var gradient_with_kong = ctx_with_kong.createLinearGradient(0, 0, 0, 400);
@@ -175,7 +184,7 @@ function fetchDataAndCreateCharts() {
                     data: {
                         labels: data.stances_with_kong.map(item => item.dogStance),
                         datasets: [{
-                            label: '# of Stances',
+                            label: '# of Activities',
                             data: data.stances_with_kong.map(item => item.total),
                             backgroundColor: gradient_with_kong,
                             borderColor: 'rgba(75, 192, 192, 1)',
@@ -186,7 +195,7 @@ function fetchDataAndCreateCharts() {
                         responsive: true,
                         title: {
                             display: true,
-                            text: 'Dog Stances with Kong',
+                            text: 'Dog Activities With Toy',
                             fontSize: 24
                         },
                         plugins: {
@@ -261,7 +270,7 @@ function fetchDataAndCreateCharts() {
                     data: {
                         labels: data.stances_without_kong.map(item => item.dogStance),
                         datasets: [{
-                            label: '# of Stances',
+                            label: '# of Activities',
                             data: data.stances_without_kong.map(item => item.total),
                             backgroundColor: gradient_without_kong,
                             borderColor: 'rgba(255, 99, 132, 1)',
@@ -272,7 +281,7 @@ function fetchDataAndCreateCharts() {
                         responsive: true,
                         title: {
                             display: true,
-                            text: 'Dog Stances without Kong',
+                            text: 'Dog Activities Without Toy',
                             fontSize: 24
                         },
                         plugins: {
@@ -398,7 +407,7 @@ function fetchDataAndCreateCharts() {
                         labels: data.top_stance_position_combos.map(item => item[0]), // Stance + Position
                         datasets: [
                             {
-                                label: 'With Kong',
+                                label: 'With Toy',
                                 data: data.top_stance_position_combos.map(item => item[1]), // Count with Kong
                                 backgroundColor: 'rgba(0, 128, 0, 0.5)', // Teal-ish green
                                 borderColor: 'rgba(0, 128, 0, 1)',
@@ -406,7 +415,7 @@ function fetchDataAndCreateCharts() {
                                 pointBackgroundColor: 'rgba(75, 192, 192, 1)' // Sky blue
                             },
                             {
-                                label: 'Without Kong',
+                                label: 'Without Toy',
                                 data: data.top_stance_position_combos.map(item => item[2]), // Count without Kong
                                 backgroundColor: 'rgba(220, 20, 60, 0.5)', // Crimson-ish red
                                 borderColor: 'rgba(220, 20, 60, 1)',
@@ -478,248 +487,255 @@ function fetchDataAndCreateCharts() {
                 });
 
 
-                // Prepare data for Health Metrics Multi-Series Pie Chart
+                // Prepare data for Health Metrics Multi-Series Pie Chart (only if the user is a vet)
                 // Extract the health metrics
-                const health_metrics = data.health_metrics;
-
-                // Generate labels and data arrays for each ring
-                const genderData = [health_metrics.gender.M, health_metrics.gender.F];
-                const genderLabels = ['Total Male Dogs', 'Total Female Dogs'];
-
-                // Extract vaccination data for each gender
-                const vaccinatedData = [].concat(health_metrics.vaccinated.M.Y, health_metrics.vaccinated.M.N, health_metrics.vaccinated.F.Y, health_metrics.vaccinated.F.N);
-
-                // Extract neutered data for each gender
-                const neuteredMaleData = [
-                    health_metrics.neutered.M.Y.Y,
-                    health_metrics.neutered.M.Y.N,
-                    health_metrics.neutered.M.Y['-'],
-                    health_metrics.neutered.M.N.Y,
-                    health_metrics.neutered.M.N.N,
-                    health_metrics.neutered.M.N['-']
-                ];
-
-                const neuteredFemaleData = [
-                    health_metrics.neutered.F.Y.Y,
-                    health_metrics.neutered.F.Y.N,
-                    health_metrics.neutered.F.Y['-'],
-                    health_metrics.neutered.F.N.Y,
-                    health_metrics.neutered.F.N.N,
-                    health_metrics.neutered.F.N['-']
-                ];
-
-                const neuteredData = [].concat.apply([], [neuteredMaleData, neuteredFemaleData]);
-
-                // Takes a base color in RGB format and a factor by which to lighten or darken the color
-                function adjustColor(color, factor) {
-                    const [r, g, b] = color.match(/\d+/g).map(Number);
-                    return `rgba(${Math.min(255, r * factor)}, ${Math.min(255, g * factor)}, ${Math.min(255, b * factor)}, 1)`;
+                function getHealthMetrics(data) {
+                    if (userIsVet === true) {
+                        return data.health_metrics;
+                    } else {
+                        return null;
+                    }
                 }
 
-                const health_baseColors = {
-                    'M': 'rgba(0, 128, 255, 1)',  // Blue for Male
-                    'F': 'rgba(255, 0, 128, 1)'   // Pink for Female
-                };
+                // Health Metrics Multi-Series Pie Chart (for vets only)
+                const health_metrics = getHealthMetrics(data);
 
-                let health_backgroundColors = [];
+                // Generate the Metrics charts only for vets
+                if (userIsVet === true) {
+                    // Generate labels and data arrays for each ring
+                    const genderData = [health_metrics.gender.M, health_metrics.gender.F];
+                    const genderLabels = ['Total Male Dogs', 'Total Female Dogs'];
 
-                // Blend two colors
-                function blendColors(color1, color2, weight) {
-                    let w1 = weight;
-                    let w2 = 1 - w1;
-                    let rgb1 = color1.match(/\d+/g);
-                    let rgb2 = color2.match(/\d+/g);
+                    // Extract vaccination data for each gender
+                    const vaccinatedData = [].concat(health_metrics.vaccinated.M.Y, health_metrics.vaccinated.M.N, health_metrics.vaccinated.F.Y, health_metrics.vaccinated.F.N);
 
-                    let blended = rgb1.map((x, i) => {
-                        return Math.floor(x * w1 + rgb2[i] * w2);
+                    // Extract neutered data for each gender
+                    const neuteredMaleData = [
+                        health_metrics.neutered.M.Y.Y,
+                        health_metrics.neutered.M.Y.N,
+                        health_metrics.neutered.M.Y['-'],
+                        health_metrics.neutered.M.N.Y,
+                        health_metrics.neutered.M.N.N,
+                        health_metrics.neutered.M.N['-']
+                    ];
+
+                    const neuteredFemaleData = [
+                        health_metrics.neutered.F.Y.Y,
+                        health_metrics.neutered.F.Y.N,
+                        health_metrics.neutered.F.Y['-'],
+                        health_metrics.neutered.F.N.Y,
+                        health_metrics.neutered.F.N.N,
+                        health_metrics.neutered.F.N['-']
+                    ];
+
+                    const neuteredData = [].concat.apply([], [neuteredMaleData, neuteredFemaleData]);
+
+                    // Takes a base color in RGB format and a factor by which to lighten or darken the color
+                    function adjustColor(color, factor) {
+                        const [r, g, b] = color.match(/\d+/g).map(Number);
+                        return `rgba(${Math.min(255, r * factor)}, ${Math.min(255, g * factor)}, ${Math.min(255, b * factor)}, 1)`;
+                    }
+
+                    const health_baseColors = {
+                        'M': 'rgba(0, 128, 255, 1)',  // Blue for Male
+                        'F': 'rgba(255, 0, 128, 1)'   // Pink for Female
+                    };
+
+                    let health_backgroundColors = [];
+
+                    // Blend two colors
+                    function blendColors(color1, color2, weight) {
+                        let w1 = weight;
+                        let w2 = 1 - w1;
+                        let rgb1 = color1.match(/\d+/g);
+                        let rgb2 = color2.match(/\d+/g);
+
+                        let blended = rgb1.map((x, i) => {
+                            return Math.floor(x * w1 + rgb2[i] * w2);
+                        });
+
+                        return `rgba(${blended[0]}, ${blended[1]}, ${blended[2]}, 1)`;
+                    }
+
+                    const health_outerBaseColors = {
+                        'M': 'rgba(128, 0, 128, 1)',  // Purple for Male
+                        'F': 'rgba(0, 255, 128, 1)'   // Green for Female
+                    };
+
+                    // Gender
+                    health_backgroundColors.push(health_baseColors['M'], health_baseColors['F']);
+
+                    // Vaccinated
+                    ['M', 'F'].forEach(gender => {
+                        health_backgroundColors.push(blendColors(health_baseColors[gender], health_outerBaseColors[gender], 0.85));
+                        health_backgroundColors.push(adjustColor(health_baseColors[gender], 0.65));
                     });
 
-                    return `rgba(${blended[0]}, ${blended[1]}, ${blended[2]}, 1)`;
-                }
-
-                const health_outerBaseColors = {
-                    'M': 'rgba(128, 0, 128, 1)',  // Purple for Male
-                    'F': 'rgba(0, 255, 128, 1)'   // Green for Female
-                };
-
-                // Gender
-                health_backgroundColors.push(health_baseColors['M'], health_baseColors['F']);
-
-                // Vaccinated
-                ['M', 'F'].forEach(gender => {
-                    health_backgroundColors.push(blendColors(health_baseColors[gender], health_outerBaseColors[gender], 0.85));
-                    health_backgroundColors.push(adjustColor(health_baseColors[gender], 0.65));
-                });
-
-                // Neutered
-                ['M', 'F'].forEach(gender => {
-                    ['Y', 'N'].forEach(vaccination => {
-                        health_backgroundColors.push(blendColors(health_baseColors[gender], health_outerBaseColors[gender], 0.75));
-                        health_backgroundColors.push(blendColors(health_baseColors[gender], health_outerBaseColors[gender], 0.625));
-                        health_backgroundColors.push(blendColors(health_baseColors[gender], health_outerBaseColors[gender], 0.45));
+                    // Neutered
+                    ['M', 'F'].forEach(gender => {
+                        ['Y', 'N'].forEach(vaccination => {
+                            health_backgroundColors.push(blendColors(health_baseColors[gender], health_outerBaseColors[gender], 0.75));
+                            health_backgroundColors.push(blendColors(health_baseColors[gender], health_outerBaseColors[gender], 0.625));
+                            health_backgroundColors.push(blendColors(health_baseColors[gender], health_outerBaseColors[gender], 0.45));
+                        });
                     });
-                });
 
-                // Combine all possible categories and ensure they're in the same order for labels and data
-                const vaccinationLabels = ['Male Vaccinated', 'Male Not Vaccinated', 'Female Vaccinated', 'Female Not Vaccinated'];
-                const neuteredLabels = [
-                    'Male Vaccinated Neutered', 'Male Vaccinated Not Neutered', 'Male Vaccinated Unknown',
-                    'Male Not Vaccinated Neutered', 'Male Not Vaccinated Not Neutered', 'Male Not Vaccinated Unknown',
-                    'Female Vaccinated Neutered', 'Female Vaccinated Not Neutered', 'Female Vaccinated Unknown',
-                    'Female Not Vaccinated Neutered', 'Female Not Vaccinated Not Neutered', 'Female Not Vaccinated Unknown'
-                ];
-                // Combined labels
-                const combinedLabels = [...genderLabels, ...vaccinationLabels, ...neuteredLabels];
+                    // Combine all possible categories and ensure they're in the same order for labels and data
+                    const vaccinationLabels = ['Male Vaccinated', 'Male Not Vaccinated', 'Female Vaccinated', 'Female Not Vaccinated'];
+                    const neuteredLabels = [
+                        'Male Vaccinated Neutered', 'Male Vaccinated Not Neutered', 'Male Vaccinated Unknown',
+                        'Male Not Vaccinated Neutered', 'Male Not Vaccinated Not Neutered', 'Male Not Vaccinated Unknown',
+                        'Female Vaccinated Neutered', 'Female Vaccinated Not Neutered', 'Female Vaccinated Unknown',
+                        'Female Not Vaccinated Neutered', 'Female Not Vaccinated Not Neutered', 'Female Not Vaccinated Unknown'
+                    ];
+                    // Combined labels
+                    const combinedLabels = [...genderLabels, ...vaccinationLabels, ...neuteredLabels];
 
-                // Initialize Chart.js Data and Config based on health metrics
-                var chart_health_metrics = new Chart(ctx_health_metrics, {
-                    type: 'pie',
-                    data: {
-                        labels: combinedLabels,
-                        datasets: [
-                            {
-                                label: 'Neutered',
-                                backgroundColor: health_backgroundColors.slice(6, 6 + neuteredData.length),
-                                borderColor: '#1F2633',
-                                borderWidth: 3,
-                                data: neuteredData,
-                            },
-                            {
-                                label: 'Vaccinated',
-                                backgroundColor: health_backgroundColors.slice(2, 2 + vaccinatedData.length),
-                                borderColor: '#1F2633',
-                                borderWidth: 3,
-                                data: vaccinatedData
-                            },
-                            {
-                                label: 'Gender',
-                                backgroundColor: health_backgroundColors.slice(0, genderData.length),
-                                borderColor: '#1F2633',
-                                borderWidth: 3,
-                                data: genderData
-                            }
-
-                        ]
-                    },
-                    options: {
-                        events: ['mousemove', 'mouseout', 'touchstart', 'touchmove'], //Exclude click event on Legends
-                        responsive: true,
-                        plugins: {
-                            datalabels: {
-                                color: 'charcoal',
-                                font: {
-                                    size: 24,
-                                    weight: 'bold'
+                    // Initialize Chart.js Data and Config based on health metrics
+                    var chart_health_metrics = new Chart(ctx_health_metrics, {
+                        type: 'pie',
+                        data: {
+                            labels: combinedLabels,
+                            datasets: [
+                                {
+                                    label: 'Neutered',
+                                    backgroundColor: health_backgroundColors.slice(6, 6 + neuteredData.length),
+                                    borderColor: '#1F2633',
+                                    borderWidth: 3,
+                                    data: neuteredData,
                                 },
-                                anchor: 'center',
-                                align: 'center',
-                                formatter: function (value, context) {
-                                    // show each context.dataset.label on the first value for that dataset
-                                    // Also show all values that are not zero
-                                    if (context.dataIndex === 0) {
-                                        if (value !== 0) {
-                                            if (context.dataset.label === 'Gender') {
-                                                return ' ' + context.dataset.label + '  \n      ' + value + '\n';
-                                            }
-                                            else if (context.dataset.label === 'Vaccinated') {
-                                                return '     ' + context.dataset.label + '  \n            ' + value;
-                                            }
-                                            else {
-                                                return context.dataset.label + '  \n      ' + value;
-                                            }
-                                        }
-                                        else {
-                                            if (context.dataset.label === 'Gender') {
-                                                return '             ' + context.dataset.label;
-                                            }
-                                            else {
-                                                return '                     ' + context.dataset.label;
-                                            }
-                                        }
-                                    } else {
-                                        if (value !== 0) {
-                                            return value;
-                                        }
-                                        else {
-                                            return '';
-                                        }
-                                    }
+                                {
+                                    label: 'Vaccinated',
+                                    backgroundColor: health_backgroundColors.slice(2, 2 + vaccinatedData.length),
+                                    borderColor: '#1F2633',
+                                    borderWidth: 3,
+                                    data: vaccinatedData
+                                },
+                                {
+                                    label: 'Gender',
+                                    backgroundColor: health_backgroundColors.slice(0, genderData.length),
+                                    borderColor: '#1F2633',
+                                    borderWidth: 3,
+                                    data: genderData
                                 }
-                            },
-                            tooltip: {
-                                bodyFont: {
-                                    size: 17,
-                                },
-                                titleFont: {
-                                    size: 18,
-                                },
-                                callbacks: {
-                                    label: function (context) {
-                                        let labelIndex;
-                                        if (context.datasetIndex === 0) {
-                                            labelIndex = genderLabels.length + vaccinationLabels.length + context.dataIndex;
-                                        } else if (context.datasetIndex === 1) {
-                                            labelIndex = genderLabels.length + context.dataIndex;
-                                        } else if (context.datasetIndex === 2) {
-                                            labelIndex = context.dataIndex;
-                                        }
-                                        return context.chart.data.labels[labelIndex] + ': ' + context.formattedValue;
-                                    }
-                                }
-                            },
-                            legend: {
-                                display: true,
-                                reverse: true,
-                                position: 'bottom',
-                                labels: {
+
+                            ]
+                        },
+                        options: {
+                            events: ['mousemove', 'mouseout', 'touchstart', 'touchmove'], //Exclude click event on Legends
+                            responsive: true,
+                            plugins: {
+                                datalabels: {
+                                    color: 'charcoal',
                                     font: {
-                                        size: 17,
+                                        size: 24,
                                         weight: 'bold'
                                     },
-                                    color: '#333333',
-                                    generateLabels: function (chart) {
-                                        let labels = [];
-                                        let cumulativeIndex = 0;
-
-                                        chart.data.datasets.slice().reverse().forEach((dataset, datasetIndexRev) => {
-                                            let datasetIndex = chart.data.datasets.length - 1 - datasetIndexRev;
-
-                                            dataset.data.slice().reverse().forEach((dataValue, dataIndexRev) => {
-                                                if (dataValue !== 0) {
-                                                    // Calculate the actual label index in the combinedLabels array
-                                                    let dataIndex = dataset.data.length - 1 - dataIndexRev;
-                                                    let actualLabelIndex = cumulativeIndex + dataIndex;
-
-                                                    labels.unshift({ // Unshift to add to the beginning of the array
-                                                        text: chart.data.labels[actualLabelIndex],
-                                                        fillStyle: dataset.backgroundColor[dataIndex],
-                                                        hidden: !chart.isDatasetVisible(datasetIndex),
-                                                        datasetIndex: datasetIndex,
-                                                        index: dataIndex
-                                                    });
+                                    anchor: 'center',
+                                    align: 'center',
+                                    formatter: function (value, context) {
+                                        // show each context.dataset.label on the first value for that dataset
+                                        // Also show all values that are not zero
+                                        if (context.dataIndex === 0) {
+                                            if (value !== 0) {
+                                                if (context.dataset.label === 'Gender') {
+                                                    return ' ' + context.dataset.label + '  \n      ' + value + '\n';
+                                                } else if (context.dataset.label === 'Vaccinated') {
+                                                    return '     ' + context.dataset.label + '  \n            ' + value;
+                                                } else {
+                                                    return context.dataset.label + '  \n      ' + value;
                                                 }
+                                            } else {
+                                                if (context.dataset.label === 'Gender') {
+                                                    return '             ' + context.dataset.label;
+                                                } else {
+                                                    return '                     ' + context.dataset.label;
+                                                }
+                                            }
+                                        } else {
+                                            if (value !== 0) {
+                                                return value;
+                                            } else {
+                                                return '';
+                                            }
+                                        }
+                                    }
+                                },
+                                tooltip: {
+                                    bodyFont: {
+                                        size: 17,
+                                    },
+                                    titleFont: {
+                                        size: 18,
+                                    },
+                                    callbacks: {
+                                        label: function (context) {
+                                            let labelIndex;
+                                            if (context.datasetIndex === 0) {
+                                                labelIndex = genderLabels.length + vaccinationLabels.length + context.dataIndex;
+                                            } else if (context.datasetIndex === 1) {
+                                                labelIndex = genderLabels.length + context.dataIndex;
+                                            } else if (context.datasetIndex === 2) {
+                                                labelIndex = context.dataIndex;
+                                            }
+                                            return context.chart.data.labels[labelIndex] + ': ' + context.formattedValue;
+                                        }
+                                    }
+                                },
+                                legend: {
+                                    display: true,
+                                    reverse: true,
+                                    position: 'bottom',
+                                    labels: {
+                                        font: {
+                                            size: 17,
+                                            weight: 'bold'
+                                        },
+                                        color: '#333333',
+                                        generateLabels: function (chart) {
+                                            let labels = [];
+                                            let cumulativeIndex = 0;
+
+                                            chart.data.datasets.slice().reverse().forEach((dataset, datasetIndexRev) => {
+                                                let datasetIndex = chart.data.datasets.length - 1 - datasetIndexRev;
+
+                                                dataset.data.slice().reverse().forEach((dataValue, dataIndexRev) => {
+                                                    if (dataValue !== 0) {
+                                                        // Calculate the actual label index in the combinedLabels array
+                                                        let dataIndex = dataset.data.length - 1 - dataIndexRev;
+                                                        let actualLabelIndex = cumulativeIndex + dataIndex;
+
+                                                        labels.unshift({ // Unshift to add to the beginning of the array
+                                                            text: chart.data.labels[actualLabelIndex],
+                                                            fillStyle: dataset.backgroundColor[dataIndex],
+                                                            hidden: !chart.isDatasetVisible(datasetIndex),
+                                                            datasetIndex: datasetIndex,
+                                                            index: dataIndex
+                                                        });
+                                                    }
+                                                });
+
+                                                // Update cumulative index for the next dataset
+                                                cumulativeIndex += dataset.data.length;
                                             });
 
-                                            // Update cumulative index for the next dataset
-                                            cumulativeIndex += dataset.data.length;
-                                        });
+                                            return labels;
+                                        },
+                                        onClick: function (event, legendItem, legend) {
+                                            // Explicitly do nothing and prevent default action
+                                            null;
 
-                                        return labels;
-                                    },
-                                    onClick: function (event, legendItem, legend) {
-                                        // Explicitly do nothing and prevent default action
-                                        null;
-
-                                        // const ci = legend.chart;
-                                        // const datasetMeta = ci.getDatasetMeta(legendItem.datasetIndex);
-                                        // datasetMeta.hidden = !datasetMeta.hidden;
-                                        // ci.update();
-                                    },
+                                            // const ci = legend.chart;
+                                            // const datasetMeta = ci.getDatasetMeta(legendItem.datasetIndex);
+                                            // datasetMeta.hidden = !datasetMeta.hidden;
+                                            // ci.update();
+                                        },
+                                    }
                                 }
                             }
                         }
-                    }
-                });
+                    });
+                }
 
                 // Hide the loading spinner
                 loadingElement.style.display = 'none';
@@ -770,7 +786,7 @@ function createChartStancesByDay(topDogStances, daysOfWeek, stanceData) {
             responsive: true,
             title: {
                 display: true,
-                text: 'Dog Stances by Day (Across The Week)',
+                text: 'Dog Activities by Day (Across The Week)',
                 fontSize: 24
             },
             plugins: {

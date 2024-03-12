@@ -11,6 +11,7 @@ from django.contrib.auth.models import Group
 register = template.Library()
 
 
+# Returns True if User has the queried group's privileges and ABOVE
 @register.filter(name='has_group')
 # Takes an input name of a User group
 def has_group(user, group_name):
@@ -32,4 +33,26 @@ def has_group(user, group_name):
     else:
         return False
 
+
+# Returns True if User has the queried group's privileges and ONLY THAT
+@register.filter(name='has_only_group')
+# Takes an input name of a User group
+def has_only_group(user, group_name):
+    # Disregard case sensitivity and pluralities ('Vets'='Vet', 'Viewers'='Viewer')
+    group_name = group_name.title()
+    if group_name.endswith('s'):
+        group_name = group_name[:-1]
+
+    # Return True if query is for Admin and User is Admin
+    if group_name == "Admin" and user.is_superuser:
+        return True
+    # Return True if query is for Viewer and User is Viewer (Regular Registered User)
+    elif group_name == "Viewer" and user.groups.filter(name="Viewer").exists():
+        return True
+    # Return True if query is for Vet and User is Vet
+    elif group_name == "Vet" and user.groups.filter(name="Vet").exists():
+        return True
+    # Otherwise return False
+    else:
+        return False
 

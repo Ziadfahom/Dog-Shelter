@@ -49,7 +49,7 @@
                 </div>
 
                 <div class="card-body bg-none shadow-none">
-                    <table class="table table-bordered">
+                    <table class="table table-bordered" {% if not user|has_group:"Vet" %}style="margin-bottom: 0;"{% endif %}>
                         <thead class="table-dark">
                             <tr>
                                 <th>Attribute</th>
@@ -516,7 +516,11 @@
         const dogImageLoad = '{{ dog_record.dogName }}';
         // Pass the current branch value to the view_observations.js file for Italy-specific functionality
         const branch = "{{ request.session.branch }}";
+        // Pass the current User Authorization status to the JS file
+        const userIsVet = {% if user.is_authenticated and user|has_group:"Vet" %}true{% else %}false{% endif %};
+        // Pass the dog's image to the JS file for use in the chart title
         const chartTitleDogName = dogImageLoad ? dogImageLoad + "'s " : "";
+        // Pass the icons to the JS file for use in the Expand/Collapse All Button
         const doubleDownIcon = '<i class="fas fa-angle-double-down"></i>';
         const doubleUpIcon = '<i class="fas fa-angle-double-up"></i>';
 

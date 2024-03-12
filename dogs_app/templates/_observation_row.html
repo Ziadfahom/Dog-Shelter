@@ -14,7 +14,7 @@
 <!-- Observation Row -->
 <tr id="observation-{{ observation.id }}">
     <!-- Cell with Flexbox -->
-    <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Stances for this Observation">
+    <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Activities for this Observation">
         <div class="d-flex justify-content-between align-items-center">
             <!-- Icon at the very left -->
             <i class="fas fa-angle-down"></i>
@@ -27,10 +27,10 @@
         </div>
     </td>
 
-    <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Stances for this Observation">
+    <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Activities for this Observation">
         {{ observation.sessionDurationInMins }}
     </td>
-    <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Stances for this Observation">
+    <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Activities for this Observation">
         <div class="form-check">
             {% if observation.isKong == "Y" %}
                 <input class="form-check-input" type="checkbox" style="transform: scale(1.5);" checked disabled>
@@ -44,7 +44,7 @@
 
     <!-- Include isDog and isHuman columns if branch is Italy only -->
     {% if request.session.branch == 'Italy' %}
-        <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Stances for this Observation">
+        <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Activities for this Observation">
             <div class="form-check">
                 {% if observation.isDog == "Y" %}
                     <input class="form-check-input" type="checkbox" style="transform: scale(1.5);" checked disabled>
@@ -55,7 +55,7 @@
                 {% endif %}
             </div>
         </td>
-        <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Stances for this Observation">
+        <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Activities for this Observation">
             <div class="form-check">
                 {% if observation.isHuman == "Y" %}
                     <input class="form-check-input" type="checkbox" style="transform: scale(1.5);" checked disabled>
@@ -67,13 +67,13 @@
             </div>
         </td>
     {% endif %}
-    <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Stances for this Observation">
+    <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Activities for this Observation">
         {{ observation.jsonFile|handle_none }}
     </td>
-    <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Stances for this Observation">
+    <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Activities for this Observation">
         {{ observation.csvFile|handle_none }}
     </td>
-    <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Stances for this Observation">
+    <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Activities for this Observation">
         {{ observation.rawVideo|handle_none }}
     </td>
     <td>
@@ -98,7 +98,7 @@
                 <caption class="stances-caption bg-dark">
                     <div class="caption-wrapper">
                         <div class="text-center">
-                            Dog Stances for Observation ({{ observation.obsDateTime|localtime|format_datetime }})
+                            Dog Activities for Observation ({{ observation.obsDateTime|localtime|format_datetime }})
                         </div>
                         <button
                             data-observation-id="{{ observation.id }}"
@@ -106,7 +106,7 @@
                             class="btn btn-light text-dark add-stance-btn"
                             data-bs-toggle="tooltip"
                             data-bs-placement="bottom"
-                            title="Add a new Dog Stance"
+                            title="Add a new Dog Activity"
                         >
                             <i class="fas fa-plus" style="margin-right: 8px;"></i>
                             <i class="fas fa-paw"></i>
@@ -115,7 +115,7 @@
                 </caption>
                 <thead class="table-group-divider">
                     <tr class="table-dark">
-                        <th>Dog Stance Start Time</th>
+                        <th>Activity Start Time</th>
                         <th>Stance</th>
                         <th>Location</th>
                         <th>Edit/Delete</th>
@@ -131,7 +131,7 @@
                                     <strong class="me-auto">Success</strong>
                                 </div>
                                 <div class="toast-body">
-                                    Stance deleted successfully!
+                                    Activity deleted successfully!
                                 </div>
                             </div>
                         </div>
@@ -144,10 +144,10 @@
                             <td>
                                 <div class="btn-group" role="group">
                                     <!-- Edit and Delete buttons -->
-                                    <button type="button" class="btn btn-outline-info btn-sm edit-stance-btn" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Edit this Stance" data-stance-id="{{ stance.id }}" data-observation-id="{{ observation.id }}">
+                                    <button type="button" class="btn btn-outline-info btn-sm edit-stance-btn" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Edit this Activity" data-stance-id="{{ stance.id }}" data-observation-id="{{ observation.id }}">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button type="button" class="btn btn-outline-danger btn-sm delete-stance-btn" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Delete this Stance" data-stance-id="{{ stance.id }}" data-observation-id="{{ observation.id }}">
+                                    <button type="button" class="btn btn-outline-danger btn-sm delete-stance-btn" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Delete this Activity" data-stance-id="{{ stance.id }}" data-observation-id="{{ observation.id }}">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>

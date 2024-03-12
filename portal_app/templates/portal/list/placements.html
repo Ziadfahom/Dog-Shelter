@@ -41,7 +41,7 @@
                                 <li><a class="dropdown-item" href="{% url 'portal_app:list-cameras' %}">Cameras</a></li>
                                 <li><a class="dropdown-item" href="{% url 'portal_app:list-observes' %}">Camera Sessions</a></li>
                                 <li><a class="dropdown-item" href="{% url 'portal_app:list-observations' %}">Observations</a></li>
-                                <li><a class="dropdown-item" href="{% url 'portal_app:list-stances' %}">Stances</a></li>
+                                <li><a class="dropdown-item" href="{% url 'portal_app:list-stances' %}">Dog Activities</a></li>
                                 <li><a class="dropdown-item" href="{% url 'portal_app:list-treatments' %}">Treatments</a></li>
                                 <li><a class="dropdown-item" href="{% url 'portal_app:list-examinations' %}">Examinations</a></li>
                                 <li><a class="dropdown-item" href="{% url 'portal_app:list-owners' %}">Dog Owners</a></li>
@@ -52,7 +52,7 @@
                     <!-- Search Bar -->
                     <div class="col-12 col-md-8 d-flex">
                         <form method="get" action="." class="d-flex col-md-12">
-                            <input type="text" class="form-control" name="search" value="{{ search_query }}" placeholder="Search Kennels...">
+                            <input style="margin-right: 17rem;" type="text" class="form-control" name="search" value="{{ search_query }}" placeholder="Search Placements...">
                             <button class="btn btn-outline-primary ms-2" type="submit">Search</button>
                             <a href="{% url 'portal_app:list-placements' %}" class="btn btn-outline-dark ms-2">Clear</a>
                         </form>

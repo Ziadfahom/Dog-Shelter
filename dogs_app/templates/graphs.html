@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load group_check %}
 {% load static %}
 
 {% block head %}
@@ -43,7 +44,7 @@
                                     </div>
                                     <label for="stanceSlider" id="stanceSliderLabel">
                                         <strong>
-                                            Number of Stances:
+                                            Number of Activities:
                                         </strong>
                                     </label>
                                     <input type="range" id="stanceSlider" min="1" max="{{ max_dog_stances_count }}" value="{% if max_dog_stances_count > 4 %}5{% else %}{{ max_dog_stances_count }}{% endif %}" step="1" oninput="updateStanceLimit(this.value)">
@@ -79,11 +80,11 @@
                                 </select>
                             </div>
                             <h2 class="card-title">
-                                Dog Stances
+                                Dog Activities
                                 <span class="with-kong-color">
                                     With
                                 </span>
-                                    Kong
+                                    Toy
                             </h2>
                             <canvas id="chart_dogStances_with_kong" width="800" height="450"></canvas>
                         </div>
@@ -102,11 +103,11 @@
                                 </select>
                             </div>
                             <h2 class="card-title">
-                                Dog Stances
+                                Dog Activities
                                 <span class="without-kong-color">
                                     Without
                                 </span>
-                                Kong
+                                Toy
                             </h2>
                             <canvas id="chart_dogStances_without_kong" width="800" height="450"></canvas>
                         </div>
@@ -125,7 +126,7 @@
                                 <span class="without-color">
                                     Without
                                 </span>
-                                Kongs
+                                Toys
                             </h2>
                             <canvas id="chart_dogStance_dogPosition_with_without" width="800" height="550"></canvas>
                         </div>
@@ -139,20 +140,22 @@
                         </div>
                     </div>
                 </div>
-                <div class="carousel-item">
-                    <div class="card chart-container chart-container-health-metrics d-block w-100">
-                        <div class="card-body">
-                            <h2 class="card-title-metrics">
-                                Comprehensive Health & Safety Profile of Our Canines
-                                <br>
-                                Categorized by Gender, Vaccination and Neutering Statuses
-                            </h2>
-                            <div style="width: 65%;  margin-left: 12rem;">
-                                <canvas id="chart_health_metrics"></canvas>
+                {% if user.is_authenticated and user|has_group:"Vet" %}
+                    <div class="carousel-item">
+                        <div class="card chart-container chart-container-health-metrics d-block w-100">
+                            <div class="card-body">
+                                <h2 class="card-title-metrics">
+                                    Health Metrics Profiling of Our Canines
+                                    <br>
+                                    Categorized by Gender, Vaccination and Neutering Statuses
+                                </h2>
+                                <div style="width: 65%;  margin-left: 12rem;">
+                                    <canvas id="chart_health_metrics"></canvas>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                {% endif %}
             </div>
 
             <button class="carousel-control-prev" style="left: -10rem;" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
@@ -176,8 +179,10 @@
     <!-- Declare a variable for chart data URL to be used in the following external JavaScript file -->
     <script type="text/javascript">
         const chartDataUrl = '{% url 'dogs_app:chart_data' %}';
-    </script>
+        // Pass the current User Authorization status to the JS file
+        const userIsVet = {% if user.is_authenticated and user|has_group:"Vet" %}true{% else %}false{% endif %};
 
+    </script>
 
     <!-- Include external JS file for charts -->
     <script src="{% static 'dogs_app/js/graphs.js' %}"></script>

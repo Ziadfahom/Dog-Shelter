@@ -3,7 +3,7 @@
 {% load static %}
 
 {% block head %}
-    <title>DogsWatch | Stances</title>
+    <title>DogsWatch | Activities</title>
 {% endblock %}
 
 
@@ -17,11 +17,11 @@
                 </a>
 
                 <!-- Dog's name centered -->
-                <h2 class="flex-grow-1 text-center display-5 fw-bold">Stances</h2>
+                <h2 class="flex-grow-1 text-center display-5 fw-bold">Dog Activities</h2>
 
                 <!-- Update and Delete on the right -->
                 <div class="btn-group">
-                    <a href="{% url 'portal_app:add-stance' %}" class="btn btn-light" title="Add Stances">
+                    <a href="{% url 'portal_app:add-stance' %}" class="btn btn-light" title="Add Dog Activities">
                         <span class="icon-add text-dark"></span>
                     </a>
                 </div>
@@ -33,7 +33,7 @@
                     <div class="col-12 col-md-4 d-flex justify-content-start">
                         <div class="dropdown">
                             <button class="btn btn-dark dropdown-toggle px-4" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                Stances
+                                Dog Activities
                             </button>
                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                                 <li><a class="dropdown-item" href="{% url 'portal_app:list-kennels' %}">Kennels</a></li>
@@ -41,7 +41,7 @@
                                 <li><a class="dropdown-item" href="{% url 'portal_app:list-cameras' %}">Cameras</a></li>
                                 <li><a class="dropdown-item" href="{% url 'portal_app:list-observes' %}">Camera Sessions</a></li>
                                 <li><a class="dropdown-item" href="{% url 'portal_app:list-observations' %}">Observations</a></li>
-                                <li><a class="dropdown-item active" href="{% url 'portal_app:list-stances' %}">Stances</a></li>
+                                <li><a class="dropdown-item active" href="{% url 'portal_app:list-stances' %}">Dog Activities</a></li>
                                 <li><a class="dropdown-item" href="{% url 'portal_app:list-treatments' %}">Treatments</a></li>
                                 <li><a class="dropdown-item" href="{% url 'portal_app:list-examinations' %}">Examinations</a></li>
                                 <li><a class="dropdown-item" href="{% url 'portal_app:list-owners' %}">Dog Owners</a></li>
@@ -52,7 +52,7 @@
                     <!-- Search Bar -->
                     <div class="col-12 col-md-8 d-flex">
                         <form method="get" action="." class="d-flex col-md-12">
-                            <input type="text" class="form-control" name="search" value="{{ search_query }}" placeholder="Search Kennels...">
+                            <input style="margin-right: 17rem;" type="text" class="form-control" name="search" value="{{ search_query }}" placeholder="Search Activities...">
                             <button class="btn btn-outline-primary ms-2" type="submit">Search</button>
                             <a href="{% url 'portal_app:list-stances' %}" class="btn btn-outline-dark ms-2">Clear</a>
                         </form>
@@ -70,7 +70,7 @@
                     {% else %}
                         <!-- Display a custom message if the table is empty -->
                         <div class="alert alert-info" role="alert">
-                            <p>No stances found.</p>
+                            <p>No Dog Activities found.</p>
                         </div>
                     {% endif %}
                 </div>
