@@ -1148,7 +1148,8 @@ def observations_list_portal(request):
                     Q(observes__sessionDate__icontains=term) |
                     Q(obsDateTime__icontains=term) |
                     Q(sessionDurationInMins__icontains=term) |
-                    Q(isKong__icontains=term)
+                    Q(isKong__icontains=term) |
+                    Q(original_csv_file_name__icontains=term)
                 )
 
         table = ObservationTable(queryset, request=request)
@@ -1165,7 +1166,7 @@ def observations_list_portal(request):
 def add_observation_portal(request):
     if request.user.is_authenticated:
         if request.method == 'POST':
-            form = ObservationPortalForm(request.POST, request=request)
+            form = ObservationPortalForm(request.POST, request.FILES, request=request)
             if form.is_valid():
                 # Save the form
                 try:
@@ -1240,7 +1241,7 @@ def edit_observation_portal(request, pk):
         observation = get_object_or_404(Observation, pk=pk)
 
         if request.method == 'POST':
-            form = ObservationPortalForm(request.POST, instance=observation, request=request)
+            form = ObservationPortalForm(request.POST, request.FILES, instance=observation, request=request)
             if form.is_valid():
                 # Save the form
                 try:

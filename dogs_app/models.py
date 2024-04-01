@@ -501,7 +501,7 @@ class Observation(models.Model):
                                                         verbose_name='Session Duration (mins)')
     isKong = models.CharField(max_length=1, choices=IS_KONG_CHOICES,
                               blank=True, null=True,
-                              default='N', verbose_name='With Kong')
+                              default='N', verbose_name='With Toy')
     isDog = models.CharField(max_length=1, choices=IS_DOG_CHOICES,
                              blank=True, null=True,
                              default=None, verbose_name='With Dog')
@@ -513,10 +513,16 @@ class Observation(models.Model):
                                 null=True, blank=True, verbose_name='JSON File')
     csvFile = models.FileField(upload_to='csv_files',
                                validators=[validate_csv_file_extension],
-                               null=True, blank=True, verbose_name='CSV File')
+                               null=True, blank=True, verbose_name='Sensory Data')
     rawVideo = models.FileField(upload_to='raw_videos',
                                 validators=[validate_video_file_extension],
                                 null=True, blank=True, verbose_name='Video')
+    original_csv_file_name = models.CharField(max_length=255,
+                                              blank=True, null=True, default=None,
+                                              verbose_name='Original File Name')
+    original_video_file_name = models.CharField(max_length=255,
+                                                blank=True, null=True, default=None,
+                                                verbose_name='Original Video File Name')
 
     # Returns the latest observation with isKong='Y' for this dog excluding this one
     def get_latest_observation(self):
@@ -540,6 +546,24 @@ class Observation(models.Model):
         - The Dog's kongDateGiven field is updated if the isKong field is
         set to 'Y' and the obsDateTime is later than that date.
         """
+
+        # Ensure original CSV file name is stored for display purposes
+        if self.csvFile:
+            # New entity being added, store the original CSV file name
+            if not self.pk:
+                self.original_csv_file_name = self.csvFile.name
+            # Existing entity being edited, check if the csvFile is replaced as well to adjust stored name
+            elif self.csvFile != Observation.objects.get(pk=self.pk).csvFile:
+                self.original_csv_file_name = self.csvFile.name
+
+        # Ensure original Video file name is stored for display purposes
+        if self.rawVideo:
+            # New entity being added, store the original Video file name
+            if not self.pk:
+                self.original_video_file_name = self.rawVideo.name
+            # Existing entity being edited, check if the video file is replaced as well to adjust stored name
+            elif self.rawVideo != Observation.objects.get(pk=self.pk).rawVideo:
+                self.original_video_file_name = self.rawVideo.name
 
         # Ensuring that the Observes instance exists
         if self.observes is None:
@@ -637,6 +661,16 @@ class Observation(models.Model):
     # Make sure the dog's kongDateAdded is updated if the isKong field is set to 'Y'
     # and the obsDateTime is equal to this one's
     def delete(self, *args, **kwargs):
+
+        # Delete the CSV file from the storage if it exists
+        if self.csvFile:
+            self.csvFile.delete(save=False)
+
+        # Delete the Video file from the storage if it exists
+        if self.rawVideo:
+            self.rawVideo.delete(save=False)
+
+        # Check if the dog's kongDateAdded field needs to be updated
         if self.isKong == 'Y':
             try:
                 dog_instance = self.observes.dog if self.observes.dog else None

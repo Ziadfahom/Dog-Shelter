@@ -846,11 +846,11 @@ class ObservationPortalForm(forms.ModelForm):
     csvFile = forms.FileField(required=False,
                               widget=forms.widgets.FileInput(attrs={"class": "form-control-file",
                                                                     "title": "Upload a CSV file"}),
-                              label="CSV File")
+                              label="Sensory Data File (CSV)")
     rawVideo = forms.FileField(required=False,
                                widget=forms.widgets.FileInput(attrs={"class": "form-control-file",
                                                                      "title": "Upload a video file"}),
-                               label="Video File")
+                               label="Observation Video File")
 
     def __init__(self, *args, **kwargs):
         request = kwargs.pop('request', None)

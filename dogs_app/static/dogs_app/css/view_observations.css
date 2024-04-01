@@ -144,6 +144,12 @@ h4 {
     font-family: 'Lato', sans-serif; /* Elegant font */
 }
 
+.modal-header-video {
+    justify-content: center;
+    padding: 15px 20px; /* Enhanced padding */
+    font-family: 'Lato', sans-serif; /* Elegant font */
+}
+
 .modal-title {
     position: relative;
     z-index: 1;
@@ -180,6 +186,15 @@ h4 {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+}
+
+/* Modal Body for Video Player */
+.modal-body-video {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
 }
 
 .modal-body p {
@@ -257,6 +272,12 @@ h4 {
     padding-top: 8px;
 }
 
+
+.file-name-display {
+    margin: -2rem 10px 15px auto;
+    font-size: 15px;
+
+}
 
 .pagination-wrapper {
     display: flex;

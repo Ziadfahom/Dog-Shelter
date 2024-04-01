@@ -107,7 +107,7 @@
                     {% endif %}
                     <div class="form-row">
                         <label for="csv-upload">Upload CSV File:</label>
-                        <input type="file" id="csv-upload" class="form-control-file" name="{{ observation_form.jsonFile.name }}" value="{{ observation_form.jsonFile.value }}">
+                        <input type="file" id="csv-upload" class="form-control-file" name="{{ observation_form.csvFile.name }}" value="{{ observation_form.jsonFile.value }}">
                     </div>
 
                     {% if observation_form.rawVideo.errors %}
@@ -116,7 +116,7 @@
                         </div>
                     {% endif %}
                     <div class="form-row">
-                        <label for="video-upload">Upload Raw Video:</label>
+                        <label for="video-upload">Upload Video:</label>
                         <input type="file" id="video-upload" class="form-control-file" name="{{ observation_form.rawVideo.name }}" value="{{ observation_form.rawVideo.value }}">
                     </div>
 

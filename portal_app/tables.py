@@ -345,8 +345,8 @@ class ObservationTable(tables.Table):
     delete = tables.Column(empty_values=(), orderable=False)
     edit = tables.Column(empty_values=(), orderable=False)
     jsonFile = tables.Column(empty_values=(), orderable=False)
-    csvFile = tables.Column(empty_values=(), orderable=False)
-    rawVideo = tables.Column(empty_values=(), orderable=False)
+    csvFile = tables.Column(empty_values=(), orderable=True)
+    rawVideo = tables.Column(empty_values=(), orderable=True)
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
@@ -387,6 +387,21 @@ class ObservationTable(tables.Table):
             return record.obsDateTime.strftime('%d/%m/%Y %H:%M:%S')
 
         return '—'
+
+    # Ensure that the csvFile is displayed with a link and correct front-end name
+    def render_csvFile(self, record):
+        if record.csvFile:
+            return format_html('<a href="{}"><i class="fas fa-file-csv"></a>', record.csvFile.url)
+        return "—"
+
+    # Ensure that the video file is displayed with a link and icon
+    def render_rawVideo(self, record):
+        if record.rawVideo:
+            return format_html(
+                '<a href="#" data-bs-toggle="modal" data-bs-target="#videoModal" data-video-url="{}"><i class="fas fa-video"></i></a>',
+                record.rawVideo.url
+            )
+        return "—"
 
     class Meta:
         model = Observation

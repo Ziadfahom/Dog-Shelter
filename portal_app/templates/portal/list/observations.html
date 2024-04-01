@@ -10,7 +10,7 @@
 {% block content %}
     <div class="container-fluid p-5">
         <div class="col-md-11 mx-auto">
-            <div class="bg-dark px-3 py-1 text-white d-flex align-items-center justify-content-between rounded">
+            <div style="box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.5);" class="bg-dark px-3 py-1 text-white d-flex align-items-center justify-content-between rounded-top">
                 <!-- Back button on the left -->
                 <a href="{% url 'dogs_app:home' %}" class="btn btn-light" title="Home">
                     <i class="bi bi-house-door"></i>
@@ -27,7 +27,7 @@
                 </div>
             </div>
 
-            <div class="my-4 rounded shadowed p-3">
+            <div class="mt-0 mb-2 rounded-bottom shadowed p-3">
                 <div class="row">
                     <!-- Navigate Button -->
                     <div class="col-12 col-md-4 d-flex justify-content-start">
@@ -77,4 +77,72 @@
             </div>
         </div>
     </div>
+
+    <!-- Video Playing Modal -->
+    <div class="modal fade" id="videoModal" tabindex="-1" aria-labelledby="videoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-dark" style="display: flex; justify-content: center; width: 100%;">
+                    <h4 class="modal-title text-white" id="videoModalLabel" style="flex-grow: 1; text-align: center;">Observation Video</h4>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="flex-shrink: 0;"></button>
+                </div>
+                <div class="modal-body">
+                <!-- Video player will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', (event) => {
+    const modal = document.getElementById('videoModal');
+    const modalBody = modal.querySelector('.modal-body');
+
+    let player; // Define player outside to reuse it
+
+    modal.addEventListener('hidden.bs.modal', function () {
+        if (player) {
+            player.destroy(); // Ensure player is destroyed when modal is closed
+            player = null; // Reset player to null
+        }
+        modalBody.innerHTML = ''; // Clear the modal body to remove video elements
+    });
+
+    // Setup video when a video link is clicked
+    document.querySelectorAll('a[data-bs-toggle="modal"]').forEach(item => {
+        item.addEventListener('click', event => {
+            // Prevent default action
+            event.preventDefault();
+
+            const videoUrl = item.getAttribute('data-video-url');
+
+            // Check if videoUrl exists to avoid errors
+            if (videoUrl) {
+                modalBody.innerHTML = `
+                    <div class="plyr__video-embed" id="player">
+                        <video id="plyr-video-player" playsinline controls muted preload="auto">
+                            <source src="${videoUrl}" type="video/mp4">
+                        </video>
+                    </div>
+                `;
+
+                // Re-initialize Plyr for the new video
+                player = new Plyr('#plyr-video-player', {
+                    muted: true,
+                    autoplay: true,
+                    hideControls: true,
+                    resetOnEnd: true,
+                    controls: ['play', 'progress', 'current-time', 'mute', 'volume', 'settings', 'pip', 'download', 'fullscreen'],
+                });
+
+                // Try playing the video, handle autoplay prevention
+                player.play().catch(error => console.error("Autoplay was prevented.", error));
+            }
+        });
+    });
+});
+
+</script>
+
 {% endblock %}

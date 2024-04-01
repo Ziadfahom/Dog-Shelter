@@ -67,14 +67,32 @@
             </div>
         </td>
     {% endif %}
-    <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Activities for this Observation">
-        {{ observation.jsonFile|handle_none }}
+    <td {% if not observation.jsonFile %}class="clickable-row" data-bs-toggle="collapse" title="View Activities for this Observation"{% endif %} data-bs-target="#stances-{{ observation.id }}">
+        {% if observation.jsonFile %}
+            <a href="{{ observation.jsonFile.url }}" target="_blank" class="btn btn-outline-info btn-sm" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Download JSON">
+                <i class="fas fa-file-code"></i>
+            </a>
+        {% else %}
+            -
+        {% endif %}
     </td>
-    <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Activities for this Observation">
-        {{ observation.csvFile|handle_none }}
+    <td {% if not observation.csvFile %}class="clickable-row" data-bs-toggle="collapse" title="View Activities for this Observation"{% endif %} data-bs-target="#stances-{{ observation.id }}">
+        {% if observation.csvFile %}
+            <a href="{{ observation.csvFile.url }}" target="_blank" class="btn btn-outline-info btn-sm" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Download CSV">
+                <i class="fas fa-file-csv"></i>
+            </a>
+        {% else %}
+            -
+        {% endif %}
     </td>
-    <td class="clickable-row" data-bs-toggle="collapse" data-bs-target="#stances-{{ observation.id }}" title="View Activities for this Observation">
-        {{ observation.rawVideo|handle_none }}
+    <td {% if not observation.rawVideo %}class="clickable-row" data-bs-toggle="collapse" title="View Activities for this Observation"{% endif %} data-bs-target="#stances-{{ observation.id }}">
+        {% if observation.rawVideo %}
+            <a href="#" data-bs-toggle="modal" target="_blank" data-bs-target="#videoModal" data-video-url="{{ observation.rawVideo.url }}" class="btn btn-outline-info btn-sm" data-bs-placement="bottom" title="Play Video">
+                <i class="fas fa-video"></i>
+            </a>
+        {% else %}
+            -
+        {% endif %}
     </td>
     <td>
         <div class="btn-group" role="group">
@@ -106,7 +124,7 @@
                             class="btn btn-light text-dark add-stance-btn"
                             data-bs-toggle="tooltip"
                             data-bs-placement="bottom"
-                            title="Add a new Dog Activity"
+                            title="Add a new Activity"
                         >
                             <i class="fas fa-plus" style="margin-right: 8px;"></i>
                             <i class="fas fa-paw"></i>

@@ -158,6 +158,7 @@ $(document).ready(function() {
 
     // Handle user clicking the #add-observation-button to display the modal
     $('#add-observation-button').click(function() {
+
         initializeDateTimeFlatpickr(new Date().setSeconds(0, 0));
         // Set the default values for the form fields
         $('#newObservationModal input[name="sessionDurationInMins"]').val('2');
@@ -169,8 +170,9 @@ $(document).ready(function() {
             $('#newObservationModal select[name="isHuman"]').val('N');
         }
 
-        // $('#newObservationModal select[name="jsonFile"]').val('');
-        // $('#newObservationModal select[name="rawVideo"]').val('');
+        // Empty the csvFile field
+        $('#newObservationModal input[name="csvFile"]').val('');
+        $('#newObservationModal input[name="rawVideo"]').val('');
 
         //Empty the form errors
         $('.form-error-row').remove();
@@ -335,8 +337,39 @@ $(document).ready(function() {
                     // Populate the form fields with the current observation data
                     $('#editObservationModal input[name="sessionDurationInMins"]').val(response.observation.sessionDurationInMins);
                     $('#editObservationModal select[name="isKong"]').val(response.observation.isKong);
-                    $('#editObservationModal select[name="csvFile"]').val(response.observation.csvFile);
-                    $('#editObservationModal select[name="rawVideo"]').val(response.observation.rawVideo);
+
+                    // Empty the csvFile and video fields
+                    $('#editObservationModal input[name="csvFile"]').val('');
+                    $('#editObservationModal input[name="rawVideo"]').val('');
+
+                    // Use the original CSV file name for display
+                    let csvFileName = response.observation.original_csv_file_name;
+                    // Use the file URL for the link's href attribute
+                    let csvFileUrl = response.observation.csvFile;
+
+                    // Check if both CSV fileName and fileUrl are not null
+                    if (csvFileName && csvFileUrl) {
+                        // Create a clickable link with the file name as text
+                        $('#currentCSVFileName').html(`<a href="${csvFileUrl}" target="_blank">${csvFileName}</a>`);
+                    } else {
+                        // Handle case where there is no file (display a default message or leave blank)
+                        $('#currentCSVFileName').text('No existing CSV file');
+                    }
+
+                    // Use the original Video file name for display
+                    let videoFileName = response.observation.original_video_file_name;
+                    // Use the file URL for the link's href attribute
+                    let videoFileUrl = response.observation.rawVideo;
+
+                    // Check if both video fileName and fileUrl are not null
+                    if (videoFileName && videoFileUrl) {
+                        // Create a clickable link with the file name as text
+                        $('#currentVideoFileName').html(`<a href="${videoFileUrl}" target="_blank">${videoFileName}</a>`);
+                    } else {
+                        // Handle case where there is no file (display a default message or leave blank)
+                        $('#currentVideoFileName').text('No existing video file');
+                    }
+
 
                     // Adjust Italy-specific fields
                     if (branch === 'Italy') {
@@ -358,13 +391,15 @@ $(document).ready(function() {
 
     $('#editObservationModal form').submit(function(e){
          e.preventDefault();
-         var formData = $(this).serialize();
+         var formData = new FormData(this);
          var observationId = $('#editObservationModal').data('observation-id');
 
          $.ajax({
              url: '/edit_observation/' + observationId + '/',
              type: 'post',
              headers: { 'X-CSRFToken': getCookie('csrftoken') },
+             processData: false, // Important for FormData
+             contentType: false, // Important for FormData
              data: formData,
              success: function(response) {
                 if (response.status === 'success') {
@@ -657,4 +692,51 @@ $(document).ready(function(){
         });
     });
     $('.dataTables_length select').val('8');
+});
+
+
+document.addEventListener('DOMContentLoaded', (event) => {
+    const modal = document.getElementById('videoModal');
+    const modalBody = modal.querySelector('.modal-body-video');
+
+    // Define a variable outside to hold the player instance
+    let player;
+
+    modal.addEventListener('hidden.bs.modal', function () {
+        if (player) {
+            player.destroy(); // Destroy the player instance
+            player = null; // Set player to null to avoid memory leaks
+        }
+        modalBody.innerHTML = ''; // Clear the modal body
+    });
+
+    // Setup video when a link is clicked
+    document.querySelectorAll('a[data-bs-toggle="modal"][data-video-url]').forEach(item => {
+        item.addEventListener('click', event => {
+            // Prevent default link behavior
+            event.preventDefault();
+
+            // Setup modal body with video
+            const videoUrl = item.getAttribute('data-video-url');
+            modalBody.innerHTML = `
+                <div class="plyr__video-embed" id="player">
+                    <video id="plyr-video-player" playsinline controls muted preload="auto">
+                        <source src="${videoUrl}" type="video/mp4">
+                    </video>
+                </div>
+            `;
+
+            // Initialize or re-initialize Plyr
+            player = new Plyr('#plyr-video-player', {
+                muted: true,
+                autoplay: true,
+                hideControls: true,
+                resetOnEnd: true,
+                controls: ['play', 'progress', 'current-time', 'mute', 'volume', 'settings', 'pip', 'download', 'fullscreen'],
+            });
+
+            // Attempt to play the video
+            player.play().catch(error => console.error("Autoplay was prevented.", error));
+        });
+    });
 });

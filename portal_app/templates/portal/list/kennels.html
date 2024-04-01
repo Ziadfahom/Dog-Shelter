@@ -9,7 +9,7 @@
 {% block content %}
     <div class="container-fluid p-5">
         <div class="col-md-11 mx-auto">
-            <div class="bg-dark px-3 py-1 text-white d-flex align-items-center justify-content-between rounded">
+            <div style="box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.5);" class="bg-dark px-3 py-1 text-white d-flex align-items-center justify-content-between rounded-top">
                 <!-- Back button on the left -->
                 <a href="{% url 'dogs_app:home' %}" class="btn btn-light" title="Home">
                     <i class="bi bi-house-door"></i>
@@ -26,7 +26,7 @@
                 </div>
             </div>
 
-            <div class="my-4 rounded shadowed p-3">
+            <div class="mt-0 mb-2 rounded-bottom shadowed p-3">
                 <div class="row">
                     <!-- Navigate Button -->
                     <div class="col-12 col-md-4 d-flex justify-content-start">

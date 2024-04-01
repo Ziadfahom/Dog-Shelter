@@ -111,6 +111,10 @@
                         <label for="csv-upload">Upload CSV File:</label>
                         <input type="file" id="csv-upload" class="form-control-file" name="{{ observation_form.csvFile.name }}" value="{{ observation_form.csvFile.value }}">
                     </div>
+                    <!-- CSV File name and URL display container -->
+                    <div class="file-name-display">
+                        <span id="currentCSVFileName"></span>
+                    </div>
 
                     {% if observation_form.rawVideo.errors %}
                         <div class="form-error-row">
@@ -118,8 +122,12 @@
                         </div>
                     {% endif %}
                     <div class="form-row">
-                        <label for="video-upload">Upload Raw Video:</label>
+                        <label for="video-upload">Upload Video:</label>
                         <input type="file" id="video-upload" class="form-control-file" name="{{ observation_form.rawVideo.name }}" value="{{ observation_form.rawVideo.value }}">
+                    </div>
+                    <!-- Video File name and URL display container -->
+                    <div class="file-name-display">
+                        <span id="currentVideoFileName"></span>
                     </div>
 
                 </div>

@@ -55,11 +55,11 @@
                             <tr class="">
                                 <th>Date & Time</th>
                                 <th>Duration (Mins)</th>
-                                <th>With Kong?</th>
+                                <th>With Toy</th>
                                 <!-- Include isDog and isHuman columns if branch is Italy only -->
                                 {% if request.session.branch == 'Italy' %}
-                                <th>With Dog?</th>
-                                <th>With Human?</th>
+                                <th>With Dog</th>
+                                <th>With Human</th>
                                 {% endif %}
                                 <th>JSON File</th>
                                 <th>CSV File</th>
@@ -85,12 +85,26 @@
         </div>
     </div>
 
+    <!-- Video Playing Modal -->
+    <div class="modal fade" id="videoModal" tabindex="-1" aria-labelledby="videoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header-video bg-dark" style="display: flex; justify-content: center; width: 100%;">
+                    <h4 class="modal-title text-white" id="videoModalLabel" style="flex-grow: 1; text-align: center;">Observation Video</h4>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="flex-shrink: 0;"></button>
+                </div>
+                <div class="modal-body-video">
+                <!-- Video player will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
 
-<!-- Edit Observation Modal -->
-{% include 'modals/observations/__edit_observation_modal.html' %}
+    <!-- Edit Observation Modal -->
+    {% include 'modals/observations/__edit_observation_modal.html' %}
 
-<!-- Add New Observation Modal -->
-{% include 'modals/observations/__add_observation_modal.html' %}
+    <!-- Add New Observation Modal -->
+    {% include 'modals/observations/__add_observation_modal.html' %}
 
 {% endblock %}
 

@@ -1099,16 +1099,28 @@ def edit_observation(request, observation_id):
         # Exclude the file field from the JSON response
         observation_data = observation_form.initial
 
-        # Temporary! Remove the file fields from the JSON response
-        del observation_data['csvFile']
-        del observation_data['rawVideo']  # TODO: Remove this line once the raw video is implemented
+        # Include the original CSV file name and the URL if available
+        if observation.csvFile:
+            observation_data['original_csv_file_name'] = observation.original_csv_file_name if observation.original_csv_file_name else observation.csvFile.name
+            observation_data['csvFile'] = observation.csvFile.url
+        else:
+            observation_data['original_csv_file_name'] = None
+            observation_data['csvFile'] = None
+
+        # Include the original Video file name and the URL if available
+        if observation.rawVideo:
+            observation_data['original_video_file_name'] = observation.original_video_file_name if observation.original_video_file_name else observation.rawVideo.name
+            observation_data['rawVideo'] = observation.rawVideo.url
+        else:
+            observation_data['original_video_file_name'] = None
+            observation_data['rawVideo'] = None
 
         return JsonResponse({"status": "success", "observation": observation_data}, status=200)
 
     elif request.method == 'POST':
         branch = get_current_branch(request)
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            observation_form = ObservationForm(request.POST or None,
+            observation_form = ObservationForm(request.POST or None, request.FILES or None,
                                                instance=Observation.objects.get(id=observation_id), request=request)
             if observation_form.is_valid():
                 try:
@@ -1129,10 +1141,21 @@ def edit_observation(request, observation_id):
                         new_observation.isHuman = None
 
                     new_observation.save()
+
                     # Get the updated observation
                     updated_observation = Observation.objects.get(id=observation_id)
+
                     # Render the _observation_row.html template with the updated observation
                     new_row_html = render_to_string('_observation_row.html', {'observation': updated_observation}, request=request)
+
+                    # Create a serializable observation data dictionary
+                    observation_data = observation_form.cleaned_data
+                    observation_data['csvFile'] = updated_observation.csvFile.url if updated_observation.csvFile else None
+                    observation_data['rawVideo'] = updated_observation.rawVideo.url if updated_observation.rawVideo else None
+                    observation_data['original_csv_file_name'] = updated_observation.original_csv_file_name if updated_observation.original_csv_file_name else updated_observation.csvFile.name
+                    observation_data['original_video_file_name'] = updated_observation.original_video_file_name if updated_observation.original_video_file_name else updated_observation.rawVideo.name
+
+
                     messages.success(request, 'Observation has been edited successfully!')
                     return JsonResponse(
                         {"status": "success", "observation": observation_form.cleaned_data, "newRowHtml": new_row_html},
