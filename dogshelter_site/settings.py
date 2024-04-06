@@ -13,6 +13,8 @@ import os
 from pathlib import Path
 from decouple import config
 from django.core.management.utils import get_random_secret_key
+from .custom_storages import MediaStorage
+
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -134,41 +136,36 @@ USE_L10N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
+# Default primary key field type
+# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Amazon S3 configurations for cloud storage
+# AWS S3 settings
+# Use the .env file variables
+AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
+# AWS_DEFAULT_ACL = 'public-read'
+
+STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+AWS_S3_REGION_NAME = 'eu-north-1'
+AWS_LOCATION = 'static'
+STATIC_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/{AWS_LOCATION}/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
     os.path.join(BASE_DIR, 'dogs_app', 'static'),
     os.path.join(BASE_DIR, 'portal_app', 'static'),
 ]
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
+DEFAULT_FILE_STORAGE = 'dogshelter_site.custom_storages.MediaStorage'
+MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/media/'
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Amazon S3 configurations for cloud storage (Used post-production only)
-if not DEBUG:
-    # AWS S3 settings
-    AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
-    AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
-    AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
-    AWS_DEFAULT_ACL = 'public-read'
-    AWS_S3_REGION_NAME = 'eu-north-1'
-    AWS_S3_FILE_OVERWRITE = False
-    AWS_QUERYSTRING_AUTH = False
-    AWS_LOCATION = 'static'
-    STATIC_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/{AWS_LOCATION}/'
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/media/'
-else:
-    MEDIA_URL = '/media/'
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
+AWS_S3_FILE_OVERWRITE = False
+AWS_QUERYSTRING_AUTH = False  # Might want to adjust to True where URLs have signatures and expire after a certain time
 
 # For better looking HTML
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
@@ -178,7 +175,8 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 THUMBNAIL_DEBUG = True
 
 # List of video files allowed to upload to the system
-ALLOWED_VIDEO_FILE_EXTENSIONS = ['.mp4', '.avi', '.mov', '.flv', '.wmv']
+ALLOWED_VIDEO_FILE_EXTENSIONS = ['.mp4', '.avi', '.mov', '.flv', '.wmv', '.mkv', '.webm', '.3gp', '.ogg', '.ogv',
+                                 '.mpeg', '.mpg', '.m4v']
 
 
 # Delete Eventually, being used for testing
