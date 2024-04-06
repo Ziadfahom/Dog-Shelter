@@ -29,9 +29,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY', default=get_random_secret_key())
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+# List of allowed hosts
+# Add 'EC2_PUBLIC_IP_ADDRESS' to the list of allowed hosts
+ALLOWED_HOSTS = ['dogswatch.net', 'www.dogswatch.net', 'localhost', '127.0.0.1']
+
 
 
 # Application definition
@@ -180,19 +183,19 @@ ALLOWED_VIDEO_FILE_EXTENSIONS = ['.mp4', '.avi', '.mov', '.flv', '.wmv', '.mkv',
 
 
 # Delete Eventually, being used for testing
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-        },
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': 'DEBUG',
-    },
-}
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'handlers': {
+#         'console': {
+#             'class': 'logging.StreamHandler',
+#         },
+#     },
+#     'root': {
+#         'handlers': ['console'],
+#         'level': 'DEBUG',
+#     },
+# }
 
 DJANGO_TABLES2_TABLE_ATTRS = {
    'class': 'table table-hover table-bordered table-striped border-dark',
