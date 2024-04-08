@@ -33,7 +33,7 @@ DEBUG = False
 
 # List of allowed hosts
 # Add 'EC2_PUBLIC_IP_ADDRESS' to the list of allowed hosts
-ALLOWED_HOSTS = ['dogswatch.net', 'www.dogswatch.net', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['dogswatch.net', 'www.dogswatch.net', 'localhost', '127.0.0.1', '16.171.41.38']
 
 
 
