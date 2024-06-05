@@ -1319,7 +1319,7 @@ if (userIsVet === true) {
                     verticalAlign: 'bottom',
                     y: 20,
                     x: 115,
-                    symbolHeight: 280,
+                    // symbolHeight: 280,
                 },
                 tooltip: {
                     formatter: tooltipFormatter,

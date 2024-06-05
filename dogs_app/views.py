@@ -370,8 +370,8 @@ def dog_record_view(request, pk):
 
         # Fetch all observations for the dog in one query
         local_tz = pytz.timezone('Asia/Jerusalem')  # Fetch all observations for the dog in UTC
-        utc_first_date = timezone.make_aware(datetime.datetime.combine(first_date, time.min), local_tz).astimezone(pytz.utc)
-        utc_last_date = timezone.make_aware(datetime.datetime.combine(last_date, time.max), local_tz).astimezone(pytz.utc)
+        utc_first_date = timezone.make_aware(datetime.combine(first_date, time.min), local_tz).astimezone(pytz.utc)
+        utc_last_date = timezone.make_aware(datetime.combine(last_date, time.max), local_tz).astimezone(pytz.utc)
 
         # Fetch observations in UTC
         observations = Observation.objects.filter(

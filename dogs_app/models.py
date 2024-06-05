@@ -1,6 +1,5 @@
 import os
 
-from django.utils.dateparse import parse_datetime
 import pytz
 from django.db import models
 from django.utils import timezone
@@ -8,8 +7,6 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import User
 import re
-import datetime
-
 
 # Location of the default User profile picture if they don't have one
 DEFAULT_PROFILE_IMAGE_SOURCE = 'profile_pictures/default.jpg'
@@ -469,8 +466,8 @@ def validate_csv_file_extension(value):
 
 # Video File Validator, raises an error if the file is not a video
 def validate_video_file_extension(value):
-    # List of allowed video file extensions, as defined in settings.py
-    from dogshelter_site.settings import ALLOWED_VIDEO_FILE_EXTENSIONS
+    # List of allowed video file extensions, as defined in settings files
+    from dogshelter_site.settings.base import ALLOWED_VIDEO_FILE_EXTENSIONS
     ext = os.path.splitext(value.name)[1]  # [0] returns path+filename
     valid_extensions = ALLOWED_VIDEO_FILE_EXTENSIONS
     if not ext.lower() in valid_extensions:
