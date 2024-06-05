@@ -1316,10 +1316,10 @@ if (userIsVet === true) {
                     align: 'bottom',
                     layout: 'horizontal',
                     margin: 100,
-                    verticalAlign: 'bottom',
+                    verticalAlign: 'top',
                     y: 20,
                     x: 115,
-                    // symbolHeight: 280,
+                    symbolHeight: 10,
                 },
                 tooltip: {
                     formatter: tooltipFormatter,
