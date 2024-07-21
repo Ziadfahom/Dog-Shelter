@@ -4,6 +4,7 @@
 
 }
 
+
 /* Change Font and Text Styles */
 .breadcrumb-item a {
   font-size: 16px;
@@ -27,7 +28,7 @@
 }
 
 .breadcrumb-item i {
-  margin: 0 10px;
+  /* margin: 0 10px; */
   color: #aaa;
   font-size: 16px;
   vertical-align: middle;
@@ -52,6 +53,8 @@
   --arrow-icon: url(https://upload.wikimedia.org/wikipedia/commons/9/9d/Caret_down_font_awesome_whitevariation.svg);
   --option-bg: black;
   --select-bg: rgba(255, 255, 255, 0.2);
+  --steps: 16;
+  --background: #8056dc;
 }
 
 .text-xl {
@@ -146,6 +149,10 @@
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5)
 }
 
+.shadowed-light {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1)
+}
+
 .wrapper {
   position: relative;
 }
@@ -166,6 +173,31 @@
   background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
   background-size: 400% 400%;
 	animation: gradient 15s ease infinite;
+}
+
+.badge {
+  display: inline-block;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border-radius: 5px !important;
+  color: #fff;
+  padding: .5rem 1.5rem !important;
+  position: relative;
+}
+
+.custom-navbar {
+  background-color: #198754 !important;
+
+  .nav-item .nav-link,
+  .dropdown-link,
+  .navbar-title {
+    color: white !important;
+  }
+
+  .dropdown-link::after {
+    background-color: whitesmoke !important;
+    color: black !important;
+  }
 }
 
 @keyframes gradient {
@@ -193,7 +225,7 @@ select {
     linear-gradient(to left, black 3em, var(--select-bg) 3em);
   color: black;
   border-radius: 0.25em;
-  box-shadow: 0 0 1em 0 rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 1em 0 rgba(0, 0, 0, 0.1);
   cursor: pointer;
   &::-ms-expand {
     display: none;
@@ -210,8 +242,14 @@ select {
 
 input {
   font-size: 16px !important;
+  box-shadow: 0 0 1em 0 rgba(0, 0, 0, 0.1);
 }
 
 input::placeholder {
   font-size: 14px;
+}
+
+textarea {
+    font-size: 16px !important;
+    box-shadow: 0 0 1em 0 rgba(0, 0, 0, 0.1);
 }

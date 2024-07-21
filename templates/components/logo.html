@@ -6,7 +6,7 @@
         <span class="font-oswald navbar-title ms-3 d-flex align-items-center">DogsWatch
             {% if request.session.branch %}
                 <div class="badge d-flex align-items-center">
-                    <span {% if request.session.branch == 'Israel' %}style="color: #000000;"{% endif %}>- {{ request.session.branch }}</span>
+                    <span {% if request.session.branch == 'Israel' %}style="color: #000000;"{% endif %}>- {% if request.session.branch == 'Israel' %}Lod Shelter{% else %}{{ request.session.branch }}{% endif %}</span>
                     <img src="{% static 'dogs_app/img/' %}{{ request.session.branch }}.png" width="50" height="50" class="ms-3" />
                 </div>
             {% endif %}

@@ -35,9 +35,19 @@
 }
 
 th {
-    font-size: 0.8em;
+    & a {
+        color: white
+    }
+
+    & a:active, a:link {
+        color: lightblue
+    }
 }
 
+th, td {
+    padding: 15px 8px !important;
+    align-items: center;
+}
 
 body {
     font-family: Arial, sans-serif;

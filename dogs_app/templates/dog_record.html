@@ -42,25 +42,37 @@
                     {% else %}
                         <img id="dog_picture" src="{% static 'dogs_app/img/default_dog.jpg' %}" class="rounded-circle" alt="Default Dog Image" style="width: 12rem; height: 12rem; object-fit: cover;">
                     {% endif %}
+                    {% if dog_record.dogVideo %}
                     <!-- View Sample Video Button -->
                     <div class="mt-4">
-                        <a  class="btn btn-dark" target="_blank">View Sample Video</a>
+                        <a class="btn btn-dark" href="#" data-bs-toggle="modal" data-bs-target="#videoModal" data-video-url="{}">Play Video</a>
                     </div>
+                    {% endif %}
                 </div>
 
                 <div class="card-body bg-none shadow-none">
                     <table class="table table-bordered" {% if not user|has_group:"Vet" %}style="margin-bottom: 0;"{% endif %}>
                         <thead class="table-dark">
                             <tr>
-                                <th>Attribute</th>
+                                <th>Attributes</th>
                                 <th>Information</th>
                             </tr>
                         </thead>
                         <tbody>
+                            {% if user.is_authenticated and user|has_group:"Vet" %}
+                                <tr>
+                                    <td><strong>Chip Number</strong></td>
+                                    <td>{{ dog_record.chipNum|handle_none }}</td>
+                                </tr>
+                            {% endif %}
                             {% if user.is_authenticated %}
                                 <tr>
                                     <td class="attr-name"><strong>Name</strong></td>
                                     <td>{{ dog_record.dogName|handle_none }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>City</strong></td>
+                                    <td>{{ dog_record.city|handle_none }}</td>
                                 </tr>
                             {% endif %}
                             {% if user.is_authenticated and user|has_group:"Vet" %}
@@ -69,8 +81,8 @@
                                     <td>{{ dog_record.dateOfArrival|handle_none }}</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Chip Number</strong></td>
-                                    <td>{{ dog_record.chipNum|handle_none }}</td>
+                                    <td><strong>Entry Reason</strong></td>
+                                    <td>{{ dog_record.get_entryReason_display|handle_none }}</td>
                                 </tr>
                             {% endif %}
                             {% if user.is_authenticated %}
@@ -120,10 +132,10 @@
                                     <td><strong>Is the Dog Dangerous?</strong></td>
                                     <td>{{ dog_record.isDangerous|yes_no_filter }}</td>
                                 </tr>
-                                <tr>
-                                    <td><strong>Last Date Given Toy</strong></td>
-                                    <td id="kongDateAdded">{{ dog_record.kongDateAdded|handle_none }}</td>
-                                </tr>
+{#                                <tr>#}
+{#                                    <td><strong>Last Date Given Toy</strong></td>#}
+{#                                    <td id="kongDateAdded">{{ dog_record.kongDateAdded|handle_none }}</td>#}
+{#                                </tr>#}
                             {% endif %}
                             {% if user.is_authenticated %}
                                 <tr>
@@ -137,327 +149,352 @@
                                     </tr>
                                 {% endif %}
                             {% endif %}
-                            {% if user.is_authenticated and user|has_group:"Vet" %}
+                            {% if user.is_authenticated and dog_record.releaseDate and user|has_group:"Vet" %}
                                 <tr>
-                                    <td class="attr-name" style="{% if dog_record.owner %}padding-top: 1.4rem;{% endif %}"><strong>Owner</strong></td>
-                                    <td>
-                                        <div class="button-right-align">
-                                            {% if dog_record.owner %}
-                                                <div style="margin-left: 5rem; flex-grow: 1;">
-                                                    {{ dog_record.owner|handle_none }}
-                                                </div>
-                                                <div>
-                                                    <button type="button" id="owner-button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#ownerModal">Details</button>
-                                                </div>
-                                            {% else %}
-                                                <div style="flex-grow: 1;">
-                                                    {{ dog_record.owner|handle_none }}
-                                                </div>
-                                            {% endif %}
-                                        </div>
-                                    </td>
+                                    <td><strong>Release Date</strong></td>
+                                    <td>{{ dog_record.releaseDate|handle_none }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Release Reason</strong></td>
+                                    <td>{{ dog_record.releaseReason|handle_none }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Release Details</strong></td>
+                                    <td>{{ dog_record.releaseDetails|handle_none }}</td>
                                 </tr>
                             {% endif %}
+                            {% if user.is_authenticated and user|has_group:"Vet" %}
+                                <tr>
+                                    <td><strong>Color Group</strong></td>
+                                    <td>{{ dog_record.get_colorGroup_display|handle_none }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Motivation Group</strong></td>
+                                    <td>{{ dog_record.get_motivationGroup_display|handle_none }}</td>
+                                </tr>
+                            {% endif %}
+
+{#                            {% if user.is_authenticated and user|has_group:"Vet" %}#}
+{#                                <tr>#}
+{#                                    <td class="attr-name" style="{% if dog_record.owner %}padding-top: 1.4rem;{% endif %}"><strong>Owner</strong></td>#}
+{#                                    <td>#}
+{#                                        <div class="button-right-align">#}
+{#                                            {% if dog_record.owner %}#}
+{#                                                <div style="margin-left: 5rem; flex-grow: 1;">#}
+{#                                                    {{ dog_record.owner|handle_none }}#}
+{#                                                </div>#}
+{#                                                <div>#}
+{#                                                    <button type="button" id="owner-button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#ownerModal">Details</button>#}
+{#                                                </div>#}
+{#                                            {% else %}#}
+{#                                                <div style="flex-grow: 1;">#}
+{#                                                    {{ dog_record.owner|handle_none }}#}
+{#                                                </div>#}
+{#                                            {% endif %}#}
+{#                                        </div>#}
+{#                                    </td>#}
+{#                                </tr>#}
+{#                            {% endif %}#}
 
                         </tbody>
                     </table>
 
-                    {% if user.is_authenticated %}
-                    {% if user.is_superuser or user|has_group:"Vet" %}
-                        <hr class="mb-4 mt-4">
-                        <div class="chart-outer-border mb-4">
-                            <!-- Container for dropdown elements -->
-                            <div class="controls-container d-flex align-items-start overflow-auto">
-
-                                <!-- First dropdown group -->
-                                <div class=" control-group">
-                                    <label for="year-selector" class="form-label year-label">Year</label>
-                                    <div class="year-selector-container">
-                                        <button id="prev-year" class="btn btn-outline-dark" type="button"><i class="fas fa-caret-left"></i></button>
-                                        <select id="year-selector" class="year-dropdown">
-                                            <!-- Options will be populated dynamically using JavaScript -->
-                                        </select>
-                                        <button id="next-year" class="btn btn-outline-dark" type="button"><i class="fas fa-caret-right"></i></button>
-                                    </div>
-                                </div>
-
-                                <!-- Second dropdown group -->
-                                <div class="control-group">
-                                    <label for="granularity-selector" class="form-label granularity-label">Granularity</label>
-                                    <select id="granularity-selector" class="granularity-dropdown">
-                                        <option value="daily" selected>Daily</option>
-                                        <option value="weekly">Weekly</option>
-                                    </select>
-                                </div>
-
-                                <!-- Third group (icons checkbox) -->
-                                <div class="control-group form-check form-switch detailed-icons-group icons-group ">
-                                    <label class="form-label form-check-label icons-label" for="detailed-check-box">Detailed Icons</label>
-                                    <input class="form-check-input" type="checkbox" id="detailed-check-box">
-                                </div>
-                            </div>
-
-                            <!-- Summary Heatmap Chart -->
-                            <div class="chart-container w-100">
-                                <div id="chart-data" data-daily-heatmap='{{ daily_heatmap_data|safe }}' data-weekly-heatmap='{{ weekly_heatmap_data|safe }}' data-first-date='{{ heatmap_first_date|safe }}' data-last-date='{{ heatmap_last_date|safe }}' data-first-weekly-date='{{ heatmap_first_weekly_date|safe }}' class="heatmap-styles"></div>
-                            </div>
-                            <div id="heatmap-legend" class="mt-3">
-                                <div class="color-gradient-legend">
-                                    <span class="low-count"></span> - Low Count (Few Observations)
-                                    <span class="medium-count" style="margin-left: 2rem;"></span> - Medium Count (Moderate Observations)
-                                    <span class="high-count" style="margin-left: 2rem;"></span> - High Count (Many Observations)
-                                </div>
-                                <div class="symbol-legend" id="icons-legend" style="display: none;">
-                                    <br>
-                                    {% if request.session.branch == 'Italy' %}
-                                        <span style="margin-right: 2rem;">🦴  - With an Enrichment Toy</span>
-                                        <span style="margin-right: 2rem;">🐶  - With Another Dog Present</span>
-                                        <span style="margin-right: 2rem;">👤  - With a Human Companion</span>
-                                        <span>🚫  - Without any Stimuli</span>
-                                        <br> <br>
-                                        <span style="font-size: 0.9em; font-style: italic;">
-                                            *Each symbol on the chart indicates the specific stimuli present with the dog during the observations for that day/week.
-                                        </span>
-                                        <br>
-                                        <span style="font-size: 0.9em; font-style: italic;">
-                                            **In 'Weekly' view, each cell displays the total count of all observations (as well as the individual counts of each stimuli) used during that week.
-                                            <br>
-                                            In 'Daily' view, the symbol represents only the most prevalent stimulus of the day, and the total count of observations is provided.
-                                            <br>
-                                            ***Hover over cells for the fully detailed daily/weekly information.
-                                        </span>
-                                    {% else %}
-                                        <span style="margin-right: 2rem;">🦴  - With an Enrichment Toy</span>
-                                        <span>🚫  - Without an Enrichment Toy</span>
-                                        <br> <br>
-                                        <span style="font-size: 0.9em; font-style: italic;">
-                                            *Each symbol on the chart indicates the existence (or lack) of stimuli with the dog during the observations for that day/week.
-                                        </span>
-                                        <br>
-                                        <span style="font-size: 0.9em; font-style: italic;">
-                                            **In 'Weekly' view, each cell displays the total count of all observations (as well as the individual counts of both states) during that week.
-                                            <br>
-                                            In 'Daily' view, the toy symbol indicates its existence at least once on that day, and the total count of observations is provided.
-                                            <br>
-                                            ***Hover over cells for the fully detailed daily/weekly information.
-                                        </span>
-                                    {% endif %}
-                                </div>
-                            </div>
-
-                            <br>
-                        </div>
-
-                        <hr class="mb-4 mt-4">
-
-                        <!-- Expand/Collapse All Button -->
-                        <div class="d-flex justify-content-end">
-                            <button id="toggleTables" class="btn btn-dark">
-                                Expand All <i class="fas fa-angle-double-down"></i>
-                            </button>
-                        </div>
-
-                        <br />
-                        <!-- Treatments Table -->
-                        <div class="scrollable-table">
-                            <div id="treatments_container" class="w-100">
-                                <div class="clickable-header h-100 w-100 my-0 py-3 px-5 d-flex justify-content-between">
-                                    <div class="spacer"></div> <!-- Invisible spacer -->
-                                    <h2>Treatments</h2>
-                                    <h2>
-                                        <i class="fas fa-angle-down"></i>
-                                    </h2>
-                                </div>
-                            </div>
-                            <div id="treatments_table" class="hide">
-                                <div class="action-bar">
-                                    <!-- Display success messages here upon submission -->
-                                    <div id="treatments-success-alert" class="alert alert-success alert-dismissible fade show" role="alert" style="display:none;">
-                                        <strong>Success!</strong> Treatment has been successfully added.
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                    </div>
-                                    <a class="btn btn-add-new new-treatment" href="#">
-                                        <i class="fas fa-plus"></i> Add Treatment
-                                    </a>
-                                </div>
-                                <table id="treatments-table" class="table styled-table table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th>Treatment Date</th>
-                                            <th>Treatment Name</th>
-                                            <th>Treated By</th>
-                                            <th>Comments</th>
-                                            <th>Edit/Delete</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                    {% for treatment in treatments %}
-                                        {% include "_treatment_row.html" with treatment=treatment %}
-                                    {% empty %}
-                                        <tr>
-                                            <td colspan="5">No treatments found.</td>
-                                        </tr>
-                                    {% endfor %}
-                                    </tbody>
-                                </table>
-
-                                <!-- Treatments Pagination -->
-                               {% include "_dog_record_pagination.html" with paginated_data=treatments param_name="treatments_page" %}
-                                <hr>
-                            </div>
-                        </div>
-
-                        <!-- Entrance Examinations Table -->
-                        <div class="scrollable-table">
-                            <div id="examinations_container" class="w-100">
-                                <div class="clickable-header h-100 w-100 my-0 py-3 px-5 d-flex justify-content-between">
-                                    <div class="spacer"></div> <!-- Invisible spacer -->
-                                    <h2>Examinations</h2>
-                                    <h2>
-                                        <i class="fas fa-angle-down"></i>
-                                    </h2>
-                                </div>
-                            </div>
-                            <div id="examinations_table" class="hide">
-                                <div class="action-bar">
-                                    <!-- Display success messages here upon submission -->
-                                    <div id="examinations-success-alert" class="alert alert-success alert-dismissible fade show" role="alert" style="display:none;">
-                                        <strong>Success!</strong> Examination has been successfully added.
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                    </div>
-                                    <a class="btn btn-add-new new-examination" href="#">
-                                        <i class="fas fa-plus"></i> Add Examination
-                                    </a>
-                                </div>
-                                <table id="examinations-table" class="table styled-table table-bordered">
-                                    <thead class=" stylish-thead">
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Examined By</th>
-                                            <th>Results</th>
-                                            <th>Weight (Kg)</th>
-                                            <th>Temperature (C)</th>
-                                            <th>Pulse (BPM)</th>
-                                            <th>Comments</th>
-                                            <th>Edit/Delete</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="small stylish-tbody">
-                                    {% for examination in examinations %}
-                                        {% include "_examination_row.html" with examination=examination %}
-                                    {% empty %}
-                                        <tr>
-                                            <td colspan="8">No examinations found.</td>
-                                        </tr>
-                                    {% endfor %}
-                                    </tbody>
-                                </table>
-
-                                <!-- Examinations Pagination -->
-                               {% include "_dog_record_pagination.html" with paginated_data=examinations param_name="examinations_page" %}
-                                <hr>
-                            </div>
-                        </div>
-
-                        <!-- Placements in Kennels Table -->
-                        <div class="scrollable-table">
-                            <div id="placements_container" class="w-100">
-                                <div class="clickable-header h-100 w-100 my-0 py-3 px-5 d-flex justify-content-between">
-                                    <div class="spacer"></div> <!-- Invisible spacer -->
-                                    <h2>Kennel Placements</h2>
-                                    <h2>
-                                        <i class="fas fa-angle-down"></i>
-                                    </h2>
-                                </div>
-                            </div>
-                            <div id="placements_table" class="hide">
-                                <div class="action-bar">
-                                    <!-- Display success messages here upon submission -->
-                                    <div id="placements-success-alert" class="alert alert-success alert-dismissible fade show" role="alert" style="display:none;">
-                                        <strong>Success!</strong> Placement has been successfully added.
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                    </div>
-                                    <a class="btn btn-add-new new-placement" href="#">
-                                        <i class="fas fa-plus"></i> Add Placement
-                                    </a>
-                                </div>
-                                <table id="placements-table" class="table styled-table table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th>Entrance Date</th>
-                                            <th>Expiration Date</th>
-                                            <th>Duration (days)</th>
-                                            <th>Kennel</th>
-                                            <th>Placement Reason</th>
-                                            <th>Edit/Delete</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                    {% for placement in placements %}
-                                        {% include "_placement_row.html" with placement=placement %}
-                                    {% empty %}
-                                        <tr>
-                                            <td colspan="6">No placements found.</td>
-                                        </tr>
-                                    {% endfor %}
-                                    </tbody>
-                                </table>
-
-                                <!-- Placements Pagination -->
-                               {% include "_dog_record_pagination.html" with paginated_data=placements param_name="placements_page" %}
-                                <hr>
-                            </div>
-                        </div>
-
-                        <!-- Observes (Camera Session) Table -->
-                        <div class="scrollable-table">
-                            <div id="sessions_container" class="w-100">
-                                <div class="clickable-header h-100 w-100 my-0 py-3 px-5 d-flex justify-content-between">
-                                    <div class="spacer"></div> <!-- Invisible spacer -->
-                                    <h2>Camera Sessions</h2>
-                                    <h2>
-                                        <i class="fas fa-angle-down"></i>
-                                    </h2>
-                                </div>
-                            </div>
-                            <div id="sessions_table" class="hide">
-                                <div class="action-bar">
-                                    <!-- Display success messages here upon submission -->
-                                    <div id="sessions-success-alert" class="alert alert-success alert-dismissible fade show" role="alert" style="display:none;">
-                                        <strong>Success!</strong> Camera Session has been successfully added.
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                    </div>
-                                    <a class="btn btn-add-new new-session" href="#">
-                                        <i class="fas fa-plus"></i> Add Session
-                                    </a>
-                                </div>
-                                <table id="sessions-table" class="table styled-table table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th>Session Date</th>
-                                            <th>Camera</th>
-                                            <th>Comments</th>
-                                            <th>Observations</th>
-                                            <th>Edit/Delete</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                    {% for session in sessions %}
-                                        {% include "_session_row.html" with session=session %}
-                                    {% empty %}
-                                        <tr>
-                                            <td colspan="5">No sessions found.</td>
-                                        </tr>
-                                    {% endfor %}
-                                    </tbody>
-                                </table>
-
-                                <!-- Sessions Pagination -->
-                               {% include "_dog_record_pagination.html" with paginated_data=sessions param_name="sessions_page" %}
-                            </div>
-                        </div>
-                    {% endif %}
-                    {% endif %}
+{#                    {% if user.is_authenticated %}#}
+{#                    {% if user.is_superuser or user|has_group:"Vet" %}#}
+{#                        <hr class="mb-4 mt-4">#}
+{#                        <div class="chart-outer-border mb-4">#}
+{#                            <!-- Container for dropdown elements -->#}
+{#                            <div class="controls-container d-flex align-items-start overflow-auto">#}
+{##}
+{#                                <!-- First dropdown group -->#}
+{#                                <div class=" control-group">#}
+{#                                    <label for="year-selector" class="form-label year-label">Year</label>#}
+{#                                    <div class="year-selector-container">#}
+{#                                        <button id="prev-year" class="btn btn-outline-dark" type="button"><i class="fas fa-caret-left"></i></button>#}
+{#                                        <select id="year-selector" class="year-dropdown">#}
+{#                                            <!-- Options will be populated dynamically using JavaScript -->#}
+{#                                        </select>#}
+{#                                        <button id="next-year" class="btn btn-outline-dark" type="button"><i class="fas fa-caret-right"></i></button>#}
+{#                                    </div>#}
+{#                                </div>#}
+{##}
+{#                                <!-- Second dropdown group -->#}
+{#                                <div class="control-group">#}
+{#                                    <label for="granularity-selector" class="form-label granularity-label">Granularity</label>#}
+{#                                    <select id="granularity-selector" class="granularity-dropdown">#}
+{#                                        <option value="daily" selected>Daily</option>#}
+{#                                        <option value="weekly">Weekly</option>#}
+{#                                    </select>#}
+{#                                </div>#}
+{##}
+{#                                <!-- Third group (icons checkbox) -->#}
+{#                                <div class="control-group form-check form-switch detailed-icons-group icons-group ">#}
+{#                                    <label class="form-label form-check-label icons-label" for="detailed-check-box">Detailed Icons</label>#}
+{#                                    <input class="form-check-input" type="checkbox" id="detailed-check-box">#}
+{#                                </div>#}
+{#                            </div>#}
+{##}
+{#                            <!-- Summary Heatmap Chart -->#}
+{#                            <div class="chart-container w-100">#}
+{#                                <div id="chart-data" data-daily-heatmap='{{ daily_heatmap_data|safe }}' data-weekly-heatmap='{{ weekly_heatmap_data|safe }}' data-first-date='{{ heatmap_first_date|safe }}' data-last-date='{{ heatmap_last_date|safe }}' data-first-weekly-date='{{ heatmap_first_weekly_date|safe }}' class="heatmap-styles"></div>#}
+{#                            </div>#}
+{#                            <div id="heatmap-legend" class="mt-3">#}
+{#                                <div class="color-gradient-legend">#}
+{#                                    <span class="low-count"></span> - Low Count (Few Observations)#}
+{#                                    <span class="medium-count" style="margin-left: 2rem;"></span> - Medium Count (Moderate Observations)#}
+{#                                    <span class="high-count" style="margin-left: 2rem;"></span> - High Count (Many Observations)#}
+{#                                </div>#}
+{#                                <div class="symbol-legend" id="icons-legend" style="display: none;">#}
+{#                                    <br>#}
+{#                                    {% if request.session.branch == 'Italy' %}#}
+{#                                        <span style="margin-right: 2rem;">🦴  - With an Enrichment Toy</span>#}
+{#                                        <span style="margin-right: 2rem;">🐶  - With Another Dog Present</span>#}
+{#                                        <span style="margin-right: 2rem;">👤  - With a Human Companion</span>#}
+{#                                        <span>🚫  - Without any Stimuli</span>#}
+{#                                        <br> <br>#}
+{#                                        <span style="font-size: 0.9em; font-style: italic;">#}
+{#                                            *Each symbol on the chart indicates the specific stimuli present with the dog during the observations for that day/week.#}
+{#                                        </span>#}
+{#                                        <br>#}
+{#                                        <span style="font-size: 0.9em; font-style: italic;">#}
+{#                                            **In 'Weekly' view, each cell displays the total count of all observations (as well as the individual counts of each stimuli) used during that week.#}
+{#                                            <br>#}
+{#                                            In 'Daily' view, the symbol represents only the most prevalent stimulus of the day, and the total count of observations is provided.#}
+{#                                            <br>#}
+{#                                            ***Hover over cells for the fully detailed daily/weekly information.#}
+{#                                        </span>#}
+{#                                    {% else %}#}
+{#                                        <span style="margin-right: 2rem;">🦴  - With an Enrichment Toy</span>#}
+{#                                        <span>🚫  - Without an Enrichment Toy</span>#}
+{#                                        <br> <br>#}
+{#                                        <span style="font-size: 0.9em; font-style: italic;">#}
+{#                                            *Each symbol on the chart indicates the existence (or lack) of stimuli with the dog during the observations for that day/week.#}
+{#                                        </span>#}
+{#                                        <br>#}
+{#                                        <span style="font-size: 0.9em; font-style: italic;">#}
+{#                                            **In 'Weekly' view, each cell displays the total count of all observations (as well as the individual counts of both states) during that week.#}
+{#                                            <br>#}
+{#                                            In 'Daily' view, the toy symbol indicates its existence at least once on that day, and the total count of observations is provided.#}
+{#                                            <br>#}
+{#                                            ***Hover over cells for the fully detailed daily/weekly information.#}
+{#                                        </span>#}
+{#                                    {% endif %}#}
+{#                                </div>#}
+{#                            </div>#}
+{##}
+{#                            <br>#}
+{#                        </div>#}
+{##}
+{#                        <hr class="mb-4 mt-4">#}
+{##}
+{#                        <!-- Expand/Collapse All Button -->#}
+{#                        <div class="d-flex justify-content-end">#}
+{#                            <button id="toggleTables" class="btn btn-dark">#}
+{#                                Expand All <i class="fas fa-angle-double-down"></i>#}
+{#                            </button>#}
+{#                        </div>#}
+{##}
+{#                        <br />#}
+{#                        <!-- Treatments Table -->#}
+{#                        <div class="scrollable-table">#}
+{#                            <div id="treatments_container" class="w-100">#}
+{#                                <div class="clickable-header h-100 w-100 my-0 py-3 px-5 d-flex justify-content-between">#}
+{#                                    <div class="spacer"></div> <!-- Invisible spacer -->#}
+{#                                    <h2>Treatments</h2>#}
+{#                                    <h2>#}
+{#                                        <i class="fas fa-angle-down"></i>#}
+{#                                    </h2>#}
+{#                                </div>#}
+{#                            </div>#}
+{#                            <div id="treatments_table" class="hide">#}
+{#                                <div class="action-bar">#}
+{#                                    <!-- Display success messages here upon submission -->#}
+{#                                    <div id="treatments-success-alert" class="alert alert-success alert-dismissible fade show" role="alert" style="display:none;">#}
+{#                                        <strong>Success!</strong> Treatment has been successfully added.#}
+{#                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>#}
+{#                                    </div>#}
+{#                                    <a class="btn btn-add-new new-treatment" href="#">#}
+{#                                        <i class="fas fa-plus"></i> Add Treatment#}
+{#                                    </a>#}
+{#                                </div>#}
+{#                                <table id="treatments-table" class="table styled-table table-bordered">#}
+{#                                    <thead>#}
+{#                                        <tr>#}
+{#                                            <th>Treatment Date</th>#}
+{#                                            <th>Treatment Name</th>#}
+{#                                            <th>Treated By</th>#}
+{#                                            <th>Comments</th>#}
+{#                                            <th>Edit/Delete</th>#}
+{#                                        </tr>#}
+{#                                    </thead>#}
+{#                                    <tbody>#}
+{#                                    {% for treatment in treatments %}#}
+{#                                        {% include "_treatment_row.html" with treatment=treatment %}#}
+{#                                    {% empty %}#}
+{#                                        <tr>#}
+{#                                            <td colspan="5">No treatments found.</td>#}
+{#                                        </tr>#}
+{#                                    {% endfor %}#}
+{#                                    </tbody>#}
+{#                                </table>#}
+{##}
+{#                                <!-- Treatments Pagination -->#}
+{#                               {% include "_dog_record_pagination.html" with paginated_data=treatments param_name="treatments_page" %}#}
+{#                                <hr>#}
+{#                            </div>#}
+{#                        </div>#}
+{##}
+{#                        <!-- Entrance Examinations Table -->#}
+{#                        <div class="scrollable-table">#}
+{#                            <div id="examinations_container" class="w-100">#}
+{#                                <div class="clickable-header h-100 w-100 my-0 py-3 px-5 d-flex justify-content-between">#}
+{#                                    <div class="spacer"></div> <!-- Invisible spacer -->#}
+{#                                    <h2>Examinations</h2>#}
+{#                                    <h2>#}
+{#                                        <i class="fas fa-angle-down"></i>#}
+{#                                    </h2>#}
+{#                                </div>#}
+{#                            </div>#}
+{#                            <div id="examinations_table" class="hide">#}
+{#                                <div class="action-bar">#}
+{#                                    <!-- Display success messages here upon submission -->#}
+{#                                    <div id="examinations-success-alert" class="alert alert-success alert-dismissible fade show" role="alert" style="display:none;">#}
+{#                                        <strong>Success!</strong> Examination has been successfully added.#}
+{#                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>#}
+{#                                    </div>#}
+{#                                    <a class="btn btn-add-new new-examination" href="#">#}
+{#                                        <i class="fas fa-plus"></i> Add Examination#}
+{#                                    </a>#}
+{#                                </div>#}
+{#                                <table id="examinations-table" class="table styled-table table-bordered">#}
+{#                                    <thead class=" stylish-thead">#}
+{#                                        <tr>#}
+{#                                            <th>Date</th>#}
+{#                                            <th>Examined By</th>#}
+{#                                            <th>Results</th>#}
+{#                                            <th>Weight (Kg)</th>#}
+{#                                            <th>Temperature (C)</th>#}
+{#                                            <th>Pulse (BPM)</th>#}
+{#                                            <th>Comments</th>#}
+{#                                            <th>Edit/Delete</th>#}
+{#                                        </tr>#}
+{#                                    </thead>#}
+{#                                    <tbody class="small stylish-tbody">#}
+{#                                    {% for examination in examinations %}#}
+{#                                        {% include "_examination_row.html" with examination=examination %}#}
+{#                                    {% empty %}#}
+{#                                        <tr>#}
+{#                                            <td colspan="8">No examinations found.</td>#}
+{#                                        </tr>#}
+{#                                    {% endfor %}#}
+{#                                    </tbody>#}
+{#                                </table>#}
+{##}
+{#                                <!-- Examinations Pagination -->#}
+{#                               {% include "_dog_record_pagination.html" with paginated_data=examinations param_name="examinations_page" %}#}
+{#                                <hr>#}
+{#                            </div>#}
+{#                        </div>#}
+{##}
+{#                        <!-- Placements in Kennels Table -->#}
+{#                        <div class="scrollable-table">#}
+{#                            <div id="placements_container" class="w-100">#}
+{#                                <div class="clickable-header h-100 w-100 my-0 py-3 px-5 d-flex justify-content-between">#}
+{#                                    <div class="spacer"></div> <!-- Invisible spacer -->#}
+{#                                    <h2>Kennel Placements</h2>#}
+{#                                    <h2>#}
+{#                                        <i class="fas fa-angle-down"></i>#}
+{#                                    </h2>#}
+{#                                </div>#}
+{#                            </div>#}
+{#                            <div id="placements_table" class="hide">#}
+{#                                <div class="action-bar">#}
+{#                                    <!-- Display success messages here upon submission -->#}
+{#                                    <div id="placements-success-alert" class="alert alert-success alert-dismissible fade show" role="alert" style="display:none;">#}
+{#                                        <strong>Success!</strong> Placement has been successfully added.#}
+{#                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>#}
+{#                                    </div>#}
+{#                                    <a class="btn btn-add-new new-placement" href="#">#}
+{#                                        <i class="fas fa-plus"></i> Add Placement#}
+{#                                    </a>#}
+{#                                </div>#}
+{#                                <table id="placements-table" class="table styled-table table-bordered">#}
+{#                                    <thead>#}
+{#                                        <tr>#}
+{#                                            <th>Entrance Date</th>#}
+{#                                            <th>Expiration Date</th>#}
+{#                                            <th>Duration (days)</th>#}
+{#                                            <th>Kennel</th>#}
+{#                                            <th>Placement Reason</th>#}
+{#                                            <th>Edit/Delete</th>#}
+{#                                        </tr>#}
+{#                                    </thead>#}
+{#                                    <tbody>#}
+{#                                    {% for placement in placements %}#}
+{#                                        {% include "_placement_row.html" with placement=placement %}#}
+{#                                    {% empty %}#}
+{#                                        <tr>#}
+{#                                            <td colspan="6">No placements found.</td>#}
+{#                                        </tr>#}
+{#                                    {% endfor %}#}
+{#                                    </tbody>#}
+{#                                </table>#}
+{##}
+{#                                <!-- Placements Pagination -->#}
+{#                               {% include "_dog_record_pagination.html" with paginated_data=placements param_name="placements_page" %}#}
+{#                                <hr>#}
+{#                            </div>#}
+{#                        </div>#}
+{##}
+{#                        <!-- Observes (Camera Session) Table -->#}
+{#                        <div class="scrollable-table">#}
+{#                            <div id="sessions_container" class="w-100">#}
+{#                                <div class="clickable-header h-100 w-100 my-0 py-3 px-5 d-flex justify-content-between">#}
+{#                                    <div class="spacer"></div> <!-- Invisible spacer -->#}
+{#                                    <h2>Camera Sessions</h2>#}
+{#                                    <h2>#}
+{#                                        <i class="fas fa-angle-down"></i>#}
+{#                                    </h2>#}
+{#                                </div>#}
+{#                            </div>#}
+{#                            <div id="sessions_table" class="hide">#}
+{#                                <div class="action-bar">#}
+{#                                    <!-- Display success messages here upon submission -->#}
+{#                                    <div id="sessions-success-alert" class="alert alert-success alert-dismissible fade show" role="alert" style="display:none;">#}
+{#                                        <strong>Success!</strong> Camera Session has been successfully added.#}
+{#                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>#}
+{#                                    </div>#}
+{#                                    <a class="btn btn-add-new new-session" href="#">#}
+{#                                        <i class="fas fa-plus"></i> Add Session#}
+{#                                    </a>#}
+{#                                </div>#}
+{#                                <table id="sessions-table" class="table styled-table table-bordered">#}
+{#                                    <thead>#}
+{#                                        <tr>#}
+{#                                            <th>Session Date</th>#}
+{#                                            <th>Camera</th>#}
+{#                                            <th>Comments</th>#}
+{#                                            <th>Observations</th>#}
+{#                                            <th>Edit/Delete</th>#}
+{#                                        </tr>#}
+{#                                    </thead>#}
+{#                                    <tbody>#}
+{#                                    {% for session in sessions %}#}
+{#                                        {% include "_session_row.html" with session=session %}#}
+{#                                    {% empty %}#}
+{#                                        <tr>#}
+{#                                            <td colspan="5">No sessions found.</td>#}
+{#                                        </tr>#}
+{#                                    {% endfor %}#}
+{#                                    </tbody>#}
+{#                                </table>#}
+{##}
+{#                                <!-- Sessions Pagination -->#}
+{#                               {% include "_dog_record_pagination.html" with paginated_data=sessions param_name="sessions_page" %}#}
+{#                            </div>#}
+{#                        </div>#}
+{#                    {% endif %}#}
+{#                    {% endif %}#}
                 </div>
                 {% if user.is_authenticated and user|has_group:"Vet" %}
                     <div class="card-footer bg-transparent py-3">
@@ -486,44 +523,111 @@
         </div>
     </div>
 
-    <!-- Delete Modals -->
-    {% include 'modals/dogs/common/__delete_modal.html' with modal_id='deleteTreatmentModal' title='Treatment' label_id='deleteTreatmentModalLabel' button_id='confirmTreatmentDeleteBtn' %}
-    {% include 'modals/dogs/common/__delete_modal.html' with modal_id='deleteSessionModal' title='Session' label_id='deleteSessionModalLabel' button_id='confirmSessionDeleteBtn' %}
-    {% include 'modals/dogs/common/__delete_modal.html' with modal_id='deletePlacementModal' title='Placement' label_id='deletePlacementModalLabel' button_id='confirmPlacementDeleteBtn' %}
-    {% include 'modals/dogs/common/__delete_modal.html' with modal_id='deleteExaminationModal' title='Examination' label_id='deleteExaminationModalLabel' button_id='confirmExaminationDeleteBtn' %}
+    <!-- Video Playing Modal -->
+    <div class="modal fade" id="videoModal" tabindex="-1" aria-labelledby="videoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-dark" style="display: flex; justify-content: center; width: 100%;">
+                    <h4 class="modal-title text-white" id="videoModalLabel" style="flex-grow: 1; text-align: center;">{{ dog_record.dogName }}'s Video</h4>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="flex-shrink: 0;"></button>
+                </div>
+                <div class="modal-body">
+                <!-- Video player will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+{#    #}
+{#    <!-- Delete Modals -->#}
+{#    {% include 'modals/dogs/common/__delete_modal.html' with modal_id='deleteTreatmentModal' title='Treatment' label_id='deleteTreatmentModalLabel' button_id='confirmTreatmentDeleteBtn' %}#}
+{#    {% include 'modals/dogs/common/__delete_modal.html' with modal_id='deleteSessionModal' title='Session' label_id='deleteSessionModalLabel' button_id='confirmSessionDeleteBtn' %}#}
+{#    {% include 'modals/dogs/common/__delete_modal.html' with modal_id='deletePlacementModal' title='Placement' label_id='deletePlacementModalLabel' button_id='confirmPlacementDeleteBtn' %}#}
+{#    {% include 'modals/dogs/common/__delete_modal.html' with modal_id='deleteExaminationModal' title='Examination' label_id='deleteExaminationModalLabel' button_id='confirmExaminationDeleteBtn' %}#}
+{##}
+{#    <!-- Add & Edit Modals -->#}
+{#    {% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='addExaminationModal' title='Add New Examination' label_id='addExaminationtModalLabel' button_title='Examination' modal_form=examination_form form_name="examination_form" %}#}
+{#    {% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='editExaminationModal' title='Edit Examination' label_id='editExaminationModalLabel' button_title='Examination' modal_form=examination_form form_name="examination_form" is_edit=True button_classes='edit-examination-confirm-btn' %}#}
+{##}
+{#    {% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='addPlacementModal' title='Add New Kennel Placement' label_id='addPlacementModalLabel' button_title='Placement' modal_form=placement_form form_name="placement_form" %}#}
+{#    {% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='editPlacementModal' title='Edit Placement' label_id='editPlacementModalLabel' button_title='Placement' modal_form=placement_form form_name="placement_form" is_edit=True button_classes='edit-placement-confirm-btn' %}#}
+{##}
+{#    {% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='editSessionModal' title='Edit Session' label_id='editSessionModalLabel' button_title='Session' modal_form=session_form form_name="session_form" is_edit=True button_classes='edit-session-confirm-btn' %}#}
+{#    {% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='addSessionModal' title='Add New Camera Session' label_id='addSessionModalLabel' button_title='Session' modal_form=session_form form_name="session_form" %}#}
+{##}
+{#    {% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='addTreatmentModal' title='Add New Treatment' label_id='addTreatmentModalLabel' button_title='Treatment' modal_form=treatment_form form_name="treatment_form" %}#}
+{#    {% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='editTreatmentModal' title='Edit Treatment' label_id='editTreatmentModalLabel' button_title='Treatment' modal_form=treatment_form form_name="treatment_form" is_edit=True button_classes='edit-treatment-confirm-btn' %}#}
+{##}
+{#    <!-- Dog Owner Modals -->#}
+{#    {% include 'modals/dogs/common/__dog_owner_modal.html' with dog_record=dog_record %}#}
+{#    {% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='editOwnerModal' title='Edit Owner' label_id='editOwnerModalLabel' button_title='Owner' modal_form=owner form_name="owner_form" is_edit=True button_classes='edit-owner-confirm-btn' %}#}
 
-    <!-- Add & Edit Modals -->
-    {% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='addExaminationModal' title='Add New Examination' label_id='addExaminationtModalLabel' button_title='Examination' modal_form=examination_form form_name="examination_form" %}
-    {% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='editExaminationModal' title='Edit Examination' label_id='editExaminationModalLabel' button_title='Examination' modal_form=examination_form form_name="examination_form" is_edit=True button_classes='edit-examination-confirm-btn' %}
 
-    {% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='addPlacementModal' title='Add New Kennel Placement' label_id='addPlacementModalLabel' button_title='Placement' modal_form=placement_form form_name="placement_form" %}
-    {% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='editPlacementModal' title='Edit Placement' label_id='editPlacementModalLabel' button_title='Placement' modal_form=placement_form form_name="placement_form" is_edit=True button_classes='edit-placement-confirm-btn' %}
-
-    {% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='editSessionModal' title='Edit Session' label_id='editSessionModalLabel' button_title='Session' modal_form=session_form form_name="session_form" is_edit=True button_classes='edit-session-confirm-btn' %}
-    {% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='addSessionModal' title='Add New Camera Session' label_id='addSessionModalLabel' button_title='Session' modal_form=session_form form_name="session_form" %}
-
-    {% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='addTreatmentModal' title='Add New Treatment' label_id='addTreatmentModalLabel' button_title='Treatment' modal_form=treatment_form form_name="treatment_form" %}
-    {% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='editTreatmentModal' title='Edit Treatment' label_id='editTreatmentModalLabel' button_title='Treatment' modal_form=treatment_form form_name="treatment_form" is_edit=True button_classes='edit-treatment-confirm-btn' %}
-
-    <!-- Dog Owner Modals -->
-    {% include 'modals/dogs/common/__dog_owner_modal.html' with dog_record=dog_record %}
-    {% include 'modals/dogs/common/__add_edit_modal.html' with modal_id='editOwnerModal' title='Edit Owner' label_id='editOwnerModalLabel' button_title='Owner' modal_form=owner form_name="owner_form" is_edit=True button_classes='edit-owner-confirm-btn' %}
 {% endblock %}
 
 <!-- Declare a variable for displaying the dog's image, to be used in the following external JavaScript file -->
 {% block script %}
     <script type="text/javascript">
         const dogImageLoad = '{{ dog_record.dogName }}';
+
         // Pass the current branch value to the view_observations.js file for Italy-specific functionality
         const branch = "{{ request.session.branch }}";
         // Pass the current User Authorization status to the JS file
         const userIsVet = {% if user.is_authenticated and user|has_group:"Vet" %}true{% else %}false{% endif %};
-        // Pass the dog's image to the JS file for use in the chart title
-        const chartTitleDogName = dogImageLoad ? dogImageLoad + "'s " : "";
-        // Pass the icons to the JS file for use in the Expand/Collapse All Button
-        const doubleDownIcon = '<i class="fas fa-angle-double-down"></i>';
-        const doubleUpIcon = '<i class="fas fa-angle-double-up"></i>';
+        {#// Pass the dog's image to the JS file for use in the chart title#}
+        {#const chartTitleDogName = dogImageLoad ? dogImageLoad + "'s " : "";#}
+        {#// Pass the icons to the JS file for use in the Expand/Collapse All Button#}
+        {#const doubleDownIcon = '<i class="fas fa-angle-double-down"></i>';#}
+        {#const doubleUpIcon = '<i class="fas fa-angle-double-up"></i>';#}
 
+        // Video Modal Setup
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const modal = document.getElementById('videoModal');
+            const modalBody = modal.querySelector('.modal-body');
+
+            let player; // Define player outside to reuse it
+
+            modal.addEventListener('hidden.bs.modal', function () {
+                if (player) {
+                    player.destroy(); // Ensure player is destroyed when modal is closed
+                    player = null; // Reset player to null
+                }
+                modalBody.innerHTML = ''; // Clear the modal body to remove video elements
+            });
+
+            // Setup video when a video link is clicked
+            document.querySelectorAll('a[data-bs-toggle="modal"]').forEach(item => {
+                item.addEventListener('click', event => {
+                    // Prevent default action
+                    event.preventDefault();
+
+                    const videoUrl = {% if dog_record.dogVideo %} '{{ dog_record.dogVideo.url }}' {% else %} null {% endif %};
+                    console.log(videoUrl);
+
+                    // Check if videoUrl exists to avoid errors
+                    if (videoUrl) {
+                        modalBody.innerHTML = `
+                            <div class="plyr__video-embed" id="player">
+                                <video id="plyr-video-player" playsinline controls muted preload="auto">
+                                    <source src="${videoUrl}" type="video/mp4">
+                                </video>
+                            </div>
+                        `;
+
+                        // Re-initialize Plyr for the new video
+                        player = new Plyr('#plyr-video-player', {
+                            muted: true,
+                            autoplay: true,
+                            hideControls: true,
+                            resetOnEnd: true,
+                            controls: ['play', 'progress', 'current-time', 'mute', 'volume', 'settings', 'pip', 'download', 'fullscreen'],
+                        });
+
+                        // Try playing the video, handle autoplay prevention
+                        player.play().catch(error => console.error("Autoplay was prevented.", error));
+                    }
+                });
+            });
+        });
     </script>
     <script src="{% static 'dogs_app/js/dog_record.js' %}"></script>
 {% endblock %}

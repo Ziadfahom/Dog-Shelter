@@ -46,10 +46,10 @@
                   <strong>News</strong>
                   <span>Our Latest Updates</span>
                 </a>
-                <a href="{% url 'dogs_app:toggle_branch' %}" id="branch-toggle" class="dropdown-item">
-                    <strong>Branch Selection</strong>
-                    <span>{% if request.session.branch == 'Italy' %}Navigate to Israeli Shelter{% else %}Navigate to Italian Shelter{% endif %}</span>
-                </a>
+{#                <a href="{% url 'dogs_app:toggle_branch' %}" id="branch-toggle" class="dropdown-item">#}
+{#                    <strong>Branch Selection</strong>#}
+{#                    <span>{% if request.session.branch == 'Italy' %}Navigate to Israeli Shelter{% else %}Navigate to Italian Shelter{% endif %}</span>#}
+{#                </a>#}
               </div>
             </div>
           </li>
@@ -81,10 +81,10 @@
                   <strong>News</strong>
                   <span>Our Latest Updates</span>
                 </a>
-                <a href="{% url 'dogs_app:view_polls' %}" class="dropdown-item">
-                  <strong>Polls</strong>
-                  <span>Check Out The Newest Polls</span>
-                </a>
+{#                <a href="{% url 'dogs_app:view_polls' %}" class="dropdown-item">#}
+{#                  <strong>Polls</strong>#}
+{#                  <span>Check Out The Newest Polls</span>#}
+{#                </a>#}
               </div>
             </div>
           </li>
@@ -108,18 +108,22 @@
                   <strong>Users</strong>
                   <span>Manage All Accounts</span>
                 </a>
+                <a href="{% url 'dogs_app:add_dog' %}" class="dropdown-item">
+                  <strong>New Dog</strong>
+                  <span>Add a New Dog to The Website</span>
+                </a>
                 <a href="{% url 'dogs_app:add_news' %}" class="dropdown-item">
                   <strong>Add News</strong>
                   <span>Create News For The Homepage</span>
                 </a>
-                <a href="{% url 'dogs_app:add_poll' %}" class="dropdown-item">
-                  <strong>Add Poll</strong>
-                  <span>Create a Poll For The Homepage</span>
-                </a>
-                <a href="{% url 'portal_app:list-kennels' %}" class="dropdown-item">
-                    <strong>Control Panel</strong>
-                    <span>Manage All Website Information</span>
-                </a>
+{#                <a href="{% url 'dogs_app:add_poll' %}" class="dropdown-item">#}
+{#                  <strong>Add Poll</strong>#}
+{#                  <span>Create a Poll For The Homepage</span>#}
+{#                </a>#}
+{#                <a href="{% url 'portal_app:list-kennels' %}" class="dropdown-item">#}
+{#                    <strong>Control Panel</strong>#}
+{#                    <span>Manage All Website Information</span>#}
+{#                </a>#}
                 <a href="{% url 'admin:index' %}" class="dropdown-item">
                   <strong>Site Administration</strong>
                   <span>Basic Data Manipulation</span>
@@ -128,9 +132,9 @@
             </div>
           </li>
         {% elif user.is_authenticated and user|has_group:"Vet" %}
-            <li class="nav-item active me-4">
-              <a href="{% url 'portal_app:list-kennels' %}" class="nav-link">Control Panel</a>
-            </li>
+{#            <li class="nav-item active me-4">#}
+{#              <a href="{% url 'portal_app:list-kennels' %}" class="nav-link">Control Panel</a>#}
+{#            </li>#}
         {% endif %}
 
         {% if user.is_authenticated %}
@@ -148,9 +152,9 @@
 
               <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
 
-                <a href="{% url 'dogs_app:toggle_branch' %}" id="branch-toggle" class="dropdown-item">
-                    <strong>{% if request.session.branch == 'Italy' %}Go to Israeli Shelter{% else %}Go to Italian Shelter{% endif %}</strong>
-                </a>
+{#                <a href="{% url 'dogs_app:toggle_branch' %}" id="branch-toggle" class="dropdown-item">#}
+{#                    <strong>{% if request.session.branch == 'Italy' %}Go to Israeli Shelter{% else %}Go to Italian Shelter{% endif %}</strong>#}
+{#                </a>#}
 
                 <a href="{% url 'dogs_app:update_user_self' %}" class="dropdown-item">
                   <strong>Manage Profile</strong>

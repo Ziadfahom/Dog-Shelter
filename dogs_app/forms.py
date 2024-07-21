@@ -69,6 +69,11 @@ class SignUpForm(UserCreationForm):
 
 # Add New Dog Form
 class AddDogForm(forms.ModelForm):
+    dogImage = forms.ImageField(required=False,
+                                widget=forms.widgets.ClearableFileInput(attrs={"class": "form-control",
+                                                                               "title": "Upload the dog's image."}),
+                                label="Profile Picture",
+                                help_text="Upload the dog's main picture here.")
     dogName = forms.CharField(required=True,
                               max_length=35,
                               error_messages={'required': 'Dog Name cannot be empty'},
@@ -83,12 +88,6 @@ class AddDogForm(forms.ModelForm):
                               widget=forms.widgets.TextInput(attrs={"class": "form-control",
                                                                     "title": "Please enter a valid chip number"}),
                               label="Chip Number")
-    dateOfBirthEst = forms.DateField(required=False,
-                                     widget=forms.widgets.DateInput(format='%Y-%m-%d',
-                                                                    attrs={"type": "date",
-                                                                           "class": "form-control",
-                                                                           "title": "Please enter a valid date"}),
-                                     label="Estimated Date of Birth")
     # Set the initial value to today's date adjusted for Jerusalem timezone
     dateOfArrival = forms.DateField(required=False,
                                     initial=timezone.localtime(timezone.now()).date(),
@@ -97,6 +96,12 @@ class AddDogForm(forms.ModelForm):
                                                                           "class": "form-control",
                                                                           "title": "Please enter a valid date"}),
                                     label="Date of Arrival")
+    dateOfBirthEst = forms.DateField(required=False,
+                                     widget=forms.widgets.DateInput(format='%Y-%m-%d',
+                                                                    attrs={"type": "date",
+                                                                           "class": "form-control",
+                                                                           "title": "Please enter a valid date"}),
+                                     label="Estimated Date of Birth")
     dateOfVaccination = forms.DateField(required=False,
                                         widget=forms.widgets.DateInput(format='%Y-%m-%d',
                                                                        attrs={"type": "date",
@@ -130,16 +135,11 @@ class AddDogForm(forms.ModelForm):
                                     widget=forms.widgets.Select(attrs={"class": "form-control",
                                                                        "title": "Select if the dog is dangerous"}),
                                     label="Is the dog dangerous?")
-    dogImage = forms.ImageField(required=False,
-                                widget=forms.widgets.ClearableFileInput(attrs={"class": "form-control",
-                                                                               "title": "Upload the dog's image."}),
-                                label="Dog Image",
-                                help_text="Upload the dog's image here.")
-    owner = forms.ModelChoiceField(queryset=Owner.objects.none(),  # Initially empty queryset
-                                   required=False,
-                                   widget=forms.widgets.Select(attrs={"class": "form-control",
-                                                                      "title": "Select the dog's owner"}),
-                                   label="Dog's Owner")
+    # owner = forms.ModelChoiceField(queryset=Owner.objects.none(),  # Initially empty queryset
+    #                                required=False,
+    #                                widget=forms.widgets.Select(attrs={"class": "form-control",
+    #                                                                   "title": "Select the dog's owner"}),
+    #                                label="Dog's Owner")
     adoptionDate = forms.DateField(required=False,
                                    widget=forms.widgets.DateInput(format='%Y-%m-%d',
                                                                   attrs={"type": "date",
@@ -147,10 +147,63 @@ class AddDogForm(forms.ModelForm):
                                                                          "title": "Please enter a valid date",
                                                                          "id": "id_adoptionDate"}),
                                    label="Adoption Date")
+    # Attributes for Lod
+    entryReason = forms.ChoiceField(choices=Dog.ENTRY_REASON_CHOICES,
+                                    required=False,
+                                    widget=forms.widgets.Select(attrs={"class": "form-control",
+                                                                       "title": "Select the reason for entry"}),
+                                    label="Entry Reason")
+    releaseDate = forms.DateField(required=False,
+                                  widget=forms.widgets.DateInput(format='%Y-%m-%d',
+                                                                 attrs={"type": "date",
+                                                                        "class": "form-control",
+                                                                        "title": "Please enter a valid date"}),
+                                  label="Release Date")
+    releaseReason = forms.CharField(required=False,
+                                    max_length=50,
+                                    widget=forms.widgets.TextInput(attrs={"class": "form-control",
+                                                                          "title": "Please enter a maximum of 50 characters",}),
+                                    label="Release Reason")
+    releaseDetails = forms.CharField(required=False,
+                                     max_length=250,
+                                     widget=forms.widgets.TextInput(attrs={"class": "form-control",
+                                                                           "title": "Please enter a maximum of 250 characters", }),
+                                     label="Release Details")
+    city = forms.CharField(required=False,
+                           max_length=30,
+                           widget=forms.widgets.TextInput(attrs={"class": "form-control",
+                                                                 "title": "Please enter a city", }),
+                           label="City")
+    colorGroup = forms.ChoiceField(choices=Dog.COLOR_GROUP_CHOICES,
+                                   required=False,
+                                   widget=forms.widgets.Select(attrs={"class": "form-control",
+                                                                      "title": "Select the dog's color group (for MYM)"}),
+                                   label="Color Group")
+    motivationGroup = forms.ChoiceField(choices=Dog.MOTIVATION_GROUP_CHOICES,
+                                        required=False,
+                                        widget=forms.widgets.Select(attrs={"class": "form-control",
+                                                                           "title": "Select the dog's motivation group (for MYM)"}),
+                                        label="Motivation Group")
+    dogImage2 = forms.ImageField(required=False,
+                                 widget=forms.widgets.ClearableFileInput(attrs={"class": "form-control",
+                                                                                "title": "Upload the dog's image."}),
+                                 label="Dog Image (2)",
+                                 help_text="Upload the dog's image here.")
+    dogImage3 = forms.ImageField(required=False,
+                                 widget=forms.widgets.ClearableFileInput(attrs={"class": "form-control",
+                                                                                "title": "Upload the dog's image."}),
+                                 label="Dog Image (3)",
+                                 help_text="Upload the dog's image here.")
+    dogImage4 = forms.ImageField(required=False,
+                                 widget=forms.widgets.ClearableFileInput(attrs={"class": "form-control",
+                                                                                "title": "Upload the dog's image."}),
+                                 label="Dog Image (4)",
+                                 help_text="Upload the dog's image here.")
+    # TO-DO dogVideo
 
     class Meta:
         model = Dog
-        exclude = ['branch', 'dogID', 'kongDateAdded']
+        exclude = ['branch', 'dogID', 'kongDateAdded', 'owner']
 
     def __init__(self, *args, **kwargs):
         request = kwargs.pop('request', None)  # Extract the request object
@@ -159,11 +212,13 @@ class AddDogForm(forms.ModelForm):
         self.fields['dateOfArrival'].widget.attrs.update({'class': 'date-field'})
         self.fields['dateOfBirthEst'].widget.attrs.update({'class': 'date-field'})
         self.fields['dateOfVaccination'].widget.attrs.update({'class': 'date-field'})
-        if request:
-            # Get the current branch
-            current_branch = get_current_branch(request)
-            # Set the queryset to the current branch's owners
-            self.fields['owner'].queryset = Owner.objects.filter(branch=current_branch)
+        self.fields['releaseDate'].widget.attrs.update({'class': 'date-field'})
+
+        # if request:
+        #     # Get the current branch
+        #     current_branch = get_current_branch(request)
+        #     # Set the queryset to the current branch's owners
+        #     self.fields['owner'].queryset = Owner.objects.filter(branch=current_branch)
 
     def clean_dateOfBirthEst(self):
         dob = self.cleaned_data.get('dateOfBirthEst')

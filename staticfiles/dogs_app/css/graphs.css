@@ -7,8 +7,38 @@ body {
     margin: 0 auto 2em auto;
     padding: 20px;
     box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
-    background-color: white;
-    border-radius: 15px;
+    background-color: #FFF8DC;
+    border-radius: 0 0 15px 15px;
+}
+
+
+.chart-container-day {
+    background-color: #F0FFF0;  /* Lavender */
+}
+
+.chart-container-kong {
+    background-color: #F0E68C;  /* Khaki */
+}
+
+.chart-container-without-kong {
+    background-color: #98FB98;  /* Pale Green */
+}
+
+.chart-container-breeds {
+    background-color: #FAF3E0;  /* Light Gray */
+}
+
+.chart-container-stance-pos {
+    background-color: #ADD8E6;  /* Light Blue */
+}
+
+.chart-container-stance-pos canvas {
+    margin: 0 auto;
+    display: block;
+}
+.chart-container-health-metrics {
+    background-color: #FFE4E1;  /* Misty Rose */
+
 }
 
 /* Title container styling */
@@ -16,15 +46,17 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(to right, #5b86e5, #36d1dc); /* Subtle gradient background */
+    background: linear-gradient(160deg, #2F4F4F, #3C636C); /* Subtle gradient background */
     color: #fff;
     padding: 1em 0;
-    margin: 2em auto;
-    border-radius: 20px; /* Rounded corners */
-    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); /* Add shadow for a "lifted" effect */
-    width: 80%;
-    font-family: 'Roboto', sans-serif; /* Use a clean, modern font */
+    border-radius: 40px 40px 0 0;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Enhanced shadow for a "lifted" effect */
+    font-family: 'Helvetica Neue', sans-serif; /* A sleek, modern font */
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase; /* Optionally make text uppercase for a more formal appearance */
 }
+
 
 h1 {
     font-size: 2.5em;
@@ -37,6 +69,7 @@ h1 {
     display: flex;
     justify-content: center;
     padding: 2em;
+    height: 6rem;
 }
 
 /* Improve card titles */
@@ -48,8 +81,180 @@ h1 {
     margin-bottom: 1em;
 }
 
+.card-title-metrics {
+    font-size: 1.8em;
+    text-align: center;
+    color: #333;
+    font-weight: bold;
+    align-self: center;
+    margin-bottom: 2rem;
+}
 /* Add styles for a hover effect on each chart */
 .chart-container:hover {
     transform: scale(1.02);
     transition: transform 0.2s;
+}
+
+
+#outer-wrapper-div {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    margin: 2em 0;
+}
+
+.carousel-indicators {
+    bottom: 2rem;
+}
+
+
+.carousel-control-prev, .carousel-control-next {
+    background-color: #333; /* Dark background */
+    color: #fff; /* Icon color */
+    border-radius:  50%; /* Rounded corners */
+    opacity:  0.7; /* Transparency */
+    transition: opacity  0.5s ease-in-out; /* Smooth transition for hover effect */
+}
+.carousel-control-prev-icon {
+ background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23fff' viewBox='0 0 8 8'%3E%3Cpath d='M5.25 0l-4 4 4 4 1.5-1.5-2.5-2.5 2.5-2.5-1.5-1.5z'/%3E%3C/svg%3E") !important;
+}
+
+.carousel-control-next-icon {
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%23fff' viewBox='0 0 8 8'%3E%3Cpath d='M2.75 0l-1.5 1.5 2.5 2.5-2.5 2.5 1.5 1.5 4-4-4-4z'/%3E%3C/svg%3E") !important;
+}
+.carousel-control-prev:hover, .carousel-control-next:hover {
+    opacity:  1; /* Full opacity on hover */
+}
+
+
+.carousel-item *:hover {
+    transform: scale(1);
+}
+
+.chart-container {
+    transition: all 0.5s ease; /* Adjust the timing and easing function as needed */
+}
+
+
+.card-title {
+    margin-right: 2rem; /* Space between h2 and canvas */
+    align-self: center; /* Adjust vertical alignment */
+}
+
+#chart_dogBreeds {
+    display: block;
+    margin: 0 auto;
+
+}
+
+.with-color {
+    color: green;
+}
+
+.without-color {
+    color: red;
+}
+
+.with-kong-color {
+    color: rgba(75, 192, 192, 1);
+}
+
+.without-kong-color {
+    color: rgba(255, 99, 132, 1);
+}
+
+#stance-pos-title {
+    margin-top: -1rem;
+    margin-right: 0;
+}
+
+#chart_dogStance_dogPosition_with_without {
+    margin-bottom: 2rem;
+}
+
+.dropdown-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    margin-bottom: 1rem;
+    margin-top: -1rem;
+}
+
+.dropdown-container label {
+    margin-right: 2rem;
+    font-size: 1.3em;
+}
+
+.slider-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    margin-bottom: 1rem;
+    margin-top: -1rem;
+}
+
+
+#stanceSliderValue {
+    text-decoration: underline;
+}
+
+.controls-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.slider-container,
+.dropdown-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Adjust spacing between slider and dropdown */
+    margin: -1rem 2rem 1rem;
+}
+
+.slider-container label,
+.dropdown-container label {
+    margin-right: 1rem;
+    font-size: 1.3em;
+
+}
+
+#year-select-stances-label {
+    margin-left: 1rem;
+}
+
+.form-check {
+    align-items: center; /* This ensures vertical center alignment */
+}
+
+#showAllStances {
+    transform: scale(1.4);
+    cursor: pointer;
+    margin-left: 1rem;
+    margin-right: 6rem;
+    background-color: black;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='white'/%3e%3c/svg%3e");
+    vertical-align: middle;
+}
+
+#showAllStances:focus {
+    border-color: rgba(255, 255, 255, 0.5);
+    outline: 0;
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+    background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='white'/></svg>");
+}
+
+#showAllStances:checked {
+    background-color: #4CAF50; /* Green background for checked state */
+    border: none;
+    background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='white'/></svg>"); /* White circle for checked state */
+}
+
+#showAllStancesLabel {
+    margin-right: 0;
 }

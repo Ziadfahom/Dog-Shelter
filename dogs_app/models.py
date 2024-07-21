@@ -30,6 +30,14 @@ def current_timezone_aware_date():
 def current_timezone_aware_datetime():
     return timezone.localtime(timezone.now())
 
+# Video File Validator, raises an error if the file is not a video
+def validate_video_file_extension(value):
+    # List of allowed video file extensions, as defined in settings files
+    from dogshelter_site.settings.base import ALLOWED_VIDEO_FILE_EXTENSIONS
+    ext = os.path.splitext(value.name)[1]  # [0] returns path+filename
+    valid_extensions = ALLOWED_VIDEO_FILE_EXTENSIONS
+    if not ext.lower() in valid_extensions:
+        raise ValidationError('Unsupported video file extension.')
 
 # Adding more attributes to the User model
 class Profile(models.Model):
@@ -116,22 +124,60 @@ class Dog(models.Model):
         ('', '-')
     ]
 
+    ENTRY_REASON_CHOICES = [
+        ('STRAY', 'Stray'),
+        ('BITE', 'Bite'),
+        ('RETURN', 'Returning'),
+        ('ELSE', 'Else'),
+        ('', '-')
+    ]
+
+    COLOR_GROUP_CHOICES = [
+        ('P', 'Purple'),
+        ('O', 'Orange'),
+        ('G', 'Green'),
+        ('PO', 'Purple/Orange'),
+        ('', '-')
+    ]
+
+    MOTIVATION_GROUP_CHOICES = [
+        ('EXTERNALLY', 'Externally'),
+        ('INTERNALLY', 'Internally'),
+        ('SOCIALLY', 'Socially'),
+        ('', '-')
+    ]
+
     dogID = models.AutoField(primary_key=True)
+    dogImage = models.ImageField(upload_to='dog_pictures', default=DEFAULT_DOG_IMAGE_SOURCE, null=True, blank=True)
     chipNum = models.CharField(max_length=30, unique=True, blank=True, null=True)
     dogName = models.CharField(max_length=35)
+    city = models.CharField(max_length=30, blank=True, null=True)
+    dateOfArrival = models.DateField(blank=True, null=True, default=current_timezone_aware_date)
+    entryReason = models.CharField(max_length=10, choices=ENTRY_REASON_CHOICES, blank=True, null=True)
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True, null=True)
+    breed = models.CharField(max_length=30, blank=True, null=True)
+    furColor = models.CharField(max_length=20, blank=True, null=True)
     owner = models.ForeignKey(Owner, on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Owner')
     dateOfBirthEst = models.DateField(blank=True, null=True)
-    dateOfArrival = models.DateField(blank=True, null=True, default=current_timezone_aware_date)
     dateOfVaccination = models.DateField(blank=True, null=True)
-    breed = models.CharField(max_length=30, blank=True, null=True)
-    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True, null=True)
-    furColor = models.CharField(max_length=20, blank=True, null=True)
     isNeutered = models.CharField(max_length=1, choices=IS_NEUTERED_CHOICES, blank=True, null=True)
     isDangerous = models.CharField(max_length=1, choices=IS_DANGEROUS_CHOICES, blank=True, null=True)
-    dogImage = models.ImageField(upload_to='dog_pictures', default=DEFAULT_DOG_IMAGE_SOURCE, null=True, blank=True)
     kongDateAdded = models.DateField(blank=True, null=True, verbose_name='Last Date Given a Kong', default=None)
     adoptionDate = models.DateField(blank=True, null=True, verbose_name='Adoption Date', default=None)
     branch = models.ForeignKey('Branch', on_delete=models.CASCADE, verbose_name='Branch')
+
+    releaseDate = models.DateField(blank=True, null=True)
+    releaseReason = models.CharField(max_length=50, blank=True, null=True)
+    releaseDetails = models.CharField(max_length=250, blank=True, null=True)
+    dogImage2 = models.ImageField(upload_to='dog_pictures', null=True, blank=True)
+    dogImage3 = models.ImageField(upload_to='dog_pictures', null=True, blank=True)
+    dogImage4 = models.ImageField(upload_to='dog_pictures', null=True, blank=True)
+    dogVideo = models.FileField(upload_to='dog_videos',
+                                validators=[validate_video_file_extension],
+                                null=True, blank=True, verbose_name='Video')
+    # Attributes matching Lod's MYM (Meet Your Match) requirements
+    colorGroup = models.CharField(max_length=2, choices=COLOR_GROUP_CHOICES, blank=True, null=True)
+    motivationGroup = models.CharField(max_length=10, choices=MOTIVATION_GROUP_CHOICES, blank=True, null=True)
 
     # Returns True if the Dog's profile picture is the default.jpg
     def is_default_image(self):
@@ -151,7 +197,44 @@ class Dog(models.Model):
         if not self.dogImage:
             self.dogImage = DEFAULT_DOG_IMAGE_SOURCE
 
+        # Check if the instance being saved is a new one or an existing one
+        if self.pk:
+            old_dogImage = Dog.objects.get(pk=self.pk).dogImage
+            old_dogImage2 = Dog.objects.get(pk=self.pk).dogImage2
+            old_dogImage3 = Dog.objects.get(pk=self.pk).dogImage3
+            old_dogImage4 = Dog.objects.get(pk=self.pk).dogImage4
+            old_dogVideo = Dog.objects.get(pk=self.pk).dogVideo
+
+            # Check if images/video are being replaced
+            if old_dogImage and self.dogImage != old_dogImage and old_dogImage != DEFAULT_DOG_IMAGE_SOURCE:
+                old_dogImage.delete(save=False)
+            if old_dogImage2 and self.dogImage2 != old_dogImage2:
+                old_dogImage2.delete(save=False)
+            if old_dogImage3 and self.dogImage3 != old_dogImage3:
+                old_dogImage3.delete(save=False)
+            if old_dogImage4 and self.dogImage4 != old_dogImage4:
+                old_dogImage4.delete(save=False)
+            if old_dogVideo and self.dogVideo != old_dogVideo:
+                old_dogVideo.delete(save=False)
+
         super().save(*args, **kwargs)
+
+    # Make sure the dog's images and video are deleted upon deletion of the Dog instance
+    def delete(self, *args, **kwargs):
+
+        # Delete the Image/Video files from the storage if they exist
+        if self.dogImage and self.dogImage != DEFAULT_DOG_IMAGE_SOURCE:
+            self.dogImage.delete(save=False)
+        if self.dogImage2:
+            self.dogImage2.delete(save=False)
+        if self.dogImage3:
+            self.dogImage3.delete(save=False)
+        if self.dogImage4:
+            self.dogImage4.delete(save=False)
+        if self.dogVideo:
+            self.dogVideo.delete(save=False)
+
+        super(Dog, self).delete(*args, **kwargs)
 
     def __str__(self):
         return f"{self.dogName}"
@@ -462,16 +545,6 @@ def validate_csv_file_extension(value):
     valid_extensions = ['.csv']
     if not ext.lower() in valid_extensions:
         raise ValidationError('Unsupported file extension. File should have a valid .csv format.')
-
-
-# Video File Validator, raises an error if the file is not a video
-def validate_video_file_extension(value):
-    # List of allowed video file extensions, as defined in settings files
-    from dogshelter_site.settings.base import ALLOWED_VIDEO_FILE_EXTENSIONS
-    ext = os.path.splitext(value.name)[1]  # [0] returns path+filename
-    valid_extensions = ALLOWED_VIDEO_FILE_EXTENSIONS
-    if not ext.lower() in valid_extensions:
-        raise ValidationError('Unsupported video file extension.')
 
 
 class Observation(models.Model):

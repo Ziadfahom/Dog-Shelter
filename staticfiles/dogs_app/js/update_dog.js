@@ -29,6 +29,35 @@ document.getElementById('id_dogImage').addEventListener('change', function(e) {
     }
 });
 
+// Function to toggle visibility of Adoption Date field based on dropdown selection
+function toggleAdoptionDateField() {
+    var adoptionStatus = document.getElementById("adoptionStatus");
+    var adoptionDateField = document.getElementById("id_adoptionDate");
+    var resetAdoption = document.getElementById("reset-adoption");
+    var adoptionDateAndLabel = document.getElementById("adoptionDateAndLabel");
+    if (adoptionStatus.value == "Yes") {
+        if (adoptionDateField.value == "") {
+            // Set the field value to today's date
+            adoptionDateField.value = new Date().toISOString().split('T')[0];
+        }
+        adoptionDateField.style.display = "block";
+        resetAdoption.style.display = "block";
+        adoptionDateAndLabel.style.display = "block";
+    } else {
+        adoptionDateField.value = "";  // Clear the field value
+        adoptionDateField.style.display = "none";
+        resetAdoption.style.display = "none";
+        adoptionDateAndLabel.style.display = "none";
+
+    }
+}
+
+// Initial call to toggleAdoptionDateField function on page load
+toggleAdoptionDateField();
+
+// Event listener for dropdown change
+document.getElementById("adoptionStatus").addEventListener("change", toggleAdoptionDateField);
+
 // Get all date fields and reset links
 var dateFields = document.querySelectorAll('.date-field');
 var resetLinks = document.querySelectorAll('.reset-date-link');
